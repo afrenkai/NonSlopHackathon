@@ -983,8 +983,9 @@ def test_deerflow_evidence_reaches_kimi_h3_and_world(
     intake = client.get("/visits/new")
     notes = "Historical context. " * 980 + "End of supplied notes."
     refined_prompt = (
-        "integrated_multimodal_description: [Shot 1] Warehouse gables catch "
-        "the warm lights along the quay.\n\noverall_soundscape: Quiet harbor ambience."
+        "integrated_multimodal_description: [Shot 1] From the opening photo, the "
+        "camera glides sideways. The illuminated tree shifts against the distant "
+        "shore and stays in frame.\n\noverall_soundscape: Quiet harbor ambience."
         "\n\nnon_diegetic_music: N/A"
     )
     readings = [
@@ -1014,12 +1015,19 @@ def test_deerflow_evidence_reaches_kimi_h3_and_world(
     )
     assert submitted.status_code == 303
     task, photos = worker.submitted[0], worker.references[0]
+    assert "Begin on the supplied first-frame image" in task.prompt
+    assert "Move the camera smoothly sideways or diagonally forward" in task.prompt
+    assert "nearby features shift visibly against the background" in task.prompt
     world_url = f"/api/jobs/{task.job_id}/world"
     assert client.post(world_url, headers=headers).status_code == 409
     assert world.submitted == []
 
     def capture_writer_request(request: httpx.Request) -> httpx.Response:
-        parts = json.loads(request.content)["messages"][1]["content"]
+        messages = json.loads(request.content)["messages"]
+        camera_guidance = messages[0]["content"]
+        assert "sideways or diagonally forward from the opening view" in camera_guidance
+        assert "distinctive landmarks remain visible across frames" in camera_guidance
+        parts = messages[1]["content"]
         photo_observations, evidence = parts[0]["text"].split("\n\n", 1)
         assert "The opening image shows an illuminated tree." in photo_observations
         packet = json.loads(evidence)

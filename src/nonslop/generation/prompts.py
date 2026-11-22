@@ -22,7 +22,7 @@ def build_scene_prompt(
 ) -> str:
     reference = (
         "Begin on the supplied first-frame image. Preserve the visible layout, "
-        "object identities, proportions, materials, lighting and viewpoint as the camera moves. "
+        "object identities, proportions, materials and lighting as the camera moves. "
         if has_reference
         else "Establish the remembered scene with consistent geometry and object placement. "
     )
@@ -37,10 +37,13 @@ def build_scene_prompt(
         "integrated_multimodal_description: [Shot 1] A realistic, continuous "
         f"first-person visit to the remembered scene at {scene.location} in {scene.year}. "
         f"{reference}"
-        "The camera makes a small, slow movement near the original viewpoint, "
-        "revealing gentle parallax in one uninterrupted shot. Choose a viewpoint and "
-        "movement appropriate to this indoor or outdoor scene. Keep geometry and "
-        "object placement stable. Do not force a walk, a street, or outdoor scenery. "
+        "Move the camera smoothly sideways or diagonally forward from the opening "
+        "view throughout the shot. Let nearby features shift visibly against the "
+        "background while keeping distinctive landmarks visible across frames. "
+        "Keep the focal length fixed and the image sharp. A gentle turn can keep "
+        "landmarks in frame during the move. Use a path that fits the available "
+        "space and keeps the scene recognizable. Keep geometry and object placement stable. "
+        "Do not force a walk, a street, or outdoor scenery. "
         "Visible photographic details take priority over generic descriptions. "
         "Use remembered details and period-specific sources to guide uncertain areas. "
         "Avoid unsupported additions, morphing objects, and captions. "
