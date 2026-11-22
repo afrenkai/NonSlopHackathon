@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from anyio import to_thread
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 from starlette.datastructures import UploadFile
@@ -28,7 +28,7 @@ def install_capsule_routes(
     def find_capsule(capsule_id: UUID) -> CapsuleRecord:
         capsule = store.get(capsule_id)
         if capsule is None:
-            raise HTTPException(404, "Capsule not found.")
+            raise HTTPException(404, "Keepsake not found.")
         return capsule
 
     def timeline(
@@ -50,19 +50,12 @@ def install_capsule_routes(
             },
         )
 
-    @application.get("/capsules", response_class=HTMLResponse)
-    def capsule_list(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse(
-            request=request,
-            name="capsules.html",
-            context={
-                "capsules": store.public_page()[0],
-                "csrf": csrf_token(request),
-            },
-        )
+    @application.get("/capsules", response_class=RedirectResponse, status_code=303)
+    def capsule_list() -> RedirectResponse:
+        return RedirectResponse("/dashboard?add=keepsake", status_code=303)
 
     @application.post("/capsules", response_class=HTMLResponse)
-    async def create_capsule(request: Request) -> HTMLResponse:
+    async def create_capsule(request: Request) -> Response:
         async with request.form(max_files=1, max_fields=3, max_part_size=8192) as form:
             require_csrf(request, str(form.get("csrf", "")))
             try:
@@ -83,14 +76,17 @@ def install_capsule_routes(
             if isinstance(anchor, UploadFile) and anchor.filename:
                 uploaded = await read_memory_media(anchor, settings.upload_limit)
                 if uploaded.kind != "image":
-                    raise HTTPException(400, "Use an image as the capsule's anchor.")
+                    raise HTTPException(
+                        400, "Choose an image for the keepsake photograph."
+                    )
                 capsule.anchor_filename = f"{uuid4()}.{uploaded.suffix}"
                 capsule.anchor_media_type = uploaded.media_type
                 anchor_bytes = uploaded.content
         await to_thread.run_sync(store.create, capsule, anchor_bytes)
-        return templates.TemplateResponse(
-            request=request, name="capsule_card.html", context={"capsule": capsule}
-        )
+        location = f"/capsules/{capsule.capsule_id}"
+        if request.headers.get("HX-Request") == "true":
+            return Response(headers={"HX-Redirect": location})
+        return RedirectResponse(location, status_code=303)
 
     @application.get("/capsules/{capsule_id}", response_class=HTMLResponse)
     def capsule_page(request: Request, capsule_id: UUID) -> HTMLResponse:

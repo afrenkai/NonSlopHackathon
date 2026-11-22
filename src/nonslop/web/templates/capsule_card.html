@@ -6,6 +6,6 @@
     <p class="ks-meta">Started <time datetime="{{ capsule.created_at.date() }}">{{ capsule.created_at.strftime('%d %b %Y') }}</time></p>
     <h3>{{ capsule.title }}</h3>
     {% if capsule.description %}<p class="ks-tag-note">{{ capsule.description }}</p>{% endif %}
-    <a class="ks-link" href="/capsules/{{ capsule.capsule_id }}" aria-label="Open this capsule: {{ capsule.title }}">Open this capsule <span aria-hidden="true">→</span></a>
+    <a class="ks-link" href="/capsules/{{ capsule.capsule_id }}" aria-label="Open this keepsake: {{ capsule.title }}">Open this keepsake</a>
   </div>
 </article>

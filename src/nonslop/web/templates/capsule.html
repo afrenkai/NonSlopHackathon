@@ -4,14 +4,14 @@
 {% block content %}
 <div class="ks-workspace">
   <div class="ks-topline">
-    <a class="ks-link" href="/dashboard#time-capsules"><span aria-hidden="true">←</span> Time capsules</a>
+    <a class="ks-link" href="/dashboard#keepsakes"><span aria-hidden="true">←</span> Keepsakes</a>
     <p class="ks-meta">Started <time datetime="{{ capsule.created_at.date() }}">{{ capsule.created_at.strftime('%d %b %Y') }}</time></p>
   </div>
   <header class="ks-cover">
-    <p class="file-tab">Keepsake notebook</p>
+
     <h1 class="ks-name">{{ capsule.title }}</h1>
     {% if capsule.description %}<p class="ks-description">{{ capsule.description }}</p>{% endif %}
-    <a class="ks-jump" href="#memory-date">Add a memory <span aria-hidden="true">↘</span></a>
+    <a class="ks-jump" href="#memory-date">Add a memory</a>
   </header>
 
   <div class="ks-spread">
@@ -23,7 +23,7 @@
       <form action="/capsules/{{ capsule.capsule_id }}/entries" method="post" enctype="multipart/form-data" class="form-stack"
             hx-post="/capsules/{{ capsule.capsule_id }}/entries" hx-encoding="multipart/form-data" hx-disabled-elt="find button"
             hx-target="#capsule-entries" hx-swap="outerHTML show:#capsule-entries:top">
-        <p class="field-help public-notice"><strong>Public collection.</strong> Anyone who opens this app can see what you add, including your uploaded files.</p>
+
         <input type="hidden" name="csrf" value="{{ csrf }}">
         <div class="field">
           <label for="memory-date">When is this memory from?</label>

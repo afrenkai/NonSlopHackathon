@@ -1,5 +1,4 @@
 <form action="/visits/new" method="post" enctype="multipart/form-data" class="form-stack" hx-post="/visits/new" hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
-  <p class="field-help public-notice"><strong>Public collection.</strong> Anyone who opens this app can see what you add, including your uploaded files.</p>
   <input type="hidden" name="csrf" value="{{ csrf }}">
   <div class="place-fields">
     <div class="field">
@@ -57,5 +56,5 @@
     <button class="button button-primary button-full" type="submit">{% if request.app.state.local_preview %}Save visit sources{% else %}Create a visit{% endif %}</button>
     <p id="submit-progress" class="htmx-indicator" role="status">Gathering your source material…</p>
   </div>
-  <p class="interpretation-note">{% if request.app.state.local_preview %}Local preview: you can save a visit record and link it to a capsule. Video and 3D generation are offline.{% else %}Each visit is a generated interpretation of the supplied evidence. Review the sources and details alongside your video.{% endif %}</p>
+  <p class="interpretation-note">{% if request.app.state.local_preview %}Local preview: you can save a visit record and link it to a keepsake. Video and 3D generation are offline.{% else %}Each visit is a generated interpretation of the supplied evidence. Review the sources and details alongside your video.{% endif %}</p>
 </form>

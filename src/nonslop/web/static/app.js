@@ -7,6 +7,19 @@ function followMovedSection() {
 window.addEventListener("hashchange", followMovedSection);
 document.addEventListener("DOMContentLoaded", () => {
   followMovedSection();
+  for (const opener of document.querySelectorAll('button[aria-haspopup="dialog"]')) {
+    const dialog = document.getElementById(opener.getAttribute('aria-controls'));
+    if (!(dialog instanceof HTMLDialogElement)) continue;
+    opener.addEventListener('click', () => dialog.showModal());
+    dialog.querySelector('[data-close-dialog]').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => opener.focus());
+    const url = new URL(location.href);
+    if (dialog.id === `add-${url.searchParams.get('add')}`) {
+      dialog.showModal();
+      url.searchParams.delete('add');
+      history.replaceState(history.state, '', url);
+    }
+  }
   const yearInput = document.getElementById("year");
   if (yearInput) {
     yearInput.max = String(new Date().getFullYear());

@@ -3,7 +3,7 @@
 .print{width:90%;margin:22px auto 20px;position:relative;transform:rotate(-2deg);padding:9px 9px 11px;background:#fcfaf2;box-shadow:1px 4px 6px #28312226,2px 12px 20px #28312214}
 .print:before{content:'';position:absolute;z-index:1;left:39%;top:-7px;width:22%;height:19px;background:#dfd2abbf;transform:rotate(-4deg);border-inline:1px dashed #c8ba94}
 .print-image{position:relative;aspect-ratio:4/3;overflow:hidden;background:#b69e64}
-.print-image img{display:block;width:100%;height:100%}
+.print > img{display:block;width:100%;height:auto}
 .print-label{display:block;margin:7px 3px 0;text-align:center;color:var(--violet);font:clamp(18px,2.1vw,31px)/1.05 'Nanum Pen Script',Georgia,serif}
 .pin{position:absolute;left:35.1%;top:35.3%;width:clamp(31px,6vw,54px);aspect-ratio:1;border:2px solid #fff9e8;box-shadow:0 0 0 1px #202c36ac;transform:translate(-50%,-50%) rotate(-8deg);border-radius:50% 44% 48% 44%;pointer-events:none}
 .case-file:has(#src-letter:checked) .pin{left:64.5%;top:55.8%;border-radius:2px;transform:translate(-50%,-50%) rotate(2deg)}

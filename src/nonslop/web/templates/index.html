@@ -1,38 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Photographs & keepsakes{% endblock %}
-{% block styles %}<link rel="stylesheet" href="/static/field-print.css"><link rel="stylesheet" href="/static/guide.css">{% endblock %}
+{% import "photo_hero.html" as hero %}
+{% block styles %}<link rel="stylesheet" href="/static/field-print.css"><link rel="stylesheet" href="/static/guide.css"><link rel="stylesheet" href="/static/photo-hero.css">{% endblock %}
+{% block scripts %}{{ super() }}<script src="/static/photo-hero.js" defer></script>{% endblock %}
 {% block content %}
-<section id="intro" class="guide-hero" aria-labelledby="guide-title">
-  <div><p class="eyebrow">Memory Worlds / A field guide</p>
-    <h1 id="guide-title">Places you remember.<br><em>Things you kept.</em></h1>
-  </div>
-  <div class="guide-welcome"><p>Revisit a place through a photograph, or gather the stories that belong to a keepsake.</p>
-    <a class="button button-primary" href="/dashboard">Open the dashboard <span aria-hidden="true">→</span></a>
+<section id="intro" class="guide-hero photo-hero" aria-labelledby="guide-title" data-slideshow>
+  {{ hero.slides() }}
+  <div class="photo-hero-copy">
+    <div class="photo-hero-text">
+      <h1 id="guide-title">Rediscover and relive <em>old memories</em></h1>
+      <div class="guide-welcome">
+        <a class="button button-primary" href="/dashboard">Open the dashboard</a>
+      </div>
+    </div>
   </div>
 </section>
 <section id="photograph" class="guide-chapter photo-chapter" aria-labelledby="photo-title">
-  <div class="chapter-copy"><p class="file-tab">01 / Photograph</p>
+  <div class="chapter-copy"><p class="file-tab">Photograph</p>
     <h2 id="photo-title">Step back<br>inside the<br><em>photograph.</em></h2>
-    <p>A picture remembers one wall. You remember the radio playing behind you. Put the two together and step inside.</p>
-    <a class="button button-primary" href="/visits/new">Add a photograph <span aria-hidden="true">→</span></a>
+    <a class="button button-primary" href="/dashboard#box">Explore photographs</a>
   </div>
   {% include "field_print.html" %}
 </section>
 <section id="keepsake" class="guide-chapter keepsake-chapter" aria-labelledby="keepsake-title">
-  <div class="chapter-copy"><p class="file-tab">02 / Keepsake</p>
-    <h2 id="keepsake-title">Some things<br><em>aren’t places.</em></h2>
-    <p>Photograph a stuffed animal, a diary, a ring. Then keep adding to it over the years with voice notes, photos, videos, or a few written lines. See it all at once, or year by year.</p>
-    <a class="button button-primary" href="/dashboard#time-capsules">Explore time capsules <span aria-hidden="true">→</span></a>
-  </div>
-  <figure class="keepsake-example" aria-labelledby="bun-caption">
-    <p class="meta">Illustrated example / Family keepsake</p>
-    <div class="keepsake-print"><img src="/static/keepsake-rabbit.svg" width="400" height="400" loading="lazy" alt="Bun-Bun, a worn stuffed rabbit with a stitched patch."></div>
-    <figcaption id="bun-caption"><span class="keepsake-tag"><strong>Bun-Bun</strong><span class="meta">Since 2009</span></span>
-      <blockquote>“She’s 17 now and still sleeps with him on the bad nights.”</blockquote>
+  <figure class="keepsake-example" aria-labelledby="spheal-caption">
+    <div class="keepsake-print"><img src="/static/spheal.webp" width="750" height="1000" loading="lazy" alt="A small white seal plush with black eyes resting in a hand."></div>
+    <figcaption id="spheal-caption"><span class="keepsake-tag"><strong>Spheal</strong> <span>since 2023</span></span>
+      <p class="keepsake-description">Soft and fuzzy lil guy</p>
     </figcaption>
-    <details class="sample-timeline"><summary>Bun-Bun’s memories, year by year</summary>
-      <ol><li><time>2009</time><span>Voice note · First night home</span></li><li><time>2014</time><span>Photograph · The hospital stay</span></li><li><time>2019</time><span>Video · Moving day</span></li><li><time>2021</time><span>Note · Lost, then found</span></li></ol>
-    </details>
   </figure>
+  <div class="chapter-copy"><p class="file-tab">Keepsake</p>
+    <h2 id="keepsake-title">Give nostalgia <em>a home</em></h2>
+    <a class="button button-primary" href="/dashboard#keepsakes">Explore keepsakes</a>
+  </div>
 </section>
 {% endblock %}

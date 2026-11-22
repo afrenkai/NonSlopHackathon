@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="{% block scheme %}light{% endblock %}">
   <meta name="htmx-config" content='{"allowEval":false,"includeIndicatorStyles":false,"allowScriptTags":false}'>
-  <title>{% block title %}Time capsules{% endblock %} · Memory Worlds</title>
+  <title>{% block title %}Keepsakes{% endblock %} · Memory Worlds</title>
   <link rel="icon" href="/static/field-mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/style.css">
   {% block styles %}{% endblock %}
@@ -17,11 +17,11 @@
   <header class="mast"><div class="site-header">
     <a class="wordmark" href="/"><svg aria-hidden="true" viewBox="0 0 28 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m2 5 20-3 4 25-20 3z"/><path d="M7 9 18 7l1.5 10-11 2zm4 15 8-1"/></svg>Memory Worlds</a>
     <nav class="header-actions" aria-label="Main navigation">
-      <a href="/visits/new"{% if request.url.path == '/visits/new' %} aria-current="page"{% endif %}>New visit</a>
-      <a class="box-link" href="/dashboard"{% if request.url.path == '/dashboard' %} aria-current="page"{% endif %}>Dashboard <span aria-hidden="true">↗</span></a>
+
+      <a class="box-link" href="/dashboard"{% if request.url.path == '/dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
     </nav>
   </div></header>
   <main id="main" tabindex="-1" class="workspace">{% block content %}{% endblock %}</main>
-  <footer class="site-footer"><span class="hand">Memory Worlds</span><span><a href="/dashboard">Explore the public collection →</a></span></footer>
+
 </body>
 </html>

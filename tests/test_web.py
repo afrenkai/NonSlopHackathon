@@ -122,8 +122,8 @@ def template_context(response: object) -> dict:
     return context
 
 
-def capsule_id_from(html: str) -> str:
-    match = re.search(r'data-capsule-id="([^"]+)"', html)
+def capsule_id_from(target: str) -> str:
+    match = re.fullmatch(r"/capsules/([0-9a-f-]{36})", target)
     assert match is not None
     return match.group(1)
 
@@ -143,11 +143,32 @@ def test_field_guide_is_static_and_leads_to_the_dashboard(tmp_path: Path) -> Non
     for part in ("photograph", "keepsake"):
         assert f'id="{part}"' in home.text
     assert 'href="/dashboard"' in home.text
-    assert "<form" not in home.text
+    for section in ("box", "keepsakes"):
+        assert f'href="/dashboard#{section}"' in home.text
+    assert "<dialog" not in home.text and "<form" not in home.text
     assert "set-cookie" not in home.headers
     assert {"jobs", "capsules", "csrf"}.isdisjoint(template_context(home))
-    assert client.get("/static/kitchen.svg").status_code == 200
-    assert "Memory Worlds" in client.get("/capsules").text
+    assert "Kyoto, Japan, Autumn 2023" in home.text
+    assert client.get("/static/kyoto-autumn-2023.webp").status_code == 200
+
+
+def test_intake_bookmarks_redirect_to_dashboard_dialogs(tmp_path: Path) -> None:
+    client = browser_client(client_settings(tmp_path), RecordingGenerator())
+    for old_path, kind in (("/visits/new", "photo"), ("/capsules", "keepsake")):
+        response = client.get(old_path, follow_redirects=False)
+        assert response.status_code == 303
+        target = f"/dashboard?add={kind}"
+        assert response.headers["location"] == target
+        page = client.get(target)
+        assert page.status_code == 200
+        dialog = re.search(
+            rf'<dialog\b[^>]*\bid="add-{kind}"[^>]*>(.*?)</dialog>',
+            page.text,
+            re.DOTALL,
+        )
+        assert dialog is not None
+        assert f'action="{old_path}"' in dialog[1]
+        assert csrf_from(dialog[1]) == template_context(page)["csrf"]
 
 
 def test_dashboard_pages_the_two_legacy_collections_independently(
@@ -277,8 +298,7 @@ def test_photo_intake_opens_the_saved_visit(tmp_path: Path) -> None:
     settings = client_settings(tmp_path)
     worker = RecordingGenerator()
     client = browser_client(settings, worker)
-    assert 'href="/visits/new"' in client.get("/").text
-    intake = client.get("/visits/new")
+    intake = client.get("/dashboard")
     assert intake.status_code == 200
     assert 'name="reference_image"' in intake.text
     assert client.post("/visits/new").status_code == 403
@@ -304,7 +324,7 @@ def test_photo_intake_opens_the_saved_visit(tmp_path: Path) -> None:
 
 def test_first_intake_submissions_from_two_tabs_share_the_box(tmp_path: Path) -> None:
     first_tab = browser_client(client_settings(tmp_path), RecordingGenerator())
-    intake = first_tab.get("/visits/new")
+    intake = first_tab.get("/dashboard")
     assert intake.status_code == 200
     csrf = csrf_from(intake.text)
 
@@ -337,7 +357,7 @@ def test_public_site_keeps_api_credentials_and_browser_csrf(tmp_path: Path) -> N
     home = client.get("/", follow_redirects=False)
     assert home.status_code == 200
     assert 'name="api_key"' not in home.text and 'name="password"' not in home.text
-    intake = client.get("/visits/new")
+    intake = client.get("/dashboard")
     for value in api_headers(settings).values():
         assert value not in home.text and value not in intake.text
     cookie = intake.headers["set-cookie"].lower()
@@ -416,12 +436,17 @@ def test_image_and_text_job_survives_restart_and_protects_video(tmp_path: Path) 
         assert restarted.get(f"/jobs/{job_id}{suffix}").status_code == 404
     assert restarted.get(f"/visits/{job_id}").status_code == 404
     assert job_id not in restarted.get("/dashboard").text
-    token = csrf_from(restarted.get("/capsules").text)
+    token = csrf_from(restarted.get("/dashboard").text)
     assert (
         restarted.post(f"/jobs/{job_id}/world", data={"csrf": token}).status_code == 404
     )
-    capsule = restarted.post("/capsules", data={"title": "Family album", "csrf": token})
-    capsule_id = capsule_id_from(capsule.text)
+    capsule = restarted.post(
+        "/capsules",
+        data={"title": "Family album", "csrf": token},
+        follow_redirects=False,
+    )
+    assert capsule.status_code == 303
+    capsule_id = capsule_id_from(capsule.headers["location"])
     assert job_id not in restarted.get(f"/capsules/{capsule_id}").text
     assert (
         restarted.post(
@@ -447,7 +472,7 @@ def test_browser_visits_and_worlds_are_public_after_restart(tmp_path: Path) -> N
     world = RecordingReconstructor()
     owner = browser_client(settings, worker, world)
     visitor = TestClient(owner.app, base_url=str(owner.base_url))
-    token = csrf_from(owner.get("/visits/new").text)
+    token = csrf_from(owner.get("/dashboard").text)
     image_data = BytesIO()
     Image.new("RGB", (16, 16), "red").save(image_data, format="PNG")
     submitted = owner.post(
@@ -480,7 +505,7 @@ def test_browser_visits_and_worlds_are_public_after_restart(tmp_path: Path) -> N
         == 206
     )
     assert owner.post(f"/jobs/{job_id}/world").status_code == 403
-    visitor_csrf = csrf_from(visitor.get("/visits/new").text)
+    visitor_csrf = csrf_from(visitor.get("/dashboard").text)
     assert (
         visitor.post(f"/jobs/{job_id}/world", data={"csrf": token}).status_code == 403
     )
@@ -543,7 +568,7 @@ def test_capsule_timeline_and_original_media_are_shared_across_browsers(
     world = RecordingReconstructor()
     owner = browser_client(settings, worker, world, archivist)
     visitor = TestClient(owner.app, base_url=str(owner.base_url))
-    token = csrf_from(owner.get("/capsules").text)
+    token = csrf_from(owner.get("/dashboard").text)
     image_data = BytesIO()
     Image.new("RGB", (16, 16), "red").save(image_data, format="PNG")
     response = owner.post(
@@ -554,11 +579,13 @@ def test_capsule_timeline_and_original_media_are_shared_across_browsers(
             "description": "The one from home.",
         },
         files={"anchor": ("bear.png", image_data.getvalue(), "image/png")},
+        headers={"HX-Request": "true"},
+        follow_redirects=False,
     )
     assert response.status_code == 200, response.text
-    capsule_id = capsule_id_from(response.text)
+    capsule_id = capsule_id_from(response.headers["hx-redirect"])
     assert owner.get(f"/capsules/{capsule_id}/anchor").content == image_data.getvalue()
-    assert "My old bear" in visitor.get("/capsules").text
+    assert "My old bear" in visitor.get("/dashboard").text
     assert capsule_id in visitor.get("/dashboard").text
     visitor_token = csrf_from(visitor.get(f"/capsules/{capsule_id}").text)
     assert (
@@ -604,9 +631,12 @@ def test_capsule_timeline_and_original_media_are_shared_across_browsers(
     assert owner.get(media_url).content == audio_data.getvalue()
     assert visitor.get(media_url).content == audio_data.getvalue()
     other = visitor.post(
-        "/capsules", data={"csrf": visitor_token, "title": "Other album"}
+        "/capsules",
+        data={"csrf": visitor_token, "title": "Other album"},
+        follow_redirects=False,
     )
-    other_id = capsule_id_from(other.text)
+    assert other.status_code == 303
+    other_id = capsule_id_from(other.headers["location"])
     assert visitor.get(media_url.replace(capsule_id, other_id)).status_code == 404
     archivist.completed = ArchivistResult(text="A machine transcript.")
     whole = owner.get(f"/capsules/{capsule_id}/entries?view=whole")
@@ -685,7 +715,7 @@ def test_folder_images_are_ordered_retained_bounded_and_public(tmp_path: Path) -
     settings = client_settings(tmp_path)
     worker = RecordingGenerator()
     owner = browser_client(settings, worker)
-    token = csrf_from(owner.get("/visits/new").text)
+    token = csrf_from(owner.get("/dashboard").text)
     uploads: list[tuple[str, tuple[str, bytes, str]]] = []
     for name, color in (("03.jfif", "blue"), ("01.png", "red"), ("02", "green")):
         content = BytesIO()
@@ -734,3 +764,41 @@ def test_folder_images_are_ordered_retained_bounded_and_public(tmp_path: Path) -
     )
     assert oversized.status_code == 413
     assert len(worker.submitted) == 1
+
+
+def test_landing_hero_cycles_cc0_nature_photographs(tmp_path: Path) -> None:
+    client = browser_client(client_settings(tmp_path), RecordingGenerator())
+    home = client.get("/").text
+    hero = re.search(r'<section id="intro".*?</section>', home, re.DOTALL)[0]
+    slides = re.findall(r'<div class="hero-slide[^"]*" data-photo="([a-z-]+)"', hero)
+    assert len(slides) == len(set(slides)) == 8
+    assert hero.count(" is-active") == 1
+    # A decorative background: hidden from screen readers, no captions or controls.
+    assert '<div class="photo-hero-slides" aria-hidden="true">' in hero
+    assert hero.count('alt=""') == 8
+    assert "<button" not in hero and "data-caption" not in hero
+    # Only the first photograph loads with the page; photo-hero.js promotes the rest.
+    assert hero.count('fetchpriority="high"') == 1
+    assert len(re.findall(r'\ssrcset="', hero)) == 2
+    assert len(re.findall(r"data-srcset=", hero)) == 14 and hero.count("data-src=") == 7
+    assert "style=" not in hero  # The CSP (style-src 'self') blocks inline styles.
+    assert '<h1 id="guide-title">' in hero and 'href="/dashboard"' in hero
+    assert '<script src="/static/photo-hero.js" defer></script>' in home
+    assert '<link rel="stylesheet" href="/static/photo-hero.css">' in home
+    css = client.get("/static/photo-hero.css").text
+    for slug in slides:
+        assert f'.hero-slide[data-photo="{slug}"] {{ --fx:' in css
+    urls = sorted(set(re.findall(r"/static/hero/[a-z0-9-]+\.webp", hero)))
+    assert len(urls) == 48
+    for url in urls:
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/webp"
+        width = int(re.search(r"-(\d+)\.webp$", url)[1])
+        ratio = (9, 16) if "-portrait-" in url else (3, 2)
+        with Image.open(BytesIO(response.content)) as image:
+            assert image.format == "WEBP" and image.mode == "RGB"
+            assert image.size == (width, round(width * ratio[1] / ratio[0]))
+    notice = client.get("/static/hero/NOTICE.md").text
+    assert notice.count("creativecommons.org/publicdomain/zero/1.0") >= 1
+    assert all(f"`{slug}`" in notice for slug in slides)
