@@ -32,7 +32,7 @@ def build_web_image() -> modal.Image:
         for filename in (demo.research_file, demo.observation_file):
             image = image.add_local_file(
                 LOCAL_RESEARCH_ROOT / filename,
-                str(MODAL_RESEARCH_ROOT / filename),
+                (MODAL_RESEARCH_ROOT / filename).as_posix(),
                 copy=True,
             )
     return image

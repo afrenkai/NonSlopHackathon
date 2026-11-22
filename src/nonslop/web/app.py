@@ -253,13 +253,9 @@ def create_app(
             },
         )
 
-    @application.get("/visits/new", response_class=HTMLResponse)
-    def new_visit(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse(
-            request=request,
-            name="new_visit.html",
-            context={"csrf": csrf_token(request), "demo_visits": DEMO_VISITS},
-        )
+    @application.get("/visits/new", response_class=RedirectResponse, status_code=303)
+    def new_visit() -> RedirectResponse:
+        return RedirectResponse("/dashboard?add=photo", status_code=303)
 
     @application.post("/visits/new", response_class=HTMLResponse)
     async def save_new_visit(request: Request) -> Response:

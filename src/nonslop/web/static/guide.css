@@ -25,7 +25,7 @@ body:has(.add-dialog[open]) { overflow:hidden; }
 .keepsake-description { margin:0 0 .7rem min(5%,1.5rem); padding:.55rem .85rem; max-width:27ch; background:repeating-linear-gradient(transparent 0 31px,#d8d5de 31px 32px),var(--paper); line-height:32px; transform:rotate(-1deg); }
 .sample-timeline summary { min-height:44px; padding:.65rem 0; font-weight:600; cursor:pointer; }.sample-timeline ol { list-style:none; margin:0; padding:0; }.sample-timeline li { display:flex; gap:1rem; padding:.45rem 0; border-top:1px solid #797383; }.sample-timeline time { font-family:var(--mono); }
 .record-link { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:1rem; align-items:center; text-decoration:none; }.record-link:hover { text-decoration:underline; }
-.dashboard-shelves { display:grid; grid-template-columns:minmax(0,1fr); gap:clamp(1.8rem,4vw,4rem); }
+.dashboard-shelves { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(1.8rem,4vw,4rem); }
 .dashboard-index,.shelf-heading { display:flex; flex-wrap:wrap; gap:.7rem 1.2rem; align-items:center; }.dashboard-index { margin-top:.7rem; }.dashboard-index a { display:inline-flex; align-items:center; min-height:44px; }
 .shelf-heading { justify-content:space-between; margin-bottom:1rem; }.shelf-heading .eyebrow { margin-bottom:.25rem; }
 .record-index { list-style:none; padding:0; margin:0; border-top:1px solid var(--hair); }.record-link { padding:1rem .3rem; border-bottom:1px solid var(--hair); }
