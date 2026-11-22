@@ -2,6 +2,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
+from nonslop.grounding.photo_schemas import PhotoMetadata
+
 
 class WebSettings(BaseModel):
     model_config = ConfigDict(hide_input_in_errors=True)
@@ -25,3 +27,4 @@ class WebSettings(BaseModel):
 class ReferenceBundle(BaseModel):
     images: list[bytes] = Field(default_factory=list)
     filenames: list[str] = Field(default_factory=list)
+    metadata: list[PhotoMetadata] = Field(default_factory=list)

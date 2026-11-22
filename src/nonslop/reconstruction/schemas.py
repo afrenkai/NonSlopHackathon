@@ -7,6 +7,8 @@ from nonslop.models.world_schemas import WorldResult
 
 class ReconstructionRecord(BaseModel):
     status: Literal["running", "complete", "failed"]
+    input_kind: Literal["reference_photos", "generated_video"] = "generated_video"
+    input_count: int = 0
     call_id: str | None = None
     result: WorldResult | None = None
     error: str | None = None

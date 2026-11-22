@@ -1,4 +1,12 @@
+// A bookmark can target a new document or a fragment on an already-open landing page.
+function followMovedSection() {
+  if (location.pathname !== "/") return;
+  if (location.hash === "#your-box") location.replace("/dashboard#box");
+  else if (location.hash === "#new-visit") location.replace("/visits/new");
+}
+window.addEventListener("hashchange", followMovedSection);
 document.addEventListener("DOMContentLoaded", () => {
+  followMovedSection();
   const yearInput = document.getElementById("year");
   if (yearInput) {
     yearInput.max = String(new Date().getFullYear());
@@ -8,6 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function showReferences() {
     const opening = document.getElementById("reference-image");
     const count = (opening?.files.length || 0) + referencePickers.reduce((total, picker) => total + picker.files.length, 0);
+    if (opening) {
+      opening.required = !referencePickers.some((picker) => picker.files.length > 0);
+      opening.setCustomValidity(count > 8 ? "Choose at most 8 reference images total." : "");
+    }
     for (const picker of referencePickers) {
       picker.setCustomValidity(count > 8 ? "Choose at most 8 reference images total." : "");
     }
@@ -29,11 +41,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   document.getElementById("reference-image")?.addEventListener("change", showReferences);
+  showReferences();
+});
+
+document.addEventListener("htmx:beforeRequest", (event) => {
+  event.detail.elt?.closest("form")?.querySelector("[data-form-feedback]")?.remove();
 });
 
 document.addEventListener("htmx:beforeSwap", (event) => {
   const response = event.detail.xhr;
   if ([400, 403, 409, 413, 422].includes(response.status)) {
+    // Keep the archive (and its swap target) intact when a form needs a correction.
+    const form = event.detail.requestConfig?.elt?.closest("form");
+    if (form) {
+      let feedback = form.querySelector("[data-form-feedback]");
+      if (!feedback) {
+        feedback = document.createElement("div");
+        feedback.dataset.formFeedback = "";
+        form.append(feedback);
+      }
+      event.detail.target = feedback;
+      event.detail.swapOverride = "innerHTML";
+    }
     event.detail.shouldSwap = true;
     event.detail.isError = false;
   }

@@ -24,8 +24,8 @@ class ModalReconstructionGateway:
     def __init__(self, worker: modal.Cls) -> None:
         self.worker = worker
 
-    def submit(self, job_id: str) -> str:
-        return self.worker().reconstruct.spawn(job_id).object_id
+    def submit(self, job_id: str, reference_images: list[bytes]) -> str:
+        return self.worker().reconstruct.spawn(job_id, reference_images).object_id
 
     def result(self, call_id: str) -> WorldResult | None:
         try:

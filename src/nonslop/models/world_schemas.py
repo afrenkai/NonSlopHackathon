@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 @dataclass(frozen=True)
@@ -11,6 +12,11 @@ class WorldSettings:
     model_subfolder: str = "HY-WorldMirror-2.0"
     model_root: str = "/models/hyworld"
     cache_root: str = "/cache/world-py312-torch210-cu130"
+    target_size: int = 756
+    max_video_frames: int = 6
+    max_splats: int = 1_500_000
+    edge_normal_threshold: float = 5.0
+    edge_depth_threshold: float = 0.05
     flash_attention_wheel: str = (
         "https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/"
         "flash_attn-2.8.3%2Bcu13torch2.10cxx11abiTRUE-cp312-cp312-linux_x86_64.whl"
@@ -36,3 +42,18 @@ class WorldResult(BaseModel):
     job_id: UUID
     ply_path: str
     camera_path: str
+    input_kind: Literal["reference_photos", "generated_video"] = "generated_video"
+    input_count: int = 0
+
+
+class CameraMatrix(BaseModel):
+    camera_id: int
+    matrix: list[list[float]]
+
+
+class CameraCalibration(BaseModel):
+    num_cameras: int
+    extrinsics: list[CameraMatrix]
+    intrinsics: list[CameraMatrix]
+    image_width: int | None = Field(default=None, gt=0)
+    image_height: int | None = Field(default=None, gt=0)

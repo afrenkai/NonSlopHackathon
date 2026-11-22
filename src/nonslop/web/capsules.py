@@ -181,7 +181,7 @@ def install_capsule_routes(
                 )
             use_ai = form.get("use_ai") == "true"
         await to_thread.run_sync(service.append, entry, media_bytes, use_ai)
-        return timeline(request, capsule, "timeline")
+        return await to_thread.run_sync(timeline, request, capsule, "timeline")
 
     @application.get("/capsules/{capsule_id}/anchor")
     def capsule_anchor(request: Request, capsule_id: UUID) -> FileResponse:

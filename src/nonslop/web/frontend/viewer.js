@@ -21,6 +21,47 @@ export function cameraWorldMatrix(matrix) {
   return cameraToWorld.multiply(new THREE.Matrix4().makeRotationX(Math.PI));
 }
 
+export function applyCameraCalibration(camera, calibration, cameraId, width, height) {
+  const intrinsics = calibration.intrinsics?.find((entry) => entry.camera_id === cameraId)?.matrix;
+  if (
+    !Array.isArray(intrinsics) ||
+    intrinsics.length !== 3 ||
+    intrinsics.some(
+      (row) => !Array.isArray(row) || row.length !== 3 || row.some((value) => !Number.isFinite(value)),
+    )
+  ) {
+    throw new Error("The reconstruction contains invalid camera calibration.");
+  }
+  const focalX = intrinsics[0][0];
+  const focalY = intrinsics[1][1];
+  const centerX = intrinsics[0][2];
+  const centerY = intrinsics[1][2];
+  const imageWidth = calibration.image_width ?? centerX * 2;
+  const imageHeight = calibration.image_height ?? centerY * 2;
+  if (
+    focalX <= 0 || focalY <= 0 ||
+    !Number.isFinite(imageWidth) || imageWidth <= 0 ||
+    !Number.isFinite(imageHeight) || imageHeight <= 0
+  ) {
+    throw new Error("The reconstruction contains invalid camera calibration.");
+  }
+  const scale = Math.min(width / imageWidth, height / imageHeight);
+  const principalX = centerX * scale + (width - imageWidth * scale) / 2;
+  const principalY = centerY * scale + (height - imageHeight * scale) / 2;
+  camera.aspect = width / height;
+  camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(height / (2 * focalY * scale)));
+  camera.projectionMatrix.makePerspective(
+    -principalX * camera.near / (focalX * scale),
+    (width - principalX) * camera.near / (focalX * scale),
+    principalY * camera.near / (focalY * scale),
+    -(height - principalY) * camera.near / (focalY * scale),
+    camera.near,
+    camera.far,
+  );
+  camera.projectionMatrix.elements[4] = -2 * intrinsics[0][1] * scale / width;
+  camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+}
+
 export function cameraPath(cameraMatrices) {
   const positions = cameraMatrices.map((matrix) =>
     new THREE.Vector3().setFromMatrixPosition(matrix),
@@ -97,7 +138,9 @@ async function initializeViewer(root) {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x080d12);
-    const camera = new THREE.PerspectiveCamera(60, 1, 0.01, 1000);
+    const camera = new THREE.PerspectiveCamera();
+    camera.near = 0.01;
+    camera.far = 1000;
     const initialMatrix = cameraMatrices[0];
 
     function resetView() {
@@ -110,7 +153,7 @@ async function initializeViewer(root) {
     resetView();
     renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    scene.add(new SparkRenderer({ renderer, lodSplatCount: 150000 }));
+    scene.add(new SparkRenderer({ renderer, preBlurAmount: 0.3, blurAmount: 0 }));
     const movement = new FpsMovement({ moveSpeed: 0.2 });
     const pointerControls = new PointerControls({ canvas });
     const path = cameraPath(cameraMatrices);
@@ -123,8 +166,7 @@ async function initializeViewer(root) {
       const width = Math.max(canvas.clientWidth, 1);
       const height = Math.max(canvas.clientHeight, 1);
       renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
+      applyCameraCalibration(camera, cameraData, cameraData.extrinsics[0].camera_id, width, height);
     }
 
     resizeObserver = new ResizeObserver(resize);

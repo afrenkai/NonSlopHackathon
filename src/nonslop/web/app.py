@@ -1,9 +1,10 @@
 from collections.abc import Callable
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID
 
 from anyio import to_thread
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -14,8 +15,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import Response
 
 from nonslop.capsules.protocols import ArchivistGateway
-from nonslop.capsules.service import CapsuleService
-from nonslop.capsules.store import CapsuleStore
 from nonslop.data.jobs import JobStore
 from nonslop.data.videos import ArtifactStore
 from nonslop.generation.protocols import GenerationGateway
@@ -24,7 +23,6 @@ from nonslop.generation.service import QueueFullError, SceneService
 from nonslop.reconstruction.protocols import ReconstructionGateway
 from nonslop.reconstruction.service import ReconstructionService
 from nonslop.web.body_limit import BodyLimitMiddleware
-from nonslop.web.capsules import install_capsule_routes
 from nonslop.web.references import read_references
 from nonslop.web.schemas import WebSettings
 from nonslop.web.security import (
@@ -45,8 +43,13 @@ def create_app(
     commit_data: Callable[[], None],
     reload_outputs: Callable[[], None],
     reload_worlds: Callable[[], None],
+    *,
+    scene_service: type[SceneService] = SceneService,
+    download_video: Callable[[Path, Path], None] | None = None,
+    download_world: Callable[[Path, Path], None] | None = None,
 ) -> FastAPI:
     application = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    application.state.local_preview = False
     application.add_middleware(
         SessionMiddleware,
         secret_key=settings.session_secret.get_secret_value(),
@@ -64,13 +67,13 @@ def create_app(
         "/static", StaticFiles(directory=assets / "static"), name="static"
     )
     store = JobStore(settings.data_root, commit_data)
-    capsules = CapsuleStore(store)
-    capsule_service = CapsuleService(capsules, archivist_gateway)
-    service = SceneService(store, gateway)
-    videos = ArtifactStore(settings.output_root, settings.serving_root, reload_outputs)
+    service = scene_service(store, gateway)
+    videos = ArtifactStore(
+        settings.output_root, settings.serving_root, reload_outputs, download_video
+    )
     worlds = ReconstructionService(store, world_gateway)
     world_artifacts = ArtifactStore(
-        settings.world_root, settings.world_serving_root, reload_worlds
+        settings.world_root, settings.world_serving_root, reload_worlds, download_world
     )
 
     @application.middleware("http")
@@ -121,6 +124,11 @@ def create_app(
         ) as form:
             if browser:
                 require_csrf(request, str(form.get("csrf", "")))
+            references = await read_references(form, settings)
+            if browser and not references.images:
+                raise HTTPException(
+                    422, "Add at least one photograph to create a field note."
+                )
             source_text = str(form.get("source_text", ""))
             source_file = form.get("source_file")
             if isinstance(source_file, UploadFile) and source_file.filename:
@@ -130,7 +138,7 @@ def create_app(
                 scene = SceneRequest(
                     location=str(form.get("location", "")),
                     year=int(str(form.get("year", "0"))),
-                    description=str(form.get("description", "")),
+                    description=str(form.get("description", "")).strip(),
                     source_text=source_text,
                     use_web=str(form.get("use_web", "" if browser else "true")).lower()
                     in ("true", "on", "1"),
@@ -139,14 +147,19 @@ def create_app(
             except (ValueError, ValidationError) as error:
                 raise HTTPException(
                     422,
-                    "Add a location, a valid year, and a description. Keep context under 20,000 characters.",
+                    "Add a place and a valid year. Keep notes under 4,000 characters and source context under 20,000 characters.",
                 ) from error
-            references = await read_references(form, settings)
+            if not references.images and not scene.description:
+                raise HTTPException(422, "Add a photograph or a scene description.")
         for recent in store.recent():
             await to_thread.run_sync(service.refresh, recent)
         try:
             return await service.submit(
-                scene, references.images, owner_id, references.filenames
+                scene,
+                references.images,
+                owner_id,
+                references.filenames,
+                references.metadata,
             )
         except QueueFullError as error:
             raise HTTPException(409, str(error)) from error
@@ -164,7 +177,7 @@ def create_app(
         return FileResponse(
             path,
             media_type="video/mp4",
-            filename=f"street-{job.job_id}.mp4",
+            filename=f"memory-{job.job_id}.mp4",
             content_disposition_type="inline",
         )
 
@@ -174,27 +187,51 @@ def create_app(
 
     @application.get("/", response_class=HTMLResponse)
     def home(request: Request) -> Response:
-        jobs = [
-            worlds.refresh(service.refresh(job))
-            for job in store.recent(owner_id=browser_workspace(request))
-        ]
+        return templates.TemplateResponse(request=request, name="index.html")
+
+    @application.get("/dashboard", response_class=HTMLResponse)
+    def dashboard(
+        request: Request,
+        box_page: Annotated[int, Query(ge=1, le=2**31 - 1)] = 1,
+    ) -> Response:
+        owner_id = browser_workspace(request)
+        page_jobs, more_jobs = store.page(box_page, owner_id)
+        jobs = [worlds.refresh(service.refresh(job)) for job in page_jobs]
         return templates.TemplateResponse(
             request=request,
-            name="index.html",
-            context={"csrf": csrf_token(request), "jobs": jobs},
+            name="dashboard.html",
+            context={
+                "csrf": csrf_token(request),
+                "jobs": jobs,
+                "box_page": box_page,
+                "more_jobs": more_jobs,
+            },
         )
+
+    @application.get("/visits/new", response_class=HTMLResponse)
+    def new_visit(request: Request) -> HTMLResponse:
+        return templates.TemplateResponse(
+            request=request,
+            name="new_visit.html",
+            context={"csrf": csrf_token(request)},
+        )
+
+    @application.post("/visits/new", response_class=HTMLResponse)
+    async def save_new_visit(request: Request) -> Response:
+        job = await submit_form(request, browser=True)
+        location = f"/visits/{job.job_id}"
+        if request.headers.get("HX-Request") == "true":
+            return Response(headers={"HX-Redirect": location})
+        return RedirectResponse(location, status_code=303)
 
     @application.get("/visits/{job_id}", response_class=HTMLResponse)
     def visit_page(request: Request, job_id: UUID) -> HTMLResponse:
         return templates.TemplateResponse(
             request=request,
-            name="index.html",
+            name="visit.html",
             context={
                 "csrf": csrf_token(request),
-                "jobs": [find_job(job_id, browser_workspace(request))],
-                "linked_memories": capsules.linked_entries(
-                    job_id, browser_workspace(request)
-                ),
+                "job": find_job(job_id, browser_workspace(request)),
             },
         )
 
@@ -255,9 +292,6 @@ def create_app(
         return video_response(job_id)
 
     install_world_routes(
-        application, settings, worlds, world_artifacts, templates, find_job, capsules
-    )
-    install_capsule_routes(
-        application, settings, capsules, capsule_service, store, templates
+        application, settings, worlds, world_artifacts, templates, find_job
     )
     return application

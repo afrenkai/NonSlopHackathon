@@ -1,6 +1,11 @@
-<article class="panel visit-card" data-capsule-id="{{ capsule.capsule_id }}">
-  {% if capsule.anchor_filename %}<img class="capsule-anchor" src="/capsules/{{ capsule.capsule_id }}/anchor" alt="Your photograph of {{ capsule.title }}" loading="lazy">{% endif %}
-  <p class="eyebrow">Started {{ capsule.created_at.strftime('%d %b %Y') }}</p><h3>{{ capsule.title }}</h3>
-  <p class="visit-description">{{ capsule.description }}</p>
-  <a class="button button-secondary" href="/capsules/{{ capsule.capsule_id }}">Open this capsule</a>
+<article class="ks-tag" data-capsule-id="{{ capsule.capsule_id }}">
+  {% if capsule.anchor_filename %}
+    <img class="ks-tag-photo" src="/capsules/{{ capsule.capsule_id }}/anchor" alt="Photograph of {{ capsule.title }}" loading="lazy">
+  {% endif %}
+  <div class="ks-tag-label">
+    <p class="ks-meta">Started <time datetime="{{ capsule.created_at.date() }}">{{ capsule.created_at.strftime('%d %b %Y') }}</time></p>
+    <h3>{{ capsule.title }}</h3>
+    {% if capsule.description %}<p class="ks-tag-note">{{ capsule.description }}</p>{% endif %}
+    <a class="ks-link" href="/capsules/{{ capsule.capsule_id }}" aria-label="Open this capsule: {{ capsule.title }}">Open this capsule <span aria-hidden="true">→</span></a>
+  </div>
 </article>

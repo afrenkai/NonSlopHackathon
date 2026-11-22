@@ -24,20 +24,27 @@ def plain_text(value: str | list[str]) -> str:
     return " ".join(" ".join(parser.parts).split())
 
 
-def street_excerpt(text: str, street: str) -> str:
-    position = text.casefold().find(street.casefold())
+def location_excerpt(text: str, location: str) -> str:
+    position = text.casefold().find(
+        location.split(",", maxsplit=1)[0].strip().casefold()
+    )
     start = max(0, position - 200)
     return text[start : start + 1000]
 
 
 async def archive_search(
-    client: httpx.AsyncClient, street: str, year_query: str
+    client: httpx.AsyncClient, location: str, year_query: str
 ) -> list[SourceEvidence]:
-    quoted_street = street.replace("\\", "\\\\").replace('"', '\\"')
+    location_terms = [
+        term.strip().replace("\\", "\\\\").replace('"', '\\"')
+        for term in location.split(",")
+        if term.strip()
+    ]
+    location_query = " AND ".join(f'"{term}"' for term in location_terms)
     response = await client.get(
         "https://archive.org/advancedsearch.php",
         params=[
-            ("q", f'"{quoted_street}" AND {year_query}'),
+            ("q", f"({location_query}) AND {year_query}"),
             ("output", "json"),
             ("rows", "3"),
             ("fl[]", "identifier"),
@@ -52,7 +59,7 @@ async def archive_search(
         SourceEvidence(
             title=plain_text(item.title),
             url=f"https://archive.org/details/{quote(item.identifier, safe='')}",
-            excerpt=street_excerpt(plain_text(item.description), street),
+            excerpt=location_excerpt(plain_text(item.description), location),
             kind="Archive period evidence; review relevance",
             date=item.date,
         )
@@ -64,7 +71,6 @@ async def retrieve_sources(scene: SceneRequest) -> GroundingResult:
     if not scene.use_web:
         return GroundingResult()
     grounding = GroundingResult()
-    street = scene.location.split(",", maxsplit=1)[0].strip()
     try:
         async with httpx.AsyncClient(
             timeout=15,
@@ -72,11 +78,13 @@ async def retrieve_sources(scene: SceneRequest) -> GroundingResult:
             headers={"User-Agent": "AgainHere/0.1 (historical scene research)"},
         ) as client:
             grounding.sources = await archive_search(
-                client, street, f"year:{scene.year}"
+                client, scene.location, f"year:{scene.year}"
             )
             if not grounding.sources:
                 grounding.sources = await archive_search(
-                    client, street, f"year:[{scene.year - 10} TO {scene.year + 10}]"
+                    client,
+                    scene.location,
+                    f"year:[{scene.year - 10} TO {scene.year + 10}]",
                 )
                 if grounding.sources:
                     grounding.notices.append(
