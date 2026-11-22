@@ -6,7 +6,7 @@ from nonslop.runtime.access import configured_access
 from nonslop.runtime.web_image import build_web_image
 
 app = modal.App("nonslop-streets")
-image = build_web_image()
+image = build_web_image().env({"WORLD_GENERATION_ENABLED": "1"})
 access = configured_access()
 data_volume = modal.Volume.from_name(
     "nonslop-scenes", create_if_missing=True, version=2

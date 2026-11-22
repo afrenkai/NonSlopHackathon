@@ -92,4 +92,12 @@ def build_world_generation_image(settings: WorldGenerationSettings) -> modal.Ima
             "uv pip install --system --no-build-isolation flash-attn",
         )
         .workdir(worldgen_directory)
+        .run_commands("rm -rf /cache")
+        .uv_pip_install("rtree")
+        .add_local_file(
+            Path(__file__).with_name("worldgen-navigation.patch"),
+            "/opt/worldgen-navigation.patch",
+            copy=True,
+        )
+        .run_commands(f"git -C {source_directory} apply /opt/worldgen-navigation.patch")
     )

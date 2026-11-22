@@ -2,13 +2,13 @@
 
 A prototype for revisiting remembered scenes, indoors or outdoors, from one or
 a few photographs, descriptions, scans, and archive material. FastAPI serves a
-small HTMX interface; pi-H3 generates a 5.2-second visit with audio on Modal.
+small HTMX interface; pi-H3 generates an approximately 8.7-second visit with audio on Modal.
 WorldMirror reconstructs a Gaussian-splat space from supplied photographs and H3 video views,
 or from generated video for legacy text-only API requests. Field notes retain
 photographs, optional remembered details, source context, and generated visits.
 
 The implementation roadmap is maintained in [todo.md](todo.md): video → 3D
-space with HY-WorldMirror, with an isolated SGLang-Omni service.
+space with HY-WorldMirror or native HY-World generation, with an isolated SGLang-Omni service.
 
 Live website: https://afrenkai--nonslop-streets-web.us-east.modal.run
 
@@ -39,6 +39,20 @@ uv run modal run -m nonslop.runtime.inference_app --action download
 uv run nonslop deploy
 ```
 
+For the optional native world-generation worker, download the ModelScope SAM3
+snapshot and prefetch the remaining native models, then deploy its separate app:
+
+```bash
+uv run -m modal run -m nonslop.runtime.world_assets_app
+uv run -m modal run -m nonslop.runtime.world_assets_app --native
+uv run -m modal deploy -m nonslop.runtime.world_generation_app
+```
+
+SAM3 is downloaded from ModelScope's `facebook/sam3` mirror into
+`/models/worldgen/sam3`. Native scripts load that local snapshot through
+`SAM3_MODEL_PATH`. Enable the web action with `WORLD_GENERATION_ENABLED=1` only
+after deploying `nonslop-world-generation`.
+
 Use Python 3.13 for the launcher, web, and pi-H3 containers. ML packages and model
 weights stay on Modal. The optional `checks` dependency group contains CPU web
 and test packages for local validation.
@@ -52,8 +66,10 @@ The processor is assembled explicitly from the original cached component files.
 The H200 worker quantizes frozen transformer and text-encoder linear layers to
 FP8 W8A8. Unsupported dimensions and excluded output/adapter layers retain their
 original precision. Transformer blocks use TorchInductor; sparse attention uses
-Sol and dense attention uses PyTorch SDPA. Output is 768 × 448, 124 frames at
-24 fps, with the four-step DWD adapter. First use includes model loading and
+Sol and dense attention uses PyTorch SDPA. Output follows the opening photograph's
+aspect ratio, rounded to the model's 64-pixel alignment at approximately the
+768 × 448 pixel budget; text-only API requests retain 768 × 448. Visits use
+209 frames at 24 fps, approximately 8.7 seconds, with the four-step DWD adapter. First use includes model loading and
 kernel compilation.
 
 | Modal app | Responsibility | Runtime |
@@ -61,9 +77,10 @@ kernel compilation.
 | `nonslop-streets` | FastAPI, HTMX, DuckDB, OCR, CPU preparation | Python 3.13, CPU |
 | `nonslop-video` | pi-H3 FP8 video and audio generation | Python 3.13.12, CUDA 13, H200 |
 | `nonslop-world` | HY-WorldMirror video reconstruction | Python 3.12, CUDA 13, H100 |
+| `nonslop-world-generation` | Native HY-Pano, WorldNav, WorldStereo, and Gaussian training | Python 3.11, CUDA 12.8, H200 |
 | `nonslop-inference` | SGLang-Omni FP8 image/video understanding and transcription | Python 3.12, CUDA 13, H100 |
 
-Model workers are private Modal classes. Omni's HTTP server listens on localhost
+Model workers are private Modal functions and classes. Omni's HTTP server listens on localhost
 inside its worker. Its current Python support excludes 3.13; WorldMirror uses
 3.12 to match the official CUDA 13 FlashAttention wheel. Each stack has isolated
 compiler cache paths within the retained `/cache` volume.
@@ -106,13 +123,13 @@ worker is a separate private Modal app, `nonslop-video`.
 ## Evidence and uploads
 
 Start a browser field note with at least one PNG, JPEG, or WebP photograph and
-add a place or scene and year. Written notes are optional; the photographs anchor
+add a place or scene. Written notes and the year are optional; the photographs anchor
 the first frame and the reconstructed space. Optional UTF-8 text/Markdown or an image scan
 supplies historical context; scans use English Tesseract OCR. Files are limited
-to 10 MB each and images to 20 megapixels.
+to 25 MB each and images to 20 megapixels.
 
 The HTMX form also accepts an image folder or multiple selected photographs.
-Use up to eight references, 10 MB per file, and 40 MB total. References are
+Use up to eight references, 25 MB per file, and 64 MB total. References are
 ordered by filename; an explicit opening photograph takes precedence. All
 references are retained at up to 2048 pixels on their longest edge and inspected
 by Omni to inform the prompt, including single-photo submissions. pi-H3 uses
@@ -166,6 +183,17 @@ assets are invalidated when a rebuild starts. Old photo-only spaces remain viewa
 rebuild them to include H3 views. Synthetic views suggest geometry but are not
 additional observations of the real scene.
 
+The optional **Complete a world from this video** action uses
+`nonslop-world-generation`. Omni reads the original photographs and sampled H3
+video views together with the scene context and evidence. A video-frame anchor
+and those observations condition HY-Pano's 360° panorama, followed by WorldNav
+trajectory planning, WorldStereo view generation, and native Gaussian training.
+The panorama and WorldStereo views supply the geometry training images; the
+full H3 clip provides context rather than a measured multi-view capture.
+Unseen completion is inferred. Completion and native rebuilds create independent
+copy visits, preserving the original video and splats. The existing WorldMirror
+reconstruction action remains available. Native GPU end-to-end validation is pending.
+
 The pinned WorldMirror export patch preserves predicted opacity during voxel
 merging and writes standard PLY opacity logits. Scale-outlier filtering remains
 enabled to remove excessively large splats. Edge filtering remains
@@ -173,7 +201,9 @@ enabled with less aggressive normal and depth thresholds. These changes retain
 more observed surfaces; larger assets use more download bandwidth and GPU memory.
 
 The Spark/three.js viewer supports keyboard, pointer, and touch movement and
-shows input camera positions. Projection uses WorldMirror's estimated focal lengths,
+shows input camera positions. WorldMirror coverage images and a distant sky
+backdrop fill gaps around supported views; guided camera playback stays near
+those views. Projection uses WorldMirror's estimated focal lengths,
 principal point, and processed image dimensions rather than a fixed field of view.
 Older assets without image dimensions assume a centered principal point. Geometry
 is inferred and unscaled; single-photo depth and unseen surfaces remain uncertain.
@@ -200,7 +230,7 @@ changes; the served bundle is included in the repository.
 
 | Modal volume | Mount | Contents |
 | --- | --- | --- |
-| `nonslop-models` | `/models` | pi-H3 snapshots, WorldMirror, and Omni FP8 weights |
+| `nonslop-models` | `/models` | pi-H3, WorldMirror, Omni FP8, native world models, and ModelScope SAM3 |
 | `nonslop-kernel-cache` | `/cache` | Inductor, Triton, CUDA JIT, CuTe, extension and LakonLab caches |
 | `nonslop-scenes` | `/data` | DuckDB scene history and opening photographs |
 | `nonslop-videos` | `/outputs` | Generated MP4 files |

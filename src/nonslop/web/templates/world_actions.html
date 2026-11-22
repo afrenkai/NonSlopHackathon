@@ -2,11 +2,14 @@
 <div class="world-actions">
   {% if job.world and job.world.status == 'complete' %}
   <a class="button button-primary" href="/jobs/{{ job.job_id }}/world">Step into this space</a>
+  {% if job.world.result.pipeline_kind != 'hy_world_generation' or request.app.state.world_generation_enabled %}
   <form action="/jobs/{{ job.job_id }}/world" method="post" hx-post="/jobs/{{ job.job_id }}/world" hx-target="#job-{{ job.job_id }}" hx-swap="outerHTML" hx-disabled-elt="find button">
     <input type="hidden" name="csrf" value="{{ csrf }}">
     {% if job.world.result.pipeline_kind == 'hy_world_generation' %}<input type="hidden" name="complete_world" value="true">{% else %}<input type="hidden" name="rebuild" value="true">{% endif %}
     <button class="button button-secondary" type="submit">Rebuild this space</button>
   </form>
+  {% if job.world.result.pipeline_kind == 'hy_world_generation' %}<p class="field-help">Rebuilding creates a separate visit and preserves this video and 3D build.</p>{% endif %}
+  {% endif %}
   {% elif job.world and job.world.status == 'running' %}
   <p role="status">{% if job.world.pipeline_kind == 'hy_world_generation' %}Completing the world from your video and supporting context. This includes a panorama, new views, and 3D training, and can take longer than reconstruction.{% else %}Checking your text and evidence against the video views, then reconstructing a 3D space from your photographs and generated video views.{% endif %} This card updates automatically.</p>
   {% else %}
@@ -16,7 +19,7 @@
     <button class="button button-secondary" type="submit">Build a 3D space</button>
   </form>
   {% endif %}
-  {% if request.app.state.world_generation_enabled and (not job.world or job.world.status != 'running') %}
+  {% if request.app.state.world_generation_enabled and (not job.world or job.world.status != 'running') and not (job.world and job.world.status == 'complete' and job.world.result and job.world.result.pipeline_kind == 'hy_world_generation') %}
   <form action="/jobs/{{ job.job_id }}/world" method="post" hx-post="/jobs/{{ job.job_id }}/world" hx-disabled-elt="find button">
     <input type="hidden" name="csrf" value="{{ csrf }}">
     <input type="hidden" name="complete_world" value="true">
@@ -25,6 +28,6 @@
   <p class="field-help">Creates a separate visit and preserves this video and 3D build. Unseen areas are generated interpretations.</p>
   {% endif %}
   {% if job.world and job.world.source_job_id %}<a class="text-link" href="/visits/{{ job.world.source_job_id }}">Original visit ↗</a>{% endif %}
-  <p class="field-help">{% if job.world and job.world.status == 'complete' and job.world.result %}{% if job.world.result.input_kind == 'photos_and_generated_video' %}{{ job.world.result.photo_count }} {% if job.world.result.photo_count == 1 %}photograph{% else %}photographs{% endif %} + {{ job.world.result.generated_frame_count }} H3 video views used for geometry.{% elif job.world.result.input_kind == 'reference_photos' %}This earlier build used photographs only. Rebuild to include H3 video views.{% else %}Geometry inferred from generated video.{% endif %}{% elif job.has_reference %}Your photographs and H3 video views jointly guide reconstruction.{% else %}Geometry inferred from generated video.{% endif %} Unseen surfaces remain uncertain.</p>
+  <p class="field-help">{% if job.world and job.world.status == 'complete' and job.world.result %}{% if job.world.result.pipeline_kind == 'hy_world_generation' %}A video-frame anchor, photograph and video observations, and supporting evidence guide generated world completion. Panorama and new views supply the geometry training images.{% elif job.world.result.input_kind == 'photos_and_generated_video' %}{{ job.world.result.photo_count }} {% if job.world.result.photo_count == 1 %}photograph{% else %}photographs{% endif %} + {{ job.world.result.generated_frame_count }} H3 video views used for geometry.{% elif job.world.result.input_kind == 'reference_photos' %}This earlier build used photographs only. Rebuild to include H3 video views.{% else %}Geometry inferred from generated video.{% endif %}{% elif job.world and job.world.pipeline_kind == 'hy_world_generation' %}A frame from your video and supporting context guide generated world completion.{% elif job.has_reference %}Your photographs and H3 video views jointly guide reconstruction.{% else %}Geometry inferred from generated video.{% endif %} Unseen surfaces remain uncertain.</p>
 </div>
 {% endif %}

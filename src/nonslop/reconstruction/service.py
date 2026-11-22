@@ -81,8 +81,16 @@ class ReconstructionService:
                 self.logger.exception(
                     "Could not start reconstruction %s", current.job_id
                 )
+                if complete_world and current.job_id == job.job_id:
+                    raise
                 current.world = ReconstructionRecord(
                     status="failed",
+                    pipeline_kind=(
+                        "hy_world_generation"
+                        if complete_world
+                        else "worldmirror_reconstruction"
+                    ),
+                    source_job_id=job.job_id if complete_world else None,
                     error="The 3D reconstruction could not start. Please try again.",
                 )
             self.store.save(current)

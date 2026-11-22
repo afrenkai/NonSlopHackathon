@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from subprocess import run
 from tempfile import TemporaryDirectory
@@ -103,7 +104,11 @@ def prepare_world_generation(
     gpu="H200",
     cpu=16,
     memory=131072,
-    volumes={"/models": model_volume, "/worlds": world_volume, "/cache": cache_volume},
+    volumes={
+        "/models": model_volume,
+        "/worlds": world_volume,
+        "/runtime-cache": cache_volume,
+    },
     timeout=21600,
     max_containers=1,
 )
@@ -112,8 +117,24 @@ def generate_world(
 ) -> str:
     identifier = UUID(job_id)
     context = ReconstructionContext.model_validate_json(context_json)
+    cache_root = Path("/runtime-cache/worldgen")
+    os.environ.update(
+        {
+            "XDG_CACHE_HOME": str(cache_root),
+            "TORCH_HOME": str(cache_root / "torch"),
+            "TORCH_EXTENSIONS_DIR": str(cache_root / "torch_extensions"),
+            "TORCHINDUCTOR_CACHE_DIR": str(cache_root / "torchinductor"),
+            "TRITON_CACHE_DIR": str(cache_root / "triton"),
+            "NUMBA_CACHE_DIR": str(cache_root / "numba"),
+            "UV_CACHE_DIR": str(cache_root / "uv"),
+        }
+    )
     model_volume.reload()
     world_volume.reload()
+    legacy_cache = Path.home() / ".cache" / "huggingface" / "hub"
+    legacy_cache.parent.mkdir(parents=True, exist_ok=True)
+    if not legacy_cache.exists():
+        legacy_cache.symlink_to(Path("/models/hf/hub"), target_is_directory=True)
     directory = Path("/worlds") / str(identifier)
     directory.mkdir(parents=True, exist_ok=True)
     anchor = directory / "worldgen-video-anchor.png"
@@ -127,7 +148,9 @@ def generate_world(
         f"Remembered details: {context.scene.description[:800]}.\n"
         f"Supporting reference text: {context.scene.source_text[:1200]}\n"
         "Retrieved evidence: "
-        + " ".join(f"{source.title}: {source.excerpt[:200]}" for source in context.sources[:6])
+        + " ".join(
+            f"{source.title}: {source.excerpt[:200]}" for source in context.sources[:6]
+        )
     )
     (directory / "worldgen-context.json").write_text(context.model_dump_json())
     (directory / "worldgen-video-observations.txt").write_text(video_observations)

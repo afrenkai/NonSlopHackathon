@@ -15,6 +15,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import Response
 
 from nonslop.capsules.protocols import ArchivistGateway
+from nonslop.capsules.service import CapsuleService
+from nonslop.capsules.store import CapsuleStore
 from nonslop.data.jobs import JobStore
 from nonslop.data.videos import ArtifactStore
 from nonslop.generation.protocols import GenerationGateway
@@ -24,6 +26,7 @@ from nonslop.grounding.research import research_packet_sources
 from nonslop.reconstruction.protocols import ReconstructionGateway
 from nonslop.reconstruction.service import ReconstructionService
 from nonslop.web.body_limit import BodyLimitMiddleware
+from nonslop.web.capsules import install_capsule_routes
 from nonslop.web.demo_visits import (
     DEMO_VISITS,
     bundled_observations,
@@ -75,6 +78,8 @@ def create_app(
         "/static", StaticFiles(directory=assets / "static"), name="static"
     )
     store = JobStore(settings.data_root, commit_data)
+    capsules = CapsuleStore(store)
+    capsule_service = CapsuleService(capsules, archivist_gateway)
     service = scene_service(store, gateway)
     videos = ArtifactStore(
         settings.output_root, settings.serving_root, reload_outputs, download_video
@@ -237,9 +242,11 @@ def create_app(
     def dashboard(
         request: Request,
         box_page: Annotated[int, Query(ge=1, le=2**31 - 1)] = 1,
+        capsule_page: Annotated[int, Query(ge=1, le=2**31 - 1)] = 1,
     ) -> Response:
         owner_id = browser_workspace(request)
         page_jobs, more_jobs = store.page(box_page, owner_id)
+        page_capsules, more_capsules = capsules.page(capsule_page, owner_id)
         jobs = [worlds.refresh(service.refresh(job)) for job in page_jobs]
         return templates.TemplateResponse(
             request=request,
@@ -249,6 +256,9 @@ def create_app(
                 "jobs": jobs,
                 "box_page": box_page,
                 "more_jobs": more_jobs,
+                "capsules": page_capsules,
+                "capsule_page": capsule_page,
+                "more_capsules": more_capsules,
                 "demo_visits": DEMO_VISITS,
             },
         )
@@ -273,6 +283,9 @@ def create_app(
             context={
                 "csrf": csrf_token(request),
                 "job": find_job(job_id, browser_workspace(request)),
+                "linked_memories": capsules.linked_entries(
+                    job_id, browser_workspace(request)
+                ),
             },
         )
 
@@ -334,5 +347,8 @@ def create_app(
 
     install_world_routes(
         application, settings, worlds, world_artifacts, templates, find_job
+    )
+    install_capsule_routes(
+        application, settings, capsules, capsule_service, store, templates
     )
     return application

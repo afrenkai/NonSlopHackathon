@@ -61,6 +61,7 @@ class InferenceSettings:
     server_url: str = "http://127.0.0.1:8000"
     startup_timeout: int = 1800
     request_timeout: int = 600
+    scaledown_window: int = 900
     context_length: int = 8192
     max_tokens: int = 1024
 

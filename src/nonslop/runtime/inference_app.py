@@ -124,7 +124,7 @@ def inspect_image() -> dict[str, str]:
     memory=98304,
     volumes={"/models": model_volume, "/cache": cache_volume},
     timeout=3600,
-    scaledown_window=60,
+    scaledown_window=settings.scaledown_window,
     max_containers=1,
 )
 @modal.concurrent(max_inputs=1)

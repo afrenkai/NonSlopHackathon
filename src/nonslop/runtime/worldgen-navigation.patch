@@ -1,0 +1,8 @@
+diff --git a/hyworld2/worldgen/traj_generate.py b/hyworld2/worldgen/traj_generate.py
+--- a/hyworld2/worldgen/traj_generate.py
++++ b/hyworld2/worldgen/traj_generate.py
+@@ -856,3 +856,4 @@
+             except Exception as e:
+                 rank0_log(f"  Navmesh Error: {e}", "ERROR")
++                raise
+ 
