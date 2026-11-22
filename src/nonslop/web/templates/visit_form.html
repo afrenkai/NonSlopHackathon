@@ -1,25 +1,39 @@
 <form action="/visits/new" method="post" enctype="multipart/form-data" class="form-stack" hx-post="/visits/new" hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
   <input type="hidden" name="csrf" value="{{ csrf }}">
+  <fieldset class="visit-presets">
+    <legend>Choose a visit</legend>
+    <label class="checkbox-field"><input type="radio" name="visit_preset" value="" checked> Your own scene</label>
+    {% for key, demo in demo_visits.items() %}
+    <label class="checkbox-field">
+      <input type="radio" name="visit_preset" value="{{ key }}" data-location="{{ demo.location }}" data-year="{{ demo.year }}" data-photo="/static/{{ demo.photo }}">
+      {{ demo.location }}, {{ demo.year }}
+    </label>
+    {% endfor %}
+  </fieldset>
+  <p class="field-help public-notice"><strong>Your collection.</strong> Your uploads and memories are available in this browser’s workspace.</p>
+  <div class="field">
+    <div id="reference-upload" class="field upload-field">
+      <label for="reference-image">Photograph <span class="optional">Optional</span></label>
+      <input id="reference-image" name="reference_image" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="reference-help">
+      <p class="field-help" id="reference-help">Upload a PNG, JPEG, or WebP, or use the folder and multi-image pickers below. If you skip the photo, add a description.</p>
+    </div>
+    <img id="reference-preview" class="reference-preview" alt="Photograph preview" hidden>
+  </div>
   <div class="place-fields">
     <div class="field">
-      <label for="location">Place or street</label>
-      <input id="location" name="location" type="text" placeholder="Street, town, country" minlength="3" maxlength="250" required autocomplete="off">
+      <label for="location">Place or scene</label>
+      <input id="location" name="location" type="text" placeholder="Grandma’s kitchen, a favorite park, a family gathering…" minlength="3" maxlength="250" autocomplete="off">
     </div>
     <div class="field year-field">
       <label for="year">Year</label>
-      <input id="year" name="year" type="number" min="1800" max="2026" placeholder="2006" inputmode="numeric" required>
+      <input id="year" name="year" type="number" min="1800" max="2026" placeholder="2006" inputmode="numeric">
     </div>
   </div>
   <div class="field">
-    <label for="description">What would you like to revisit?</label>
-    <textarea id="description" name="description" rows="4" minlength="5" maxlength="4000" required placeholder="A slow walk past the corner shop, late afternoon light on the brickwork, a bus passing in the distance…"></textarea>
+    <label for="description">What do you remember about the scene?</label>
+    <textarea id="description" name="description" rows="4" maxlength="4000" placeholder="Sounds, names, colors, or details just outside the frame…"></textarea>
   </div>
-  <div class="field upload-field">
-    <label for="reference-image">Opening photograph <span class="optional">Optional</span></label>
-    <input id="reference-image" name="reference_image" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="reference-help">
-    <p class="field-help" id="reference-help">Use a street photograph to anchor the first frame. PNG, JPEG, or WebP.</p>
-  </div>
-  <details class="source-details">
+  <details id="reference-options" class="source-details">
     <summary>Add multiple reference images <span class="optional">Optional</span></summary>
     <div class="details-content form-stack">
       <div class="field upload-field">
@@ -30,7 +44,7 @@
         <label for="reference-images">Or select multiple images</label>
         <input id="reference-images" name="reference_images" type="file" accept="image/png,image/jpeg,image/webp" multiple data-reference-picker>
       </div>
-      <p class="field-help">Up to 8 images total, 10 MB each, 40 MB per upload. Folder images are ordered by filename. The opening photograph comes first when supplied. All images inform the prompt; pi-H3 uses the first and last as frame anchors.</p>
+      <p class="field-help">Up to 8 images total, 10 MB each, 40 MB per upload. Choose overlapping views of the same scene for a more grounded 3D space. Folder images are ordered by filename; the opening photograph comes first when supplied. Additional photographs provide supporting views.</p>
       <p id="reference-selection" class="field-help" role="status" aria-live="polite"></p>
     </div>
   </details>
@@ -46,11 +60,27 @@
         <input id="source-file" name="source_file" type="file" accept=".txt,.md,image/png,image/jpeg,image/webp" aria-describedby="source-help">
         <p class="field-help" id="source-help">A text file or a newspaper image scan. Text is extracted from image scans.</p>
       </div>
+      <div class="field upload-field">
+        <label for="research-file">Saved research packet</label>
+        <input id="research-file" name="research_file" type="file" accept=".json,application/json" aria-describedby="research-help">
+        <p class="field-help" id="research-help">Optional: a scene_scout manifest or another evidence JSON with a list of items. Its records join the research evidence shown with the visit.</p>
+      </div>
     </div>
   </details>
   <label class="checkbox-field" for="use-web">
     <input id="use-web" name="use_web" type="checkbox" value="true" {% if request.app.state.local_preview %}disabled{% else %}checked{% endif %}>
-    <span><strong>Find context on the web</strong><span class="field-help">{% if request.app.state.local_preview %}Off in the local preview. Your materials stay on this computer.{% else %}Look up this place and show the sources used with the result.{% endif %}</span></span>
+    <span>
+      <strong>Find context on the web</strong>
+      <span id="web-context-help" class="field-help">
+        {% if request.app.state.local_preview %}
+        Off in the local preview. Your materials stay on this computer.
+        {% else %}
+        Look up this place and show the sources used with the result.<br>
+        may take up to 30 minutes with DeerFlow
+        {% endif %}
+      </span>
+      <span id="demo-context-help" class="field-help" hidden>Web lookup is off for demo visits.</span>
+    </span>
   </label>
   <div class="form-submit">
     <button class="button button-primary button-full" type="submit">{% if request.app.state.local_preview %}Save visit sources{% else %}Create a visit{% endif %}</button>

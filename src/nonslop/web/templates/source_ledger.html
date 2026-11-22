@@ -3,9 +3,18 @@
   <summary>{% if job.reference_count > 1 %}{{ job.reference_count }} reference photographs{% else %}Opening photograph{% endif %}</summary>
   <div class="reference-gallery">
     {% for name in job.reference_names %}
-    <figure><a href="/jobs/{{ job.job_id }}/references/{{ loop.index0 }}"><img src="/jobs/{{ job.job_id }}/references/{{ loop.index0 }}" alt="View reference {{ loop.index }}: {{ name }}" loading="lazy"></a><figcaption>{{ name }}{% if loop.first %} · Opening frame{% elif loop.last %} · Ending frame{% endif %}</figcaption></figure>
+    <figure><a href="/jobs/{{ job.job_id }}/references/{{ loop.index0 }}"><img src="/jobs/{{ job.job_id }}/references/{{ loop.index0 }}" alt="View reference {{ loop.index }}: {{ name }}" loading="lazy"></a><figcaption>{{ name }}{% if loop.first %} · Opening view{% endif %}</figcaption></figure>
     {% else %}<figure><a href="/jobs/{{ job.job_id }}/reference"><img src="/jobs/{{ job.job_id }}/reference" alt="View the opening photograph" loading="lazy"></a></figure>{% endfor %}
   </div>
+</details>
+{% endif %}
+{% if job.reference_metadata %}
+<details class="source-details result-sources">
+  <summary>Photograph metadata</summary>
+  <p class="field-help">Recorded location and capture time are clues. A scan may record when it was digitized. Your requested memory year and corrections guide the interpretation.</p>
+  {% for photo in job.reference_metadata %}
+  <p class="source-excerpt">{{ photo.filename }} · {{ photo.width }} × {{ photo.height }}{% if photo.captured_at %} · Recorded capture: {{ photo.captured_at }}{% endif %}{% if photo.latitude is not none and photo.longitude is not none %} · GPS: {{ '%.6f'|format(photo.latitude) }}, {{ '%.6f'|format(photo.longitude) }}{% endif %}{% if photo.camera_model %} · {{ photo.camera_model }}{% endif %}{% if photo.focal_length_mm %} · {{ photo.focal_length_mm }} mm{% endif %}</p>
+  {% endfor %}
 </details>
 {% endif %}
 {% if job.scene.source_text %}

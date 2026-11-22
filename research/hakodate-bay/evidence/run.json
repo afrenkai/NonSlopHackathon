@@ -1,0 +1,19 @@
+{
+ "arm": "deer-visual",
+ "upstream": "1dafd8a3b45fbb9b98ca13ab3291c8f432bc81ed",
+ "model": "kimi-k3-1-pro-high",
+ "status": "failure",
+ "timed_out": false,
+ "rc": -15,
+ "elapsed_s": 1331.7,
+ "run_seconds_bound": 1800,
+ "usage": {
+  "model_responses": 80,
+  "http_error_responses": 0,
+  "input": 4929978,
+  "output": 138349,
+  "total": 5068327,
+  "cached": 473088
+ },
+ "worker_error": "TimeoutException"
+}

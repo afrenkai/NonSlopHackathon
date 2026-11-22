@@ -6,7 +6,18 @@
     </div>
     <span class="status status-{{ job.status }}">{% if job.status == 'complete' %}Ready to visit{% elif job.status == 'failed' and request.app.state.local_preview %}Sources saved{% elif job.status == 'failed' %}Couldn’t complete{% elif job.status == 'running' %}Creating your visit{% else %}Waiting to begin{% endif %}</span>
   </div>
-  {% if job.result and job.result.reference_observations %}<details class="source-details"><summary>AI observations of your photographs</summary><p class="source-excerpt">{{ job.result.reference_observations }}</p><p class="field-help">These observations informed the prompt. They may contain mistakes and are separate from historical evidence.</p></details>{% endif %}
+  {% if job.result and job.result.photo_readings %}
+  <details class="source-details">
+    <summary>Kimi’s reading of each photograph</summary>
+    {% for reading in job.result.photo_readings %}
+    <h4>Photo {{ reading.photo_number }}{% if loop.first %} · opening view{% endif %}</h4>
+    <ul>{% for detail in reading.visible_details %}<li>{{ detail }}</li>{% endfor %}</ul>
+    {% if reading.uncertainty %}<p class="field-help">{{ reading.uncertainty }}</p>{% endif %}
+    {% endfor %}
+  </details>
+  {% endif %}
+  {% if job.result and job.result.reference_observations %}<details class="source-details"><summary>Omni’s initial photo observations</summary><p class="source-excerpt">{{ job.result.reference_observations }}</p></details>{% endif %}
+  {% if job.result and job.result.used_prompt %}<details class="source-details"><summary>Prompt used by H3</summary><p class="field-help">{% if job.result.prompt_model %}Composed by {{ job.result.prompt_model }} from the supplied evidence.{% else %}Composed from the visit template.{% endif %}</p><p class="source-excerpt">{{ job.result.used_prompt }}</p></details>{% elif job.result and job.result.prompt_model %}<p class="field-help">The visit prompt was composed by {{ job.result.prompt_model }} from the supplied evidence.</p>{% endif %}
   {% if job.status == 'complete' and job.result %}
   <div class="video-wrap">
     <video controls playsinline preload="metadata"{% if job.has_reference %} poster="/jobs/{{ job.job_id }}/reference"{% endif %}>
@@ -18,34 +29,39 @@
     <span class="muted">{{ job.result.width }} × {{ job.result.height }} · {{ '%.1f'|format(job.result.frames / 24) }} seconds</span>
     <a class="button button-secondary" href="/jobs/{{ job.job_id }}/video" download>Download video</a>
   </div>
-  <div class="world-actions">
-    {% if job.world and job.world.status == 'complete' %}
-    <a class="button button-primary" href="/jobs/{{ job.job_id }}/world">Step into this space</a>
-    {% elif job.world and job.world.status == 'running' %}
-    <p role="status">Reconstructing a 3D space from your video… This card updates automatically.</p>
-    {% else %}
-    {% if job.world and job.world.error %}<p class="message message-error">{{ job.world.error }}</p>{% endif %}
-    <form action="/jobs/{{ job.job_id }}/world" method="post" hx-post="/jobs/{{ job.job_id }}/world" hx-target="#job-{{ job.job_id }}" hx-swap="outerHTML" hx-disabled-elt="find button">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      <button class="button button-secondary" type="submit">Build a 3D space</button>
-    </form>
-    {% endif %}
-    <p class="field-help">Geometry inferred from generated video. Unseen details and historical accuracy remain uncertain.</p>
-  </div>
   {% elif job.status == 'failed' %}
   <div class="{% if request.app.state.local_preview %}context-notices{% else %}message message-error{% endif %}" role="status">{{ job.error or 'The generation could not finish. Please try another visit.' }}</div>
   {% else %}
   <div class="generation-state">
-    {% if job.has_reference %}<img class="reference-thumbnail" src="/jobs/{{ job.job_id }}/reference" alt="Opening street photograph" loading="lazy">{% endif %}
+    {% if job.has_reference %}<img class="reference-thumbnail" src="/jobs/{{ job.job_id }}/reference" alt="Your opening photograph" loading="lazy">{% endif %}
     <div class="generation-copy">
       <div class="progress-line" aria-hidden="true"></div>
-      <p>{% if job.status == 'running' and job.reference_count > 1 %}Reading your reference photographs and creating the visit.{% elif job.status == 'running' %}Building the street, its movement, and its sound.{% else %}Your material is saved. Your visit will begin when the model is ready.{% endif %}</p>
+      <p>{% if job.status == 'running' and job.has_reference %}Reading your reference photographs and creating the visit.{% elif job.status == 'running' %}Building the remembered scene, its movement, and its sound.{% else %}Your material is saved. Your visit will begin when the model is ready.{% endif %}</p>
       <span class="field-help">This card updates automatically. The first generation can take longer while the model loads.</span>
     </div>
   </div>
   {% endif %}
+  {% set research = job.research_sources or saved_demo_research(job) %}
+  {% if research %}
+  <section class="visit-research" aria-labelledby="research-{{ job.job_id }}">
+    <h3 id="research-{{ job.job_id }}">Research evidence</h3>
+    <p class="field-help">{% if job.research_sources %}These saved observations guide the video. New 3D builds use frames from the video.{% else %}Saved observations for this location. This visit started before the research notes were added to the video prompt.{% endif %}</p>
+    <ul class="source-list research-sources">
+      {% for source in research %}
+      <li class="source-entry">
+        <p class="source-meta">{{ source.kind }}{% if source.date %} · {{ source.date }}{% endif %}</p>
+        <p class="source-excerpt">{{ source.excerpt }}</p>
+        <a class="source-title" href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% include "world_actions.html" %}
+  {% if job.scene.description %}
   <p class="eyebrow record-label">Contributor’s words</p>
   <p class="visit-description personal-words">{{ job.scene.description }}</p>
+  {% endif %}
   {% if job.notices %}
   <div class="context-notices">
     {% for notice in job.notices %}<p>{{ notice }}</p>{% endfor %}

@@ -136,15 +136,9 @@ def generate_video(
         if reference_images
         else None
     )
-    last_image = (
-        reference_frame(reference_images[-1], settings.width, settings.height)
-        if len(reference_images) > 1
-        else None
-    )
     output = pipeline(
         prompt=task.prompt,
         image=image,
-        last_image=last_image,
         height=settings.height,
         width=settings.width,
         num_frames=settings.frames,

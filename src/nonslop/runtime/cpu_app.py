@@ -1,3 +1,5 @@
+import os
+
 import modal
 
 from nonslop.runtime.access import configured_access
@@ -19,6 +21,10 @@ world_volume = modal.Volume.from_name(
 with image.imports():
     from fastapi import FastAPI
 
+    from nonslop.generation.prompt_writer import (
+        PromptWriterSettings,
+        compose_scene_prompt,
+    )
     from nonslop.generation.schemas import GenerationResult, GenerationTask
     from nonslop.models.inference_schemas import ArchivistResult
     from nonslop.runtime.archivist import ModalArchivistGateway
@@ -28,38 +34,58 @@ with image.imports():
     )
     from nonslop.web.app import create_app
     from nonslop.web.security import environment_settings
+    from nonslop.web.uploads import normalize_image
 
 
-@app.function(image=image, cpu=2, memory=8192, timeout=3600, max_containers=4)
+@app.function(
+    image=image, cpu=2, memory=8192, timeout=3600, max_containers=4, secrets=[access]
+)
 def prepare_visit(task_json: str, reference_images: list[bytes]) -> str:
     task = GenerationTask.model_validate_json(task_json)
+    writer_packet = task.evidence.model_dump_json() if task.evidence else task.prompt
     observations = ""
-    if len(reference_images) > 1:
+    analysis_images = [normalize_image(content, 768) for content in reference_images]
+    if analysis_images:
         observations = ArchivistResult.model_validate_json(
             modal.Cls.from_name(
                 "nonslop-inference", "MemoryArchivist"
             )().analyze_images.remote(
-                "Compare all of these reference photographs for a scene reconstruction. "
-                "Describe shared architecture, street layout, materials, and visible signs. "
-                "Mention conflicting viewpoints or details explicitly. Do not invent dates, "
-                "identities, hidden objects, or historical facts. Keep the observations concise.",
-                reference_images,
+                "Describe each photograph independently in input order. Start each "
+                "short paragraph with its photo number, beginning with Photo 1 for "
+                "the opening view. Name distinctive visible features with their "
+                "materials or shapes and relative positions. Include lighting or "
+                "legible text when useful. Mark blur, cropping, guesses, and "
+                "uncertain overlap. Keep unobserved details out of the descriptions.",
+                analysis_images,
             )
         ).text
         description, sound_marker, sound_fields = task.prompt.partition(
             "\n\noverall_soundscape:"
         )
-        task.prompt = (
-            f"{description} Begin on the first reference photograph and use the last as the ending frame. "
+        photo_context = (
+            "Keep the opening photograph as the visual anchor. "
+            "Additional photographs are supporting views, not an ordered camera trajectory. "
             f"AI observations of all {len(reference_images)} reference images (interpretations, not verified facts): "
-            f"{observations}{sound_marker}{sound_fields}"
+            f"{observations}"
         )
+        task.prompt = f"{description} {photo_context}{sound_marker}{sound_fields}"
+        writer_packet = f"{photo_context}\n\n{writer_packet}"
+    writer = PromptWriterSettings()
+    composition = compose_scene_prompt(
+        writer_packet, writer, reference_images=analysis_images
+    )
+    if composition is not None:
+        task.prompt = composition.prompt
     result = GenerationResult.model_validate_json(
         modal.Cls.from_name("nonslop-video", "StreetGenerator")().generate.remote(
-            task.model_dump_json(), reference_images
+            task.model_dump_json(exclude={"evidence"}), reference_images
         )
     )
     result.reference_observations = observations
+    result.used_prompt = task.prompt
+    if composition is not None:
+        result.prompt_model = os.environ.get(writer.model_env, writer.model)
+        result.photo_readings = composition.photo_readings
     return result.model_dump_json()
 
 

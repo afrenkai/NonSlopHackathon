@@ -17,6 +17,10 @@ requests require server-side credentials configured through CLI flags or `.env`.
 - [x] FastAPI + DuckDB + HTMX website with protected uploads/media, CSRF and upload limits.
 - [x] Real text-to-video and image-conditioned video generation, archive grounding, and authenticated HTTP 206 playback.
 - [x] Focused web tests, Ruff, and Black.
+- [x] Enable the redesigned local website's real Modal workers, on-demand private video/3D downloads, web context, and capsule AI. Real two-reference generation, video playback, six-camera reconstruction, movement/Reset, AI observations, browser isolation, and 320–1440 px layouts passed; 11 focused tests, Ruff, Black, and the viewer build passed.
+- [x] Deploy the Memory Worlds redesign to the existing public Modal URL. Public browser checks passed for assets, HTMX validation, capsule creation/reopening, timeline/whole views, CSRF, browser isolation, and 320–1440 px layouts with no unexpected browser or network errors.
+- [x] Remove decorative editorial headers and the global footer from the public design; nine web tests and public desktop/mobile layout and control checks passed.
+- [x] Apply locally served Outfit variable fonts to body text and controls; public font loading, weights, extended Latin, and desktop/mobile layouts passed browser checks.
 - [x] Deploy and verify public access without login, per-browser history/media isolation, and CLI credential flags with `.env` defaults.
 - [x] Separate CPU (`nonslop-streets`), video (`nonslop-video`), 3D (`nonslop-world`), and inference (`nonslop-inference`) into independent deployed Modal apps.
 - [x] Add HTMX folder and multi-file pickers, retain/order all references, and bound uploads to 8 images / 40 MB total. Real browser selection of two images, Omni comparison, first/last-frame video generation, and reconstruction passed end to end.

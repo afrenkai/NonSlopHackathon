@@ -18,5 +18,14 @@ def configured_access() -> modal.Secret:
                 "together; otherwise leave all three unset to use nonslop-access"
             )
         if all(configured):
+            optional_keys = (
+                "NONSLOP_PROMPT_TOKEN",
+                "NONSLOP_PROMPT_BASE_URL",
+                "NONSLOP_PROMPT_MODEL",
+            )
+            for optional_key in optional_keys:
+                optional_value = os.environ.get(optional_key, "")
+                if optional_value.strip():
+                    values[optional_key] = optional_value
             return modal.Secret.from_dict(values)
     return modal.Secret.from_name("nonslop-access", required_keys=required_keys)

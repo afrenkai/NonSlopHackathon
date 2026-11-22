@@ -1,0 +1,323 @@
+{
+  "title": "Flatbush at Fulton, Brooklyn | circa 1990",
+  "items": [
+    {
+      "id": "anchor",
+      "title": "25 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_3fa7930d-9051-41a4-98e0-16af03763ddb/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Five-storey commercial loft with a bracketed metal cornice, masonry piers, stone bands, broad second-storey glazing and upper sash windows. The lot 24 photograph is a substitute card. The loft appears in views from neighboring lots 26 and 19. The later building survey height is an approximate roofline reference. Period storefront finishes, the construction system, and the extent of the 1989 alteration are uncertain.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 15-17 Flatbush Avenue, Block 2106 Lot 26, lvd_06_48136 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_3fa7930d-9051-41a4-98e0-16af03763ddb/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, 19 Flatbush Avenue, Block 2106 Lot 19, lvd_06_48133 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_a9cf8161-815b-4c8a-9e4b-d64a2a129d56/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, 21 Flatbush Avenue, Block 2106 Lot 24, lvd_06_48138 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_cb2227f6-1f47-437f-b193-b1bd748a6b22/"
+        },
+        {
+          "title": "NYC Department of Buildings, certificate of occupancy 231396, 25 April 1989 (both sides)",
+          "url": "https://a810-bisweb.nyc.gov/bisweb/CofoDocumentContentServlet?passjobnumber=null&cofomatadata1=COFO&cofomatadata2=B&cofomatadata3=000&cofomatadata4=231000&cofomatadata5=B000231396.PDF"
+        },
+        {
+          "title": "NYC Planning, PLUTO: block 2106 lot 24 (later tax record)",
+          "url": "https://data.cityofnewyork.us/resource/64uk-42ks.json?borough=BK&block=2106&lot=24"
+        },
+        {
+          "title": "Kevin Walsh, Downtown to Prospect, Brooklyn, Part 1 (2013; detail photographs, not evidence of 1990 occupancy)",
+          "url": "https://forgotten-ny.com/2013/08/downtown-to-prospect-brooklyn-part-1/"
+        }
+      ]
+    },
+    {
+      "id": "certificate",
+      "title": "NYC Department of Buildings, certificate of occupancy 231396, 25 April 1989 (both sides)",
+      "record_url": "https://a810-bisweb.nyc.gov/bisweb/CofoDocumentContentServlet?passjobnumber=null&cofomatadata1=COFO&cofomatadata2=B&cofomatadata3=000&cofomatadata4=231000&cofomatadata5=B000231396.PDF",
+      "kind": "Certificate of occupancy",
+      "date": "25 April 1989",
+      "excerpt": "Certificate 231396 for 19–27 Flatbush records three stores and offices on floors 2–5 after the alteration completed 24 March 1989. It lists a height of 45 ft, while a later building footprint survey gives 69.87 ft. The figures disagree. The certificate gives no storefront names or finishes.",
+      "local_file": "1989-occupancy.pdf"
+    },
+    {
+      "id": "ortho",
+      "title": "City of New York, April 1996 orthophotography, NYC Ortho 1996 Mosaic (after the reconstruction date)",
+      "record_url": "https://tiles.arcgis.com/tiles/yG5s3afENB5iO9fj/arcgis/rest/services/Ortho_1996_Mosaic/MapServer",
+      "kind": "Aerial photograph · later survey",
+      "date": "April 1996",
+      "excerpt": "The orthophoto mosaic is useful for cross-checking street alignment, the block outline, and the relationship of the loft and bank to the parking gap. It was taken six years after the target year and cannot establish 1990 storefronts or whether disputed 1990 structures were still standing.",
+      "local_file": "1996-survey.jpg"
+    },
+    {
+      "id": "corner",
+      "title": "1 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_ad25f17d-811f-4750-8791-bbb8c2cb3b37/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Low corner restaurant with a clipped prow, strip windows, projecting striped fascia and paired pole signs. Evidence limitations: Sign wording is legible in the photograph; the 1993 permit corroborates the owner, not the exact sign design in 1990.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 1 Flatbush Avenue, Block 2106 Lot 29, lvd_06_48137 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_ad25f17d-811f-4750-8791-bbb8c2cb3b37/"
+        },
+        {
+          "title": "NYC DOB, 1 Flatbush, job 300224781, 1993. Owner: Kansas Fried Chicken, Inc.",
+          "url": "https://data.cityofnewyork.us/resource/ipu4-2q9a.json?job__=300224781"
+        }
+      ]
+    },
+    {
+      "id": "annex",
+      "title": "15-17 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_3fa7930d-9051-41a4-98e0-16af03763ddb/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Two-storey commercial infill with broad upper windows, a flat coping and shopfronts. Evidence limitations: Separate old footprint between the restaurant and the taller loft. Signs and the rear return are incompletely resolved.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 15-17 Flatbush Avenue, Block 2106 Lot 26, lvd_06_48136 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_3fa7930d-9051-41a4-98e0-16af03763ddb/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, 560 Fulton Street, Block 2106 Lot 35, lvd_06_48135 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_8ebf35be-6948-4f68-b7e3-af6a0f3b54d4/"
+        }
+      ]
+    },
+    {
+      "id": "fulton",
+      "title": "560 Fulton Street (later 570)",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_8ebf35be-6948-4f68-b7e3-af6a0f3b54d4/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Three-storey industrial loft, five wide factory-window bays in a pale masonry frame, dark spandrels, shallow cornice and low shopfront band. Evidence limitations: Photo title is 560 Fulton. Matched by block and lot 35; later redevelopment address is 570. No modern tower is used.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 560 Fulton Street, Block 2106 Lot 35, lvd_06_48135 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_8ebf35be-6948-4f68-b7e3-af6a0f3b54d4/"
+        },
+        {
+          "title": "NYC Planning Commission, 570 Fulton Street, C 180459 ZMK, 2019",
+          "url": "https://www.nyc.gov/assets/planning/download/pdf/about/cpc/180459.pdf"
+        }
+      ]
+    },
+    {
+      "id": "disputed",
+      "title": "572 Fulton Street",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_0d008f76-d698-4b27-b7da-eff1399945bd/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Narrow three-storey shop, four segment-headed upper openings across, cornice, exposed plain end wall. Evidence limitations: Disputed. A 1980s photo and a 1992 full-demolition filing identify a 30 ft, three-storey building on lot 40. A 2008 archaeological report reading the 1969, 1979 and 1989 Sanborn sheets instead calls the lot parking. Model gives priority to photograph and DOB for existence, using the report's 22 by 40 ft historic dimensions only as a provisional size. View this as a hypothesis.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 572 Fulton Street, Block 2106 Lot 40, lvd_06_48134 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_0d008f76-d698-4b27-b7da-eff1399945bd/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, 560 Fulton Street, Block 2106 Lot 35, lvd_06_48135 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_8ebf35be-6948-4f68-b7e3-af6a0f3b54d4/"
+        },
+        {
+          "title": "NYC DOB, 572 Fulton Street, full demolition job 300205748: 3 existing stories, 30 feet",
+          "url": "https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=300205748&passdocnumber=01&requestid=1"
+        },
+        {
+          "title": "NYC DOB, full-demolition permit issued 29 September 1992",
+          "url": "https://data.cityofnewyork.us/resource/ipu4-2q9a.json?job__=300205748"
+        },
+        {
+          "title": "Celia J. Bergoffen, 572 Fulton Street Disposition: Phase IA Archaeological Assessment, May 2008, pp. 5-8",
+          "url": "https://s-media.nyc.gov/agencies/lpc/arch_reports/1068.pdf"
+        }
+      ]
+    },
+    {
+      "id": "bank",
+      "title": "33-35 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_2e75ebd4-a071-43b0-a585-f2d6307188ea/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Restrained neoclassical bank and office loft; six window axes on the upper floors, round-headed top surrounds and a two-level glazed base. Evidence limitations: Seven visible levels: five over the two-level base. Modern PLUTO counts eight; the photo governs the street elevation. No later movie-set bank name shown.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 33-35 Flatbush Avenue, Block 2106 Lot 16, lvd_06_48132 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_2e75ebd4-a071-43b0-a585-f2d6307188ea/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, 19 Flatbush Avenue, Block 2106 Lot 19, lvd_06_48133 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_a9cf8161-815b-4c8a-9e4b-d64a2a129d56/"
+        },
+        {
+          "title": "Suzanne Spellen, Building of the Day: 33 Flatbush Avenue, 2010",
+          "url": "https://www.brownstoner.com/architecture/building-of-the-116/"
+        }
+      ]
+    },
+    {
+      "id": "warehouse",
+      "title": "Pioneer Warehouses / 41 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_8a70c166-c7b7-4fbf-9e60-d6802b42bb20/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Romanesque Revival commercial storage complex; broad buff-brick elevation, small dark openings alternating with blind recesses, masonry base, arched entry, ships' prows and dated urns. Evidence limitations: Modeled before the 2010s office conversion, with blocked openings rather than the present large glazing. Four construction campaigns commemorated: 1896, 1902, 1910, 1914.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 37-53 Flatbush Avenue, Block 2106 Lot 9, lvd_06_48131 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_8a70c166-c7b7-4fbf-9e60-d6802b42bb20/"
+        },
+        {
+          "title": "Christopher Gray, Streetscapes: Pioneer Warehouses; In Brooklyn, a Romanesque Revival Repository Complex, 7 February 1988",
+          "url": "https://www.nytimes.com/1988/02/07/realestate/streetscapes-pioneer-warehouses-brooklyn-romanesque-revival-repository-complex.html"
+        },
+        {
+          "title": "Kevin Walsh, Downtown to Prospect, Brooklyn, Part 1 (2013; detail photographs, not evidence of 1990 occupancy)",
+          "url": "https://forgotten-ny.com/2013/08/downtown-to-prospect-brooklyn-part-1/"
+        }
+      ]
+    },
+    {
+      "id": "piano",
+      "title": "55-57 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_601bdb5a-00e3-4e91-b524-80a78a805707/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Six-storey piano factory with broad industrial sash groups above a glazed showroom. Evidence limitations: Height estimated from period photo and adjoining cornice; excludes the six-floor residential addition documented in 2007. The modern 171 ft height must not be used.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 55-57 Flatbush Avenue, Block 2106 Lot 7, lvd_06_48130 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_601bdb5a-00e3-4e91-b524-80a78a805707/"
+        },
+        {
+          "title": "Brownstoner, New Development: 96 Rockwell Place, March 2007; six-storey addition to six-storey piano factory",
+          "url": "https://www.brownstoner.com/development/new-development-4/"
+        }
+      ]
+    },
+    {
+      "id": "furniture",
+      "title": "59 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_a94cba58-6063-404f-9262-7b8fa6b22393/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Narrow matching white or light-painted loft face, multi-light factory sash, deep shop window and furniture sign. Evidence limitations: Four small-window upper rows over a showroom and shop read as six levels in the photograph. Cornice steps near the piano factory. Period roof height estimated; later survey records 86 ft and PLUTO seven floors.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 59 Flatbush Avenue, Block 2106 Lot 6, lvd_06_48129 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_a94cba58-6063-404f-9262-7b8fa6b22393/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, 55-57 Flatbush Avenue, Block 2106 Lot 7, lvd_06_48130 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_601bdb5a-00e3-4e91-b524-80a78a805707/"
+        }
+      ]
+    },
+    {
+      "id": "shop61",
+      "title": "61 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_95a440a7-7895-4bd6-bb8d-2494665be5b3/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Narrow three-storey shop with plain light masonry and paired rectangular windows. Evidence limitations: Texture, paint colour, storefront occupancy and rear treatments are approximations.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 61 Flatbush Avenue, Block 2106 Lot 5, lvd_06_48127 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_95a440a7-7895-4bd6-bb8d-2494665be5b3/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, 63 Flatbush Avenue, Block 2106 Lot 4, lvd_06_48125 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_14ead364-a68b-461a-8ff5-dccd1ca35a1f/"
+        }
+      ]
+    },
+    {
+      "id": "uniform",
+      "title": "63 Flatbush Avenue",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_14ead364-a68b-461a-8ff5-dccd1ca35a1f/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Narrow three-storey outfitter; projecting blade, showroom below, blind billboard-bearing side wall to vacant lot. Evidence limitations: Nevins Uniforms / tuxedo signage appears in tax photograph; graphic lettering and 1990 tenancy are not independently verified. The southern tip is not filled with buildings.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 63 Flatbush Avenue, Block 2106 Lot 4, lvd_06_48125 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_14ead364-a68b-461a-8ff5-dccd1ca35a1f/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, Flatbush Avenue, Block 2106 Lot 1, lvd_06_48124 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_d6e6e17e-824f-4873-ba6d-7de6d19679f9/"
+        },
+        {
+          "title": "Queens Public Library, William A. Brief, 104 Rockwell Place, ca. 1988, brf-002945 (catalog description of empty triangle)",
+          "url": "https://digitalarchives.queenslibrary.org/nodes/view/23763"
+        }
+      ]
+    },
+    {
+      "id": "opposite",
+      "title": "38 Flatbush Avenue",
+      "record_url": "https://80snyc.bdon.org/photos/3/00162/0001.jpg",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Triangular postwar office block with horizontal ribbon windows, solid corner piers and recessed dark base, opposite the older lofts. Evidence limitations: Current outline and height used as proxies; banding follows the tax image rather than later renovations. The Fox Theatre that occupied this block was demolished in 1971.",
+      "supporting_sources": [
+        {
+          "title": "NYC Municipal Archives / NYC DOF, 1980s tax photograph, Brooklyn block 162 lot 1, 38 Flatbush (via 80s.NYC)",
+          "url": "https://80snyc.bdon.org/photos/3/00162/0001.jpg"
+        },
+        {
+          "title": "Library of Congress, HABS NY-5554, Fox Theatre: demolished 1971",
+          "url": "https://www.loc.gov/item/ny0255/"
+        },
+        {
+          "title": "Kevin Walsh, Downtown to Prospect, Brooklyn, Part 1 (2013; detail photographs, not evidence of 1990 occupancy)",
+          "url": "https://forgotten-ny.com/2013/08/downtown-to-prospect-brooklyn-part-1/"
+        }
+      ]
+    },
+    {
+      "id": "parking",
+      "title": "Break in the street wall, lot 19",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_a9cf8161-815b-4c8a-9e4b-d64a2a129d56/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Cars in the gap between the loft and bank. Do not insert the present 66 Rockwell tower.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, 19 Flatbush Avenue, Block 2106 Lot 19, lvd_06_48133 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_a9cf8161-815b-4c8a-9e4b-d64a2a129d56/"
+        },
+        {
+          "title": "City of New York, April 1996 orthophotography, NYC Ortho 1996 Mosaic (after the reconstruction date)",
+          "url": "https://tiles.arcgis.com/tiles/yG5s3afENB5iO9fj/arcgis/rest/services/Ortho_1996_Mosaic/MapServer"
+        }
+      ]
+    },
+    {
+      "id": "south-tip",
+      "title": "Flatbush / Rockwell tip",
+      "record_url": "https://nycrecords.access.preservica.com/uncategorized/IO_d6e6e17e-824f-4873-ba6d-7de6d19679f9/",
+      "kind": "Historical reconstruction evidence",
+      "date": "Circa 1990 reconstruction",
+      "excerpt": "Vacant, partly fenced triangle; no modern landscape plan assumed.",
+      "supporting_sources": [
+        {
+          "title": "NYC DOF / Municipal Archives, Flatbush Avenue, Block 2106 Lot 1, lvd_06_48124 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_d6e6e17e-824f-4873-ba6d-7de6d19679f9/"
+        },
+        {
+          "title": "NYC DOF / Municipal Archives, 63 Flatbush Avenue, Block 2106 Lot 4, lvd_06_48125 (1980s)",
+          "url": "https://nycrecords.access.preservica.com/uncategorized/IO_14ead364-a68b-461a-8ff5-dccd1ca35a1f/"
+        },
+        {
+          "title": "Queens Public Library, William A. Brief, 104 Rockwell Place, ca. 1988, brf-002945 (catalog description of empty triangle)",
+          "url": "https://digitalarchives.queenslibrary.org/nodes/view/23763"
+        }
+      ]
+    }
+  ]
+}
