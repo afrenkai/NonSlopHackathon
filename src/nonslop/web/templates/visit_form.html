@@ -1,4 +1,5 @@
-<form action="/jobs" method="post" enctype="multipart/form-data" class="form-stack" hx-post="/jobs" hx-target="#latest" hx-swap="afterbegin show:top" hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
+{% set submit_url = '/visits/new' if standalone_intake else '/jobs' %}
+<form action="{{ submit_url }}" method="post" enctype="multipart/form-data" class="form-stack" hx-post="{{ submit_url }}"{% if not standalone_intake %} hx-target="#latest" hx-swap="afterbegin show:top"{% endif %} hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
   <input type="hidden" name="csrf" value="{{ csrf }}">
   <div class="place-fields">
     <div class="field">

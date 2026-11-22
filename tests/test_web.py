@@ -132,6 +132,64 @@ def test_field_guide_leads_into_live_workspace(tmp_path: Path) -> None:
     assert "Memory Worlds" in client.get("/capsules").text
 
 
+def test_photo_intake_opens_the_saved_visit(tmp_path: Path) -> None:
+    settings = client_settings(tmp_path)
+    worker = RecordingGenerator()
+    client = browser_client(settings, worker)
+    assert 'href="/visits/new"' in client.get("/").text
+    intake = client.get("/visits/new")
+    assert intake.status_code == 200
+    assert 'name="reference_image"' in intake.text
+    assert client.post("/visits/new").status_code == 403
+    fields = {
+        "csrf": csrf_from(intake.text),
+        "location": "Mill Street",
+        "year": "1994",
+        "description": "The old mill by the river.",
+    }
+    for use_htmx in (False, True):
+        response = client.post(
+            "/visits/new",
+            data=fields,
+            headers={"HX-Request": "true"} if use_htmx else {},
+            follow_redirects=False,
+        )
+        assert response.status_code == (200 if use_htmx else 303)
+        target = response.headers["HX-Redirect" if use_htmx else "Location"]
+        assert target == f"/visits/{worker.submitted[-1].job_id}"
+        assert "Mill Street" in client.get(target).text
+        assert browser_client(settings, worker).get(target).status_code == 404
+
+
+def test_first_intake_submissions_from_two_tabs_share_workspace(tmp_path: Path) -> None:
+    first_tab = browser_client(client_settings(tmp_path), RecordingGenerator())
+    intake = first_tab.get("/visits/new")
+    assert intake.status_code == 200
+    csrf = csrf_from(intake.text)
+
+    # Both tabs submit with the intake cookie, before either sees the other's response.
+    second_tab = TestClient(first_tab.app, base_url=str(first_tab.base_url))
+    second_tab.cookies.update(intake.cookies)
+    visits = []
+    for tab, location in ((first_tab, "Mill Street"), (second_tab, "River Road")):
+        response = tab.post(
+            "/visits/new",
+            data={
+                "csrf": csrf,
+                "location": location,
+                "year": "1994",
+                "description": location,
+            },
+            follow_redirects=False,
+        )
+        assert response.status_code == 303
+        visits.append(response.headers["Location"])
+
+    assert visits[0] != visits[1]
+    for tab in (first_tab, second_tab):
+        assert [tab.get(visit).status_code for visit in visits] == [200, 200]
+
+
 def test_public_site_keeps_api_credentials_and_browser_csrf(tmp_path: Path) -> None:
     settings = client_settings(tmp_path)
     client = browser_client(settings, RecordingGenerator())

@@ -8,7 +8,7 @@
     <p class="ks-meta">Started <time datetime="{{ capsule.created_at.date() }}">{{ capsule.created_at.strftime('%d %b %Y') }}</time></p>
   </div>
   <header class="ks-cover">
-    <p class="ks-meta">Keepsake notebook</p>
+    <p class="file-tab">Keepsake notebook</p>
     <h1 class="ks-name">{{ capsule.title }}</h1>
     {% if capsule.description %}<p class="ks-description">{{ capsule.description }}</p>{% endif %}
     <a class="ks-jump" href="#memory-date">Add a memory <span aria-hidden="true">↘</span></a>

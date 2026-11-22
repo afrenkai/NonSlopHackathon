@@ -186,6 +186,23 @@ def create_app(
             context={"csrf": csrf_token(request), "jobs": jobs},
         )
 
+    @application.get("/visits/new", response_class=HTMLResponse)
+    def new_visit(request: Request) -> HTMLResponse:
+        browser_workspace(request)
+        return templates.TemplateResponse(
+            request=request,
+            name="new_visit.html",
+            context={"csrf": csrf_token(request), "standalone_intake": True},
+        )
+
+    @application.post("/visits/new", response_class=HTMLResponse)
+    async def save_new_visit(request: Request) -> Response:
+        job = await submit_form(request, browser=True)
+        location = f"/visits/{job.job_id}"
+        if request.headers.get("HX-Request") == "true":
+            return Response(headers={"HX-Redirect": location})
+        return RedirectResponse(location, status_code=303)
+
     @application.get("/visits/{job_id}", response_class=HTMLResponse)
     def visit_page(request: Request, job_id: UUID) -> HTMLResponse:
         return templates.TemplateResponse(

@@ -17,7 +17,7 @@
   <header class="mast"><div class="site-header">
     <a class="wordmark" href="/"><svg aria-hidden="true" viewBox="0 0 28 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m2 5 20-3 4 25-20 3z"/><path d="M7 9 18 7l1.5 10-11 2zm4 15 8-1"/></svg>Memory Worlds</a>
     <nav class="header-actions" aria-label="Workspace">
-      <a href="/#new-visit">New visit</a><a href="/capsules"{% if request.url.path.startswith('/capsules') %} aria-current="{{ 'page' if request.url.path == '/capsules' else 'location' }}"{% endif %}>Time capsules</a><a class="box-link" href="/#your-box">Your box <span aria-hidden="true">↗</span></a>
+      <a href="/visits/new"{% if request.url.path == '/visits/new' %} aria-current="page"{% endif %}>New visit</a><a href="/capsules"{% if request.url.path.startswith('/capsules') %} aria-current="{{ 'page' if request.url.path == '/capsules' else 'location' }}"{% endif %}>Time capsules</a><a class="box-link" href="/#your-box">Your box <span aria-hidden="true">↗</span></a>
     </nav>
   </div></header>
   <main id="main" tabindex="-1" class="workspace">{% block content %}{% endblock %}</main>
