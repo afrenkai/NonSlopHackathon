@@ -31,9 +31,9 @@ class ReconstructionService:
                 raise ValueError(
                     "Wait for the generated video to finish before building the 3D space."
                 )
-            if self.store.active_world_count() >= 2:
+            if self.store.active_world_count() >= 3:
                 raise ValueError(
-                    "Two spaces are already queued. Wait for one to finish."
+                    "Three spaces are already queued. Wait for one to finish."
                 )
             try:
                 references = self.store.reference_images(current)
