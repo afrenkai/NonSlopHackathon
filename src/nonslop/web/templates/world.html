@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>{{ job.scene.location }} · 3D visit · Again, here</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script type="module" src="/static/viewer.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="/">Again, here<span class="wordmark-mark" aria-hidden="true">.</span></a>
+      <nav class="header-actions" aria-label="Visit navigation">
+        <a class="text-link" href="/">Your visits</a>
+        <a class="button button-secondary" href="/jobs/{{ job.job_id }}/video">Watch the video</a>
+      </nav>
+    </header>
+    <main class="workspace world-page">
+      <section class="page-intro" aria-labelledby="world-title">
+        <p class="eyebrow">{{ job.scene.year }} · A reconstructed visit</p>
+        <h1 id="world-title">{{ job.scene.location }}</h1>
+        <p>Step into a space inferred from your generated video. It is an interpretation of your material; missing areas remain unknown.</p>
+      </section>
+      <div class="world-layout">
+        <section id="world-viewer" class="world-viewer panel" data-world-viewer data-job-id="{{ job.job_id }}" aria-label="3D visit" aria-busy="true">
+          <div class="world-toolbar">
+            <button id="world-reset" class="button button-secondary" type="button" disabled>Reset view</button>
+            <label class="checkbox-field" for="world-show-cameras">
+              <input id="world-show-cameras" type="checkbox" disabled>
+              <span>Show input camera positions</span>
+            </label>
+            <span id="world-camera-count" class="field-help world-camera-count">Loading camera positions…</span>
+          </div>
+          <canvas id="world-canvas" class="world-canvas" width="1280" height="720" tabindex="0" aria-label="Interactive 3D reconstruction of {{ job.scene.location }}" aria-describedby="world-controls">
+            Your browser needs WebGL to display this visit. You can still watch the video using the link above.
+          </canvas>
+          <p id="world-status" class="field-help world-status" role="status" aria-live="polite" aria-atomic="true">Loading your 3D visit…</p>
+          <p id="world-controls" class="field-help world-controls">Select the scene, then use WASD or the arrow keys to move. Drag to look around. On a touchscreen, use two fingers to slide; scroll to move forward or back.</p>
+          <noscript><p class="message message-error">Enable JavaScript to explore the 3D visit, or watch the video above.</p></noscript>
+        </section>
+        <aside class="world-notes panel composer" aria-labelledby="world-notes-title">
+          <p class="eyebrow">What you are seeing</p>
+          <h2 id="world-notes-title">A place, interpreted.</h2>
+          <p class="visit-description">{{ job.scene.description }}</p>
+          <div class="context-notices">
+            <p>The source material guides a generated video. Its frames are then used to infer this 3D space.</p>
+            <p>Shapes may be incomplete or distorted. Moving away from the original views can reveal gaps. Empty areas do not establish what was there.</p>
+            <p>Camera markers show the views used for reconstruction. They do not measure historical accuracy.</p>
+          </div>
+          {% if job.notices %}
+          <div class="context-notices">
+            {% for notice in job.notices %}<p>{{ notice }}</p>{% endfor %}
+          </div>
+          {% endif %}
+          {% if job.sources %}
+          <details class="source-details result-sources" open>
+            <summary>Source material <span class="source-count">{{ job.sources|length }}</span></summary>
+            <div class="source-list">
+              {% for source in job.sources %}
+              <div class="source-entry">
+                <p class="source-meta">{{ source.kind }}{% if source.date %} · {{ source.date }}{% endif %}</p>
+                {% if source.url %}<a class="source-title" href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a>{% else %}<p class="source-title">{{ source.title }}</p>{% endif %}
+                {% if source.excerpt %}<p class="source-excerpt">{{ source.excerpt }}</p>{% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </details>
+          {% endif %}
+          <div class="visit-footer"><span>Generated video → inferred geometry</span><time>{{ job.created_at|string|replace('T', ' ') }}</time></div>
+          {% include "linked_memories.html" %}
+        </aside>
+      </div>
+    </main>
+    <footer class="site-footer"><span>Again, here.</span><span>A generated visit. A personal memory.</span></footer>
+  </body>
+</html>

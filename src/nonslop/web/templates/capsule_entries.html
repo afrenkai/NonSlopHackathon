@@ -1,0 +1,22 @@
+<div id="capsule-entries" class="{% if view == 'whole' %}capsule-gallery{% else %}visit-list capsule-timeline{% endif %}"{% if pending %} hx-get="/capsules/{{ capsule.capsule_id }}/entries?view={{ view }}" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %} aria-live="polite">
+  {% for entry in entries %}
+  <article class="panel visit-card" data-entry-id="{{ entry.entry_id }}">
+    <p class="eyebrow"><time datetime="{{ entry.occurred_on }}">{{ entry.occurred_on.strftime('%d %b %Y') }}</time> · {% if entry.kind == 'correction' %}Your correction{% else %}Your {{ entry.kind }}{% endif %}</p>
+    {% if entry.media_filename %}
+    {% set media_url = '/capsules/' ~ capsule.capsule_id ~ '/entries/' ~ entry.entry_id ~ '/media' %}
+    {% if entry.kind == 'image' %}<img class="capsule-image" src="{{ media_url }}" alt="Your photograph from {{ entry.occurred_on }}" loading="lazy">
+    {% elif entry.kind == 'audio' %}<audio controls preload="metadata" src="{{ media_url }}">Your browser cannot play this recording.</audio>
+    {% elif entry.kind == 'video' %}<video controls playsinline preload="metadata" src="{{ media_url }}">Your browser cannot play this recording.</video>{% endif %}
+    <a class="text-link" href="{{ media_url }}" download>Download your original</a>
+    {% endif %}
+    {% if entry.text %}<p class="visit-description">{{ entry.text }}</p>{% endif %}
+    {% if entry.linked_job_id %}<p><a class="button button-secondary" href="/visits/{{ entry.linked_job_id }}">Open the linked visit and 3D space</a></p>{% endif %}
+    {% if entry.enrichment %}
+    <details class="source-details result-sources" open><summary>AI {{ entry.enrichment.kind }} · {% if entry.enrichment.status == 'running' %}Processing{% else %}{{ entry.enrichment.status }}{% endif %}</summary>
+      {% if entry.enrichment.text %}<p class="source-excerpt">{{ entry.enrichment.text }}</p>{% elif entry.enrichment.error %}<p class="message message-error">{{ entry.enrichment.error }}</p>{% else %}<p class="field-help">Your original is saved. Processing continues in the background.</p>{% endif %}
+      <p class="field-help">AI-generated text may contain mistakes. It has not replaced your words or recording.</p>
+    </details>
+    {% endif %}
+  </article>
+  {% else %}<div class="panel visit-card"><p>No memories here yet. Add the first in your own words.</p></div>{% endfor %}
+</div>

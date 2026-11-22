@@ -1,0 +1,15 @@
+diff --git a/setup.py b/setup.py
+--- a/setup.py
++++ b/setup.py
+@@ -40,7 +40,8 @@
+-def get_version():
++def get_version() -> str:
+     version_file = 'mmcv/version.py'
++    namespace: dict[str, object] = {}
+     with open(version_file, encoding='utf-8') as f:
+-        exec(compile(f.read(), version_file, 'exec'))
+-    return locals()['__version__']
++        exec(compile(f.read(), version_file, 'exec'), namespace)
++    return str(namespace['__version__'])
+ 
+ 

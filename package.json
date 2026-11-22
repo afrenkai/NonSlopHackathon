@@ -1,0 +1,14 @@
+{
+  "name": "again-here-viewer",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/nonslop/web/frontend/viewer.js --bundle --format=esm --target=es2022 --outfile=src/nonslop/web/static/viewer.js --minify --legal-comments=eof"
+  },
+  "dependencies": {
+    "@sparkjsdev/spark": "2.4.0",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11"
+  }
+}

@@ -1,0 +1,28 @@
+[project]
+name = "nonslop"
+version = "0.1.0"
+description = "Sentimental scene reconstruction from personal images and contextual prompts"
+readme = "README.md"
+authors = [
+    { name = "afrenkai", email = "frenkartemcool1@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "modal>=1.6.4",
+    "python-dotenv>=1.2.1",
+    "pydantic>=2.12,<3",
+    "setuptools>=84.2.1",
+]
+
+[project.scripts]
+nonslop = "nonslop.runtime.cli:main"
+
+[dependency-groups]
+checks = [
+    "black", "ruff", "pytest", "fastapi[standard]", "duckdb", "httpx",
+    "itsdangerous", "jinja2", "pillow", "pytesseract",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"

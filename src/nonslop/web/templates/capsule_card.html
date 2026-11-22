@@ -1,0 +1,6 @@
+<article class="panel visit-card" data-capsule-id="{{ capsule.capsule_id }}">
+  {% if capsule.anchor_filename %}<img class="capsule-anchor" src="/capsules/{{ capsule.capsule_id }}/anchor" alt="Your photograph of {{ capsule.title }}" loading="lazy">{% endif %}
+  <p class="eyebrow">Started {{ capsule.created_at.strftime('%d %b %Y') }}</p><h3>{{ capsule.title }}</h3>
+  <p class="visit-description">{{ capsule.description }}</p>
+  <a class="button button-secondary" href="/capsules/{{ capsule.capsule_id }}">Open this capsule</a>
+</article>

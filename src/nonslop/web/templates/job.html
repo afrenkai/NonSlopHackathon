@@ -1,0 +1,71 @@
+<article id="job-{{ job.job_id }}" class="visit-card panel"{% if job.status in ('queued', 'running') or (job.world and job.world.status == 'running') %} hx-get="/jobs/{{ job.job_id }}" hx-trigger="every 5s" hx-swap="outerHTML" aria-busy="true"{% endif %}>
+  <div class="visit-heading">
+    <div>
+      <p class="eyebrow">{{ job.scene.year }}</p>
+      <h3>{{ job.scene.location }}</h3>
+    </div>
+    <span class="status status-{{ job.status }}">{% if job.status == 'complete' %}Ready to visit{% elif job.status == 'failed' %}Couldn’t complete{% elif job.status == 'running' %}Creating your visit{% else %}Waiting to begin{% endif %}</span>
+  </div>
+  {% if job.reference_count > 1 %}
+  <details class="source-details"><summary>{{ job.reference_count }} reference photographs</summary><div class="reference-gallery">{% for name in job.reference_names %}<figure><img src="/jobs/{{ job.job_id }}/references/{{ loop.index0 }}" alt="Reference {{ loop.index }}: {{ name }}" loading="lazy"><figcaption>{{ loop.index }}. {{ name }}{% if loop.first %} · Opening frame{% elif loop.last %} · Ending frame{% endif %}</figcaption></figure>{% endfor %}</div></details>
+  {% endif %}
+  {% if job.result and job.result.reference_observations %}<details class="source-details"><summary>AI observations of your photographs</summary><p class="source-excerpt">{{ job.result.reference_observations }}</p><p class="field-help">These observations informed the prompt. They may contain mistakes and are separate from historical evidence.</p></details>{% endif %}
+  {% if job.status == 'complete' and job.result %}
+  <div class="video-wrap">
+    <video controls playsinline preload="metadata"{% if job.has_reference %} poster="/jobs/{{ job.job_id }}/reference"{% endif %}>
+      <source src="/jobs/{{ job.job_id }}/video" type="video/mp4">
+      Your browser cannot play this video. <a href="/jobs/{{ job.job_id }}/video">Download the visit</a>.
+    </video>
+  </div>
+  <div class="video-actions">
+    <span class="muted">{{ job.result.width }} × {{ job.result.height }} · {{ '%.1f'|format(job.result.frames / 24) }} seconds</span>
+    <a class="button button-secondary" href="/jobs/{{ job.job_id }}/video" download>Download video</a>
+  </div>
+  <div class="world-actions">
+    {% if job.world and job.world.status == 'complete' %}
+    <a class="button button-primary" href="/jobs/{{ job.job_id }}/world">Step into this space</a>
+    {% elif job.world and job.world.status == 'running' %}
+    <p role="status">Reconstructing a 3D space from your video… This card updates automatically.</p>
+    {% else %}
+    {% if job.world and job.world.error %}<p class="message message-error">{{ job.world.error }}</p>{% endif %}
+    <form action="/jobs/{{ job.job_id }}/world" method="post" hx-post="/jobs/{{ job.job_id }}/world" hx-target="#job-{{ job.job_id }}" hx-swap="outerHTML" hx-disabled-elt="find button">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="button button-secondary" type="submit">Build a 3D space</button>
+    </form>
+    {% endif %}
+    <p class="field-help">Geometry inferred from generated video. Unseen details and historical accuracy remain uncertain.</p>
+  </div>
+  {% elif job.status == 'failed' %}
+  <div class="message message-error" role="alert">{{ job.error or 'The generation could not finish. Please try another visit.' }}</div>
+  {% else %}
+  <div class="generation-state">
+    {% if job.has_reference %}<img class="reference-thumbnail" src="/jobs/{{ job.job_id }}/reference" alt="Your opening street photograph" loading="lazy">{% endif %}
+    <div class="generation-copy">
+      <div class="progress-line" aria-hidden="true"></div>
+      <p>{% if job.status == 'running' and job.reference_count > 1 %}Reading your reference photographs and creating the visit.{% elif job.status == 'running' %}Building the street, its movement, and its sound.{% else %}Your material is saved. Your visit will begin when the model is ready.{% endif %}</p>
+      <span class="field-help">This card updates automatically. The first generation can take longer while the model loads.</span>
+    </div>
+  </div>
+  {% endif %}
+  <p class="visit-description">{{ job.scene.description }}</p>
+  {% if job.notices %}
+  <div class="context-notices">
+    {% for notice in job.notices %}<p>{{ notice }}</p>{% endfor %}
+  </div>
+  {% endif %}
+  {% if job.sources %}
+  <details class="source-details result-sources">
+    <summary>Source material <span class="source-count">{{ job.sources|length }}</span></summary>
+    <div class="source-list">
+      {% for source in job.sources %}
+      <div class="source-entry">
+        <p class="source-meta">{{ source.kind }}{% if source.date %} · {{ source.date }}{% endif %}</p>
+        {% if source.url %}<a class="source-title" href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a>{% else %}<p class="source-title">{{ source.title }}</p>{% endif %}
+        {% if source.excerpt %}<p class="source-excerpt">{{ source.excerpt }}</p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+  <div class="visit-footer"><span>Generated interpretation</span><time>{{ job.created_at|string|replace('T', ' ') }}</time></div>
+</article>
