@@ -1,22 +1,64 @@
-<div id="capsule-entries" class="{% if view == 'whole' %}capsule-gallery{% else %}visit-list capsule-timeline{% endif %}"{% if pending %} hx-get="/capsules/{{ capsule.capsule_id }}/entries?view={{ view }}" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %} aria-live="polite">
-  {% for entry in entries %}
-  <article class="panel visit-card" data-entry-id="{{ entry.entry_id }}">
-    <p class="eyebrow"><time datetime="{{ entry.occurred_on }}">{{ entry.occurred_on.strftime('%d %b %Y') }}</time> · {% if entry.kind == 'correction' %}Your correction{% else %}Your {{ entry.kind }}{% endif %}</p>
-    {% if entry.media_filename %}
-    {% set media_url = '/capsules/' ~ capsule.capsule_id ~ '/entries/' ~ entry.entry_id ~ '/media' %}
-    {% if entry.kind == 'image' %}<img class="capsule-image" src="{{ media_url }}" alt="Your photograph from {{ entry.occurred_on }}" loading="lazy">
-    {% elif entry.kind == 'audio' %}<audio controls preload="metadata" src="{{ media_url }}">Your browser cannot play this recording.</audio>
-    {% elif entry.kind == 'video' %}<video controls playsinline preload="metadata" src="{{ media_url }}">Your browser cannot play this recording.</video>{% endif %}
-    <a class="text-link" href="{{ media_url }}" download>Download your original</a>
-    {% endif %}
-    {% if entry.text %}<p class="visit-description">{{ entry.text }}</p>{% endif %}
-    {% if entry.linked_job_id %}<p><a class="button button-secondary" href="/visits/{{ entry.linked_job_id }}">Open the linked visit and 3D space</a></p>{% endif %}
-    {% if entry.enrichment %}
-    <details class="source-details result-sources" open><summary>AI {{ entry.enrichment.kind }} · {% if entry.enrichment.status == 'running' %}Processing{% else %}{{ entry.enrichment.status }}{% endif %}</summary>
-      {% if entry.enrichment.text %}<p class="source-excerpt">{{ entry.enrichment.text }}</p>{% elif entry.enrichment.error %}<p class="message message-error">{{ entry.enrichment.error }}</p>{% else %}<p class="field-help">Your original is saved. Processing continues in the background.</p>{% endif %}
-      <p class="field-help">AI-generated text may contain mistakes. It has not replaced your words or recording.</p>
-    </details>
-    {% endif %}
-  </article>
-  {% else %}<div class="panel visit-card"><p>No memories here yet. Add the first in your own words.</p></div>{% endfor %}
-</div>
+{% set capsule_url = '/capsules/' ~ capsule.capsule_id %}
+<section id="capsule-entries" class="ks-tray" aria-labelledby="ks-pages"
+         {% if pending %}hx-get="{{ capsule_url }}/entries?view={{ view }}" hx-trigger="every 5s" hx-swap="outerHTML" hx-sync="this:drop"{% endif %}>
+  <header class="ks-ruler">
+    <h2 id="ks-pages">Memories</h2>
+    <span class="ks-meta">{{ entries|length }} {{ 'entry' if entries|length == 1 else 'entries' }}</span>
+  </header>
+  {% if request.method == 'POST' %}<p role="status" class="ks-view-note">Memory saved in the timeline.</p>{% endif %}
+  <nav class="ks-views" aria-label="Memory view">
+    {% for key, label in [('whole', 'Whole capsule'), ('timeline', 'Timeline')] %}
+      <a id="ks-view-{{ key }}" href="{{ capsule_url }}?view={{ key }}#capsule-entries" hx-get="{{ capsule_url }}/entries?view={{ key }}"
+         hx-target="#capsule-entries" hx-swap="outerHTML" hx-sync="#capsule-entries:replace"{% if view == key %} aria-current="true"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+  {% if capsule.anchor_filename %}
+    <figure class="ks-print ks-anchor">
+      <img src="{{ capsule_url }}/anchor" alt="Your photograph of {{ capsule.title }}">
+      <figcaption>Your photograph</figcaption>
+    </figure>
+  {% elif view == 'whole' and entries %}
+    <p class="ks-center-label">{{ capsule.title }}</p>
+  {% endif %}
+  {% if view == 'timeline' %}<p class="ks-view-note">Only the dates you’ve added appear here.</p>{% endif %}
+  {% if entries %}
+    <div class="ks-pages {{ 'capsule-gallery' if view == 'whole' else 'ks-timeline' }}">
+      {% set labels = {'text': 'Your note', 'image': 'Your photograph', 'audio': 'Your voice note', 'video': 'Your video', 'correction': 'Your correction'} %}
+      {% for entry in entries %}
+        <article class="ks-item" data-entry-id="{{ entry.entry_id }}">
+          {% if view == 'timeline' %}<span class="ks-year" aria-hidden="true">{{ entry.occurred_on.year }}</span>{% endif %}
+          <div class="ks-page">
+            <header class="ks-entry-heading">
+              <h3>{{ 'Your linked visit' if entry.kind == 'text' and not entry.text.strip() and entry.linked_job_id else labels[entry.kind] }}</h3>
+              <time class="ks-meta" datetime="{{ entry.occurred_on }}">{{ entry.occurred_on.strftime('%d %b %Y') }}</time>
+            </header>
+            {% if entry.media_filename %}
+              {% set media_url = capsule_url ~ '/entries/' ~ entry.entry_id ~ '/media' %}
+              {% if entry.kind == 'image' %}
+                <img class="ks-image" src="{{ media_url }}" alt="Your photograph from {{ entry.occurred_on }}" loading="lazy">
+              {% elif entry.kind == 'audio' %}
+                <audio id="ks-player-{{ entry.entry_id }}" hx-preserve controls preload="metadata" src="{{ media_url }}">Your browser cannot play this recording.</audio>
+              {% elif entry.kind == 'video' %}
+                <video id="ks-player-{{ entry.entry_id }}" hx-preserve controls playsinline preload="metadata" src="{{ media_url }}">Your browser cannot play this recording.</video>
+              {% endif %}
+              <a class="ks-link" href="{{ media_url }}" download>Download your original</a>
+            {% endif %}
+            {% if entry.text %}<p class="ks-words{% if entry.text|length <= 200 %} ks-short{% endif %}">{{ entry.text }}</p>{% endif %}
+            {% if entry.linked_job_id %}<a class="ks-link" href="/visits/{{ entry.linked_job_id }}">Open the linked visit and 3D space <span aria-hidden="true">→</span></a>{% endif %}
+            {% if entry.enrichment %}
+              <details class="ks-machine" open>
+                <summary aria-live="polite">AI {{ entry.enrichment.kind }} · {{ 'Processing' if entry.enrichment.status == 'running' else entry.enrichment.status }}</summary>
+                {% if entry.enrichment.text %}<p class="ks-transcript">{{ entry.enrichment.text }}</p>
+                {% elif entry.enrichment.error %}<p class="message message-error">{{ entry.enrichment.error }}</p>
+                {% elif entry.enrichment.status == 'running' %}<p>Your original is saved. Processing continues in the background.</p>{% endif %}
+                <p class="field-help">AI-generated text may contain mistakes. It has not replaced your words or recording.</p>
+              </details>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="ks-blank"><h3>No memories here yet</h3><p>Add your words, an upload, or a linked visit to start this notebook.</p></div>
+  {% endif %}
+</section>

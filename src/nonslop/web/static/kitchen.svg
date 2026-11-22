@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <radialGradient id="vig" cx="50%" cy="48%" r="70%">
+      <stop offset="55%" stop-color="#14161E" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#14161E" stop-opacity="0.7"/>
+    </radialGradient>
+    <radialGradient id="lamp" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFE7A8" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#FFE7A8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0%" stop-color="#FFF6DA" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#FFF6DA" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="paper" width="24" height="24" patternUnits="userSpaceOnUse">
+      <rect width="24" height="24" fill="#E8D7A2"/>
+      <path d="M12 4 l2 3 -2 3 -2 -3z" fill="#D9C488"/>
+    </pattern>
+  </defs>
+  <polygon points="0,0 800,0 580,140 220,140" fill="#4A4652"/>
+  <polygon points="0,0 220,140 220,440 0,600" fill="#B9A877"/>
+  <polygon points="800,0 580,140 580,440 800,600" fill="#C9B783"/>
+  <rect x="220" y="140" width="360" height="300" fill="url(#paper)"/>
+  <polygon points="220,440 580,440 800,600 0,600" fill="#DDB842"/>
+  <g stroke="#B8962C" stroke-width="2">
+    <line x1="280" y1="440" x2="160" y2="600"/><line x1="340" y1="440" x2="300" y2="600"/>
+    <line x1="400" y1="440" x2="400" y2="600"/><line x1="460" y1="440" x2="500" y2="600"/>
+    <line x1="520" y1="440" x2="640" y2="600"/>
+    <line x1="175" y1="472" x2="625" y2="472"/><line x1="112" y1="515" x2="688" y2="515"/><line x1="40" y1="568" x2="760" y2="568"/>
+  </g>
+  <g>
+    <rect x="245" y="250" width="72" height="190" fill="#8A5A3B"/>
+    <rect x="255" y="262" width="52" height="70" fill="#7A4E33"/>
+    <rect x="255" y="344" width="52" height="84" fill="#7A4E33"/>
+    <circle cx="305" cy="350" r="4" fill="#E2C27A"/>
+  </g>
+  <g>
+    <circle cx="281" cy="212" r="22" fill="#F4EAD2" stroke="#B5432E" stroke-width="4"/>
+    <path d="M272 190 q4 -10 9 -2 q5 -9 9 2" fill="#C9432E"/>
+    <line x1="281" y1="212" x2="281" y2="199" stroke="#2A2A2A" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="281" y1="212" x2="291" y2="216" stroke="#2A2A2A" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g>
+    <rect x="400" y="178" width="132" height="122" fill="#F4EAD2"/>
+    <rect x="408" y="186" width="116" height="106" fill="#BFD7E6"/>
+    <path d="M408 250 q30 -18 58 0 t58 -6 v48 h-116z" fill="#9DB98A"/>
+    <line x1="466" y1="186" x2="466" y2="292" stroke="#F4EAD2" stroke-width="5"/>
+    <line x1="408" y1="239" x2="524" y2="239" stroke="#F4EAD2" stroke-width="5"/>
+    <path d="M394 172 h40 v96 q-22 6 -40 0z" fill="#D35F45"/>
+    <path d="M498 172 h40 v96 q-18 6 -40 0z" fill="#D35F45"/>
+    <g stroke="#F4EAD2" stroke-width="3" opacity="0.6">
+      <line x1="394" y1="190" x2="434" y2="190"/><line x1="394" y1="214" x2="434" y2="214"/><line x1="394" y1="238" x2="434" y2="238"/>
+      <line x1="498" y1="190" x2="538" y2="190"/><line x1="498" y1="214" x2="538" y2="214"/><line x1="498" y1="238" x2="538" y2="238"/>
+    </g>
+    <rect x="390" y="166" width="152" height="8" fill="#7A4E33"/>
+  </g>
+  <polygon points="408,300 524,300 600,600 300,600" fill="url(#sun)"/>
+  <g>
+    <rect x="352" y="352" width="230" height="16" fill="#F1E8D4"/>
+    <rect x="358" y="368" width="222" height="72" fill="#7C8443"/>
+    <rect x="368" y="378" width="62" height="54" fill="#6E763A"/>
+    <rect x="438" y="378" width="62" height="54" fill="#6E763A"/>
+    <rect x="508" y="378" width="62" height="54" fill="#6E763A"/>
+    <g fill="#E2C27A"><rect x="394" y="386" width="10" height="3"/><rect x="464" y="386" width="10" height="3"/><rect x="534" y="386" width="10" height="3"/></g>
+  </g>
+  <g>
+    <rect x="486" y="318" width="60" height="34" rx="5" fill="#6B4430"/>
+    <circle cx="504" cy="335" r="11" fill="#3E2A1E"/>
+    <g stroke="#6B4430" stroke-width="1.5"><line x1="495" y1="331" x2="513" y2="331"/><line x1="495" y1="335" x2="513" y2="335"/><line x1="495" y1="339" x2="513" y2="339"/></g>
+    <rect x="520" y="326" width="20" height="8" fill="#E9D9A6"/>
+    <circle cx="530" cy="343" r="4" fill="#E9D9A6"/>
+    <line x1="540" y1="318" x2="556" y2="296" stroke="#2A2A2A" stroke-width="2"/>
+  </g>
+  <g>
+    <rect x="372" y="334" width="22" height="18" rx="3" fill="#E9E2D0"/>
+    <path d="M394 338 q8 2 0 10" fill="none" stroke="#E9E2D0" stroke-width="3"/>
+    <rect x="404" y="326" width="38" height="26" rx="3" fill="#C9432E"/>
+    <rect x="404" y="326" width="38" height="6" fill="#A9362A"/>
+  </g>
+  <g>
+    <polygon points="650,232 676,226 676,288 650,292" fill="#EDE4CF"/>
+    <polygon points="654,240 672,236 672,262 654,265" fill="#D8CDB2"/>
+    <path d="M662 292 q-6 40 12 70" fill="none" stroke="#2A2A2A" stroke-width="1.5"/>
+  </g>
+  <line x1="400" y1="140" x2="400" y2="176" stroke="#2A2A2A" stroke-width="2"/>
+  <path d="M378 176 h44 l-8 18 h-28z" fill="#E9D9A6"/>
+  <circle cx="400" cy="200" r="90" fill="url(#lamp)"/>
+  <rect width="800" height="600" fill="url(#vig)"/>
+</svg>

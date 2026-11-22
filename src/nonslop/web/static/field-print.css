@@ -1,0 +1,30 @@
+.case-file{position:relative;margin:0;min-width:0;border:1px solid #acafa2;padding:12px clamp(12px,2vw,28px) 16px;background-color:#dfe2d8;background-image:radial-gradient(#aeb3a5 .65px,transparent .8px);background-size:7px 7px}
+.file-no{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #aeb3a5;padding-bottom:9px;color:#404b42}
+.print{width:90%;margin:22px auto 20px;position:relative;transform:rotate(1.5deg);padding:9px 9px 11px;background:#fcfaf2;box-shadow:1px 4px 6px #28312226,2px 12px 20px #28312214}
+.print:before{content:'';position:absolute;z-index:1;left:39%;top:-7px;width:22%;height:19px;background:#dfd2abbf;transform:rotate(-4deg);border-inline:1px dashed #c8ba94}
+.print-image{position:relative;aspect-ratio:4/3;overflow:hidden;background:#b69e64}
+.print-image img{display:block;width:100%;height:100%}
+.print-label{display:block;margin:7px 3px 0;color:var(--blue);font:clamp(18px,2.1vw,31px)/1.05 'Nanum Pen Script',Georgia,serif}
+.pin{position:absolute;left:35.1%;top:35.3%;width:clamp(31px,6vw,54px);aspect-ratio:1;border:2px solid #fff9e8;box-shadow:0 0 0 1px #202c36ac;transform:translate(-50%,-50%) rotate(-8deg);border-radius:50% 44% 48% 44%;pointer-events:none}
+.case-file:has(#src-letter:checked) .pin{left:64.5%;top:55.8%;border-radius:2px;transform:translate(-50%,-50%) rotate(2deg)}
+.case-file:has(#src-guess:checked) .pin{left:52.9%;top:56.5%;border-radius:3px;border-style:dashed;transform:translate(-50%,-50%)}
+.lenses{border:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:0 6px}
+.lenses legend{padding:0 0 3px;font:700 13px/1.4 'Schibsted Grotesk',sans-serif}
+.lenses label{position:relative;cursor:pointer;flex:1 1 auto}
+.lenses input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
+.lenses span{min-height:44px;display:flex;align-items:center;justify-content:center;border-block-end:1px solid #929c91;font:500 14px/1.2 'Schibsted Grotesk',sans-serif}
+.lenses input:checked + span{color:#fbfbf8;background:var(--ink)}
+.lenses input:focus-visible + span{outline:2px solid var(--blue);outline-offset:2px}
+.source-notes{margin:12px 0 0;min-height:57px;background:#f7f6ef;padding:11px 14px}
+.source-notes p{display:none;margin:0}.source-notes .note-memory{display:block;color:var(--blue);font:24px/1.2 'Nanum Pen Script',Georgia,serif}
+.source-notes .note-letter,.source-notes .note-guess{font:13px/1.5 'IBM Plex Mono',monospace}
+.case-file:has(#src-letter:checked,#src-guess:checked) .note-memory{display:none}
+.case-file:has(#src-letter:checked) .note-letter,.case-file:has(#src-guess:checked) .note-guess{display:block}
+@media (prefers-reduced-motion:no-preference) {
+  .pin { transition:left .22s ease-out, top .22s ease-out, transform .22s ease-out }
+}
+@media (max-width:800px) {
+  .print { width:min(88%,440px) }
+  .source-notes { min-height:68px }
+}
+@media (max-width:370px) { .lenses span { font-size:13px } }

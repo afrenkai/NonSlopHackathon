@@ -1,4 +1,4 @@
-# Again, here
+# Memory Worlds
 
 A prototype for revisiting a lost street from photographs, descriptions,
 newspaper scans, and archive material. FastAPI serves a small HTMX interface;
@@ -9,7 +9,19 @@ photos, audio, video, and linked visits.
 The implementation roadmap is maintained in [todo.md](todo.md): video → 3D
 space with HY-WorldMirror → time capsules, with an isolated SGLang-Omni service.
 
-Website: https://afrenkai--nonslop-streets-web.us-east.modal.run
+Existing deployment (not this redesign): https://afrenkai--nonslop-streets-web.us-east.modal.run
+
+## Local CPU preview
+
+From the repo root with Python 3.13, install once with `uv sync --locked --group checks`. Then start the browser app without network access, model downloads, or Modal credentials:
+
+```bash
+uv run --offline --no-sync python scripts/local_preview.py
+```
+
+Open **http://127.0.0.1:8742/**. Use one server at a time; stop it with Ctrl+C. Capsules, dated entries, and original media use the real local store. Keep the browser cookie to return after restarting. On Windows, the database, uploads and session key live under `%LOCALAPPDATA%\NonSlop\cpu-preview`; on other systems they live under `~/.local/share/NonSlop/cpu-preview`. Keep this directory private; never serve it with a static file server.
+
+Visit submissions save supplied text and reference images, even if web search is checked. No archive lookup, video, 3D space, transcript or AI observations are produced. Worker requests show an offline result instead of polling. Image scans need local English Tesseract; audio/video uploads need `ffprobe` on `PATH`. Text/Markdown and photographs need neither.
 
 ## Run on Modal
 

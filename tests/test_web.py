@@ -119,6 +119,19 @@ def api_headers(settings: WebSettings) -> dict[str, str]:
     }
 
 
+def test_field_guide_leads_into_live_workspace(tmp_path: Path) -> None:
+    client = browser_client(client_settings(tmp_path), RecordingGenerator())
+    home = client.get("/")
+    assert home.status_code == 200
+    assert "Memory Worlds" in home.text
+    for part in ("new-visit", "your-box", "src-memory", "src-letter", "src-guess"):
+        assert f'id="{part}"' in home.text
+    assert 'href="/capsules"' in home.text
+    assert 'action="/jobs"' in home.text
+    assert client.get("/static/kitchen.svg").status_code == 200
+    assert "Memory Worlds" in client.get("/capsules").text
+
+
 def test_public_site_keeps_api_credentials_and_browser_csrf(tmp_path: Path) -> None:
     settings = client_settings(tmp_path)
     client = browser_client(settings, RecordingGenerator())

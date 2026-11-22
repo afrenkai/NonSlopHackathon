@@ -45,6 +45,8 @@ def create_app(
     commit_data: Callable[[], None],
     reload_outputs: Callable[[], None],
     reload_worlds: Callable[[], None],
+    *,
+    scene_service: type[SceneService] = SceneService,
 ) -> FastAPI:
     application = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     application.add_middleware(
@@ -66,7 +68,7 @@ def create_app(
     store = JobStore(settings.data_root, commit_data)
     capsules = CapsuleStore(store)
     capsule_service = CapsuleService(capsules, archivist_gateway)
-    service = SceneService(store, gateway)
+    service = scene_service(store, gateway)
     videos = ArtifactStore(settings.output_root, settings.serving_root, reload_outputs)
     worlds = ReconstructionService(store, world_gateway)
     world_artifacts = ArtifactStore(
@@ -188,10 +190,10 @@ def create_app(
     def visit_page(request: Request, job_id: UUID) -> HTMLResponse:
         return templates.TemplateResponse(
             request=request,
-            name="index.html",
+            name="visit.html",
             context={
                 "csrf": csrf_token(request),
-                "jobs": [find_job(job_id, browser_workspace(request))],
+                "job": find_job(job_id, browser_workspace(request)),
                 "linked_memories": capsules.linked_entries(
                     job_id, browser_workspace(request)
                 ),

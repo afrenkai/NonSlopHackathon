@@ -1,0 +1,60 @@
+<form action="/jobs" method="post" enctype="multipart/form-data" class="form-stack" hx-post="/jobs" hx-target="#latest" hx-swap="afterbegin show:top" hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="place-fields">
+    <div class="field">
+      <label for="location">Place or street</label>
+      <input id="location" name="location" type="text" placeholder="Street, town, country" minlength="3" maxlength="250" required autocomplete="off">
+    </div>
+    <div class="field year-field">
+      <label for="year">Year</label>
+      <input id="year" name="year" type="number" min="1800" max="2026" placeholder="2006" inputmode="numeric" required>
+    </div>
+  </div>
+  <div class="field">
+    <label for="description">What would you like to revisit?</label>
+    <textarea id="description" name="description" rows="4" minlength="5" maxlength="4000" required placeholder="A slow walk past the corner shop, late afternoon light on the brickwork, a bus passing in the distance…"></textarea>
+  </div>
+  <div class="field upload-field">
+    <label for="reference-image">Opening photograph <span class="optional">Optional</span></label>
+    <input id="reference-image" name="reference_image" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="reference-help">
+    <p class="field-help" id="reference-help">Use a street photograph to anchor the first frame. PNG, JPEG, or WebP.</p>
+  </div>
+  <details class="source-details">
+    <summary>Add multiple reference images <span class="optional">Optional</span></summary>
+    <div class="details-content form-stack">
+      <div class="field upload-field">
+        <label for="reference-folder">Choose an image folder</label>
+        <input id="reference-folder" name="reference_images" type="file" accept="image/png,image/jpeg,image/webp" multiple webkitdirectory directory data-reference-picker>
+      </div>
+      <div class="field upload-field">
+        <label for="reference-images">Or select multiple images</label>
+        <input id="reference-images" name="reference_images" type="file" accept="image/png,image/jpeg,image/webp" multiple data-reference-picker>
+      </div>
+      <p class="field-help">Up to 8 images total, 10 MB each, 40 MB per upload. Folder images are ordered by filename. The opening photograph comes first when supplied. All images inform the prompt; pi-H3 uses the first and last as frame anchors.</p>
+      <p id="reference-selection" class="field-help" role="status" aria-live="polite"></p>
+    </div>
+  </details>
+  <details class="source-details">
+    <summary>Add newspaper or archive material <span class="optional">Optional</span></summary>
+    <div class="details-content form-stack">
+      <div class="field">
+        <label for="source-text">Source text or remembered details</label>
+        <textarea id="source-text" name="source_text" rows="4" maxlength="20000" placeholder="Paste a newspaper excerpt, OCR text, or details you remember. Add dates and source names when you know them."></textarea>
+      </div>
+      <div class="field upload-field">
+        <label for="source-file">Upload a source</label>
+        <input id="source-file" name="source_file" type="file" accept=".txt,.md,image/png,image/jpeg,image/webp" aria-describedby="source-help">
+        <p class="field-help" id="source-help">A text file or a newspaper image scan. Text is extracted from image scans.</p>
+      </div>
+    </div>
+  </details>
+  <label class="checkbox-field" for="use-web">
+    <input id="use-web" name="use_web" type="checkbox" value="true" {% if request.app.state.local_preview %}disabled{% else %}checked{% endif %}>
+    <span><strong>Find context on the web</strong><span class="field-help">{% if request.app.state.local_preview %}Off in the local preview. Your materials stay on this computer.{% else %}Look up this place and show the sources used with the result.{% endif %}</span></span>
+  </label>
+  <div class="form-submit">
+    <button class="button button-primary button-full" type="submit">{% if request.app.state.local_preview %}Save visit sources{% else %}Create a visit{% endif %}</button>
+    <p id="submit-progress" class="htmx-indicator" role="status">Gathering your source material…</p>
+  </div>
+  <p class="interpretation-note">{% if request.app.state.local_preview %}Local preview: you can save a visit record and link it to a capsule. Video and 3D generation are offline.{% else %}Each visit is a generated interpretation of the supplied evidence. Review the sources and details alongside your video.{% endif %}</p>
+</form>

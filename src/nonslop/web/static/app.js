@@ -31,9 +31,25 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("reference-image")?.addEventListener("change", showReferences);
 });
 
+document.addEventListener("htmx:beforeRequest", (event) => {
+  event.detail.elt?.closest("form")?.querySelector("[data-form-feedback]")?.remove();
+});
+
 document.addEventListener("htmx:beforeSwap", (event) => {
   const response = event.detail.xhr;
   if ([400, 403, 409, 413, 422].includes(response.status)) {
+    // Keep the archive (and its swap target) intact when a form needs a correction.
+    const form = event.detail.requestConfig?.elt?.closest("form");
+    if (form) {
+      let feedback = form.querySelector("[data-form-feedback]");
+      if (!feedback) {
+        feedback = document.createElement("div");
+        feedback.dataset.formFeedback = "";
+        form.append(feedback);
+      }
+      event.detail.target = feedback;
+      event.detail.swapOverride = "innerHTML";
+    }
     event.detail.shouldSwap = true;
     event.detail.isError = false;
   }

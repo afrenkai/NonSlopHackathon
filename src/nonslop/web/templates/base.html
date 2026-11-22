@@ -3,19 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="{% block scheme %}light{% endblock %}">
   <meta name="htmx-config" content='{"allowEval":false,"includeIndicatorStyles":false,"allowScriptTags":false}'>
-  <title>{% block title %}Time capsules{% endblock %} · Again, here</title>
+  <title>{% block title %}Time capsules{% endblock %} · Memory Worlds</title>
+  <link rel="icon" href="/static/field-mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/style.css">
-  <script src="/static/htmx.min.js" defer></script>
-  <script src="/static/app.js" defer></script>
+  {% block styles %}{% endblock %}
+  {% block scripts %}<script src="/static/htmx.min.js" defer></script>
+  <script src="/static/app.js" defer></script>{% endblock %}
 </head>
-<body>
-  <header class="site-header">
-    <a class="wordmark" href="/">Again, here<span class="wordmark-mark" aria-hidden="true">.</span></a>
-    <nav class="header-actions" aria-label="Workspace"><a class="text-link" href="/">Your visits</a><a class="text-link" href="/capsules">Time capsules</a></nav>
-  </header>
-  <main class="workspace">{% block content %}{% endblock %}</main>
-  <footer class="site-footer"><span>Your words stay yours.</span><span>Saved in this browser’s workspace. Keep its cookies to return.</span></footer>
+<body class="{% block surface %}archive{% endblock %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="mast"><div class="site-header">
+    <a class="wordmark" href="/"><svg aria-hidden="true" viewBox="0 0 28 32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m2 5 20-3 4 25-20 3z"/><path d="M7 9 18 7l1.5 10-11 2zm4 15 8-1"/></svg>Memory Worlds</a>
+    <nav class="header-actions" aria-label="Workspace">
+      <a href="/#new-visit">New visit</a><a href="/capsules"{% if request.url.path.startswith('/capsules') %} aria-current="{{ 'page' if request.url.path == '/capsules' else 'location' }}"{% endif %}>Time capsules</a><a class="box-link" href="/#your-box">Your box <span aria-hidden="true">↗</span></a>
+    </nav>
+  </div></header>
+  <main id="main" tabindex="-1" class="workspace">{% block content %}{% endblock %}</main>
+  <footer class="site-footer"><span class="hand">Your words stay yours.</span><span>Saved in this browser’s workspace. Keep its cookies to return.</span></footer>
 </body>
 </html>

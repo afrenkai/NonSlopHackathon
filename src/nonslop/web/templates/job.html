@@ -2,13 +2,10 @@
   <div class="visit-heading">
     <div>
       <p class="eyebrow">{{ job.scene.year }}</p>
-      <h3>{{ job.scene.location }}</h3>
+      {% if request.url.path.startswith('/visits/') %}<h2>Visit record</h2>{% else %}<h3><a href="/visits/{{ job.job_id }}">{{ job.scene.location }}</a></h3>{% endif %}
     </div>
-    <span class="status status-{{ job.status }}">{% if job.status == 'complete' %}Ready to visit{% elif job.status == 'failed' %}Couldn’t complete{% elif job.status == 'running' %}Creating your visit{% else %}Waiting to begin{% endif %}</span>
+    <span class="status status-{{ job.status }}">{% if job.status == 'complete' %}Ready to visit{% elif job.status == 'failed' and request.app.state.local_preview %}Sources saved{% elif job.status == 'failed' %}Couldn’t complete{% elif job.status == 'running' %}Creating your visit{% else %}Waiting to begin{% endif %}</span>
   </div>
-  {% if job.reference_count > 1 %}
-  <details class="source-details"><summary>{{ job.reference_count }} reference photographs</summary><div class="reference-gallery">{% for name in job.reference_names %}<figure><img src="/jobs/{{ job.job_id }}/references/{{ loop.index0 }}" alt="Reference {{ loop.index }}: {{ name }}" loading="lazy"><figcaption>{{ loop.index }}. {{ name }}{% if loop.first %} · Opening frame{% elif loop.last %} · Ending frame{% endif %}</figcaption></figure>{% endfor %}</div></details>
-  {% endif %}
   {% if job.result and job.result.reference_observations %}<details class="source-details"><summary>AI observations of your photographs</summary><p class="source-excerpt">{{ job.result.reference_observations }}</p><p class="field-help">These observations informed the prompt. They may contain mistakes and are separate from historical evidence.</p></details>{% endif %}
   {% if job.status == 'complete' and job.result %}
   <div class="video-wrap">
@@ -36,7 +33,7 @@
     <p class="field-help">Geometry inferred from generated video. Unseen details and historical accuracy remain uncertain.</p>
   </div>
   {% elif job.status == 'failed' %}
-  <div class="message message-error" role="alert">{{ job.error or 'The generation could not finish. Please try another visit.' }}</div>
+  <div class="{% if request.app.state.local_preview %}context-notices{% else %}message message-error{% endif %}" role="status">{{ job.error or 'The generation could not finish. Please try another visit.' }}</div>
   {% else %}
   <div class="generation-state">
     {% if job.has_reference %}<img class="reference-thumbnail" src="/jobs/{{ job.job_id }}/reference" alt="Your opening street photograph" loading="lazy">{% endif %}
@@ -47,25 +44,13 @@
     </div>
   </div>
   {% endif %}
-  <p class="visit-description">{{ job.scene.description }}</p>
+  <p class="eyebrow record-label">Your words</p>
+  <p class="visit-description personal-words">{{ job.scene.description }}</p>
   {% if job.notices %}
   <div class="context-notices">
     {% for notice in job.notices %}<p>{{ notice }}</p>{% endfor %}
   </div>
   {% endif %}
-  {% if job.sources %}
-  <details class="source-details result-sources">
-    <summary>Source material <span class="source-count">{{ job.sources|length }}</span></summary>
-    <div class="source-list">
-      {% for source in job.sources %}
-      <div class="source-entry">
-        <p class="source-meta">{{ source.kind }}{% if source.date %} · {{ source.date }}{% endif %}</p>
-        {% if source.url %}<a class="source-title" href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a>{% else %}<p class="source-title">{{ source.title }}</p>{% endif %}
-        {% if source.excerpt %}<p class="source-excerpt">{{ source.excerpt }}</p>{% endif %}
-      </div>
-      {% endfor %}
-    </div>
-  </details>
-  {% endif %}
-  <div class="visit-footer"><span>Generated interpretation</span><time>{{ job.created_at|string|replace('T', ' ') }}</time></div>
+  {% include "source_ledger.html" %}
+  <div class="visit-footer"><span>{% if request.app.state.local_preview and not job.result %}Source record · not generated{% else %}Generated interpretation{% endif %}</span><time>{{ job.created_at|string|replace('T', ' ') }}</time></div>
 </article>
