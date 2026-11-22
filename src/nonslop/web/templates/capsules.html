@@ -1,17 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Your keepsake box{% endblock %}
+{% block title %}Time capsules{% endblock %}
 {% block styles %}<link rel="stylesheet" href="/static/keepsakes.css">{% endblock %}
 {% block content %}
 <div class="ks-workspace">
   <header class="ks-cover">
-    <h1>Your keepsake box</h1>
+    <a class="text-link" href="/dashboard#time-capsules">← Your dashboard</a>
+    <p class="file-tab">Keepsake collection</p>
+    <h1>Time capsules</h1>
     <p class="ks-lead">Choose an object or a place. Keep the memories that belong to it together.</p>
     <a class="ks-jump" href="#capsule-title">Start a keepsake <span aria-hidden="true">↘</span></a>
   </header>
 
   <div class="ks-spread">
     <section class="ks-tray" aria-labelledby="ks-collection">
-      <header class="ks-ruler"><h2 id="ks-collection">In your box</h2></header>
+      <header class="ks-ruler"><h2 id="ks-collection">Shared capsules</h2></header>
       <div id="capsule-list" class="ks-list" aria-live="polite">
         {% for capsule in capsules %}
           {% include "capsule_card.html" %}
@@ -28,10 +30,11 @@
     </section>
 
     <section class="panel ks-sheet" aria-labelledby="ks-new">
-      <header class="ks-sheet-head"><h2 id="ks-new">Label a capsule</h2></header>
+      <header class="ks-sheet-head"><p class="ks-meta">New keepsake</p><h2 id="ks-new">Label a capsule</h2></header>
       <form action="/capsules" method="post" enctype="multipart/form-data" class="form-stack"
             hx-post="/capsules" hx-encoding="multipart/form-data" hx-target="#capsule-list"
             hx-swap="afterbegin show:#capsule-list:top" hx-disabled-elt="find button">
+        <p class="field-help public-notice"><strong>Your collection.</strong> Your uploads and memories are available in this browser’s workspace.</p>
         <input type="hidden" name="csrf" value="{{ csrf }}">
         <div class="field">
           <label for="capsule-title">Name this object or place</label>

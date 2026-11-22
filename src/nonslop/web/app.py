@@ -1,9 +1,10 @@
 from collections.abc import Callable
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID
 
 from anyio import to_thread
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -51,6 +52,7 @@ def create_app(
     download_world: Callable[[Path, Path], None] | None = None,
 ) -> FastAPI:
     application = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    application.state.local_preview = False
     application.add_middleware(
         SessionMiddleware,
         secret_key=settings.session_secret.get_secret_value(),
@@ -180,15 +182,47 @@ def create_app(
 
     @application.get("/", response_class=HTMLResponse)
     def home(request: Request) -> Response:
-        jobs = [
-            worlds.refresh(service.refresh(job))
-            for job in store.recent(owner_id=browser_workspace(request))
-        ]
+        return templates.TemplateResponse(request=request, name="index.html")
+
+    @application.get("/dashboard", response_class=HTMLResponse)
+    def dashboard(
+        request: Request,
+        box_page: Annotated[int, Query(ge=1, le=2**31 - 1)] = 1,
+        capsule_page: Annotated[int, Query(ge=1, le=2**31 - 1)] = 1,
+    ) -> Response:
+        owner_id = browser_workspace(request)
+        page_jobs, more_jobs = store.page(box_page, owner_id)
+        page_capsules, more_capsules = capsules.page(capsule_page, owner_id)
+        jobs = [worlds.refresh(service.refresh(job)) for job in page_jobs]
         return templates.TemplateResponse(
             request=request,
-            name="index.html",
-            context={"csrf": csrf_token(request), "jobs": jobs},
+            name="dashboard.html",
+            context={
+                "csrf": csrf_token(request),
+                "jobs": jobs,
+                "capsules": page_capsules,
+                "box_page": box_page,
+                "capsule_page": capsule_page,
+                "more_jobs": more_jobs,
+                "more_capsules": more_capsules,
+            },
         )
+
+    @application.get("/visits/new", response_class=HTMLResponse)
+    def new_visit(request: Request) -> HTMLResponse:
+        return templates.TemplateResponse(
+            request=request,
+            name="new_visit.html",
+            context={"csrf": csrf_token(request)},
+        )
+
+    @application.post("/visits/new", response_class=HTMLResponse)
+    async def save_new_visit(request: Request) -> Response:
+        job = await submit_form(request, browser=True)
+        location = f"/visits/{job.job_id}"
+        if request.headers.get("HX-Request") == "true":
+            return Response(headers={"HX-Redirect": location})
+        return RedirectResponse(location, status_code=303)
 
     @application.get("/visits/{job_id}", response_class=HTMLResponse)
     def visit_page(request: Request, job_id: UUID) -> HTMLResponse:

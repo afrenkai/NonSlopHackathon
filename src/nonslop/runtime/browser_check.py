@@ -117,7 +117,8 @@ def check(
 
     def is_creation_response(response: Response) -> bool:
         return (
-            response.request.method == "POST" and urlsplit(response.url).path == "/jobs"
+            response.request.method == "POST"
+            and urlsplit(response.url).path == "/visits/new"
         )
 
     with sync_playwright() as playwright:
@@ -144,6 +145,8 @@ def check(
             page.on("response", record_response)
             home = page.goto("/", wait_until="domcontentloaded", timeout=120000)
             assert home is not None and home.status == 200
+            page.get_by_role("link", name="Add a photograph").click()
+            page.wait_for_url("**/visits/new")
             page.get_by_label("Place or street", exact=True).fill(
                 "Hester Street, Lower East Side, New York City"
             )
@@ -179,7 +182,10 @@ def check(
                         "button", name="Create a visit", exact=True
                     ).click()
             assert creation.value.status == 200
-            created_article = page.locator("#latest article.visit-card").first
+            visit_path = creation.value.headers["hx-redirect"]
+            assert visit_path.startswith("/visits/")
+            page.wait_for_url(f"**{visit_path}")
+            created_article = page.locator(".visit-record article.visit-card")
             created_article.wait_for(state="visible", timeout=30000)
             article_id = created_article.get_attribute("id")
             assert article_id is not None and article_id.startswith("job-")
@@ -233,31 +239,31 @@ def check(
 
             other_context = browser.new_context(base_url=base_url.rstrip("/"))
             try:
-                private_video = other_context.request.get(
+                shared_video = other_context.request.get(
                     f"/jobs/{job_id}/video",
                     headers={"Range": "bytes=0-0"},
                     timeout=30000,
                 )
-                video_status = private_video.status
-                private_video.dispose()
-                private_world = other_context.request.get(
+                video_status = shared_video.status
+                shared_video.dispose()
+                shared_world = other_context.request.get(
                     f"/jobs/{job_id}/world/gaussians.ply",
                     headers={"Range": "bytes=0-0"},
                     timeout=30000,
                 )
-                world_status = private_world.status
-                private_world.dispose()
+                world_status = shared_world.status
+                shared_world.dispose()
             finally:
                 other_context.close()
 
-            metadata["other_workspace_video_status"] = str(video_status)
-            metadata["other_workspace_world_status"] = str(world_status)
+            metadata["other_browser_video_status"] = str(video_status)
+            metadata["other_browser_world_status"] = str(world_status)
             metadata.update(diagnostics())
             assert not page_errors, metadata
             assert not failed_requests, metadata
             assert not failed_responses, metadata
             assert metadata["csp_errors"] == "[]", metadata
-            assert video_status == 404 and world_status == 404, metadata
+            assert video_status == 206 and world_status == 206, metadata
             metadata["status"] = "passed"
             progress("checks passed")
             return before, after, metadata
@@ -380,7 +386,9 @@ def check_navigation(base_url: str, job_id: str) -> tuple[bytes, bytes, dict[str
         autoescape=select_autoescape(("html",)),
     )
     world_html = templates.get_template("world.html").render(
-        job=fixture, linked_memories=[]
+        job=fixture,
+        linked_memories=[],
+        request={"url": {"path": f"/jobs/{identifier}/world"}},
     )
 
     with sync_playwright() as playwright:

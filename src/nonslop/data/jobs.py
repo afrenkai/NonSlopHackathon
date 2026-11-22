@@ -83,6 +83,19 @@ class JobStore:
         assert row is not None
         return int(row[0])
 
+    def page(self, page_number: int, owner_id: str) -> tuple[list[JobRecord], bool]:
+        page_size = 20
+        with self.lock, duckdb.connect(str(self.database)) as connection:
+            rows = connection.execute(
+                "SELECT payload FROM jobs WHERE owner_id = ? "
+                "ORDER BY created_at DESC, job_id DESC LIMIT ? OFFSET ?",
+                [owner_id, page_size + 1, (page_number - 1) * page_size],
+            ).fetchall()
+        return (
+            [JobRecord.model_validate_json(row[0]) for row in rows[:page_size]],
+            len(rows) > page_size,
+        )
+
     def active_world_count(self) -> int:
         with self.lock, duckdb.connect(str(self.database)) as connection:
             row = connection.execute(

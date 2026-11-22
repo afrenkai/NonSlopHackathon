@@ -1,6 +1,6 @@
 <article class="ks-tag" data-capsule-id="{{ capsule.capsule_id }}">
   {% if capsule.anchor_filename %}
-    <img class="ks-tag-photo" src="/capsules/{{ capsule.capsule_id }}/anchor" alt="Your photograph of {{ capsule.title }}" loading="lazy">
+    <img class="ks-tag-photo" src="/capsules/{{ capsule.capsule_id }}/anchor" alt="Photograph of {{ capsule.title }}" loading="lazy">
   {% endif %}
   <div class="ks-tag-label">
     <p class="ks-meta">Started <time datetime="{{ capsule.created_at.date() }}">{{ capsule.created_at.strftime('%d %b %Y') }}</time></p>

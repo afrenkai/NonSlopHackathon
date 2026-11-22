@@ -109,6 +109,19 @@ class CapsuleStore:
                 connection.execute("COMMIT")
             self.commit()
 
+    def page(self, page_number: int, owner_id: str) -> tuple[list[CapsuleRecord], bool]:
+        page_size = 20
+        with self.lock, duckdb.connect(str(self.database)) as connection:
+            rows = connection.execute(
+                "SELECT payload FROM capsules WHERE owner_id = ? "
+                "ORDER BY created_at DESC, capsule_id DESC LIMIT ? OFFSET ?",
+                [owner_id, page_size + 1, (page_number - 1) * page_size],
+            ).fetchall()
+        return (
+            [CapsuleRecord.model_validate_json(row[0]) for row in rows[:page_size]],
+            len(rows) > page_size,
+        )
+
     def get_entry(self, entry_id: UUID, owner_id: str) -> CapsuleEntry | None:
         with self.lock, duckdb.connect(str(self.database)) as connection:
             row = connection.execute(

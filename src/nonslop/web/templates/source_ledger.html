@@ -9,7 +9,7 @@
 </details>
 {% endif %}
 {% if job.scene.source_text %}
-<details class="source-details result-sources"><summary>Context you supplied</summary><p class="field-help">The notes or extracted text submitted with this visit.</p><p class="source-excerpt">{{ job.scene.source_text }}</p></details>
+<details class="source-details result-sources"><summary>Supplied context</summary><p class="field-help">The notes or extracted text submitted with this visit.</p><p class="source-excerpt">{{ job.scene.source_text }}</p></details>
 {% endif %}
 {% if job.sources %}
 <details class="source-details result-sources"{% if expanded_sources %} open{% endif %}>

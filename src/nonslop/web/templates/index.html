@@ -1,28 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Your box{% endblock %}
-{% block styles %}<link rel="stylesheet" href="/static/field-print.css">{% endblock %}
+{% block title %}Photographs & keepsakes{% endblock %}
+{% block styles %}<link rel="stylesheet" href="/static/field-print.css"><link rel="stylesheet" href="/static/guide.css">{% endblock %}
 {% block content %}
-<section class="spread" aria-labelledby="spread-title">
-  <div class="lead">
-    <h1 id="spread-title">Revisit<br>your<br><em>memories.</em></h1>
-    <div class="actions"><a class="button button-primary" href="#new-visit">Start a visit <span aria-hidden="true">→</span></a><a class="text-link" href="#your-box">Open your box</a></div>
+<section id="intro" class="guide-hero" aria-labelledby="guide-title">
+  <div><p class="eyebrow">Memory Worlds / A field guide</p>
+    <h1 id="guide-title">Places you remember.<br><em>Things you kept.</em></h1>
+  </div>
+  <div class="guide-welcome"><p>Revisit a place through a photograph, or gather the stories that belong to a keepsake.</p>
+    <a class="button button-primary" href="/dashboard">Open the dashboard <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+<section id="photograph" class="guide-chapter photo-chapter" aria-labelledby="photo-title">
+  <div class="chapter-copy"><p class="file-tab">01 / Photograph</p>
+    <h2 id="photo-title">Step back<br>inside the<br><em>photograph.</em></h2>
+    <p>A picture remembers one wall. You remember the radio playing behind you. Put the two together and step inside.</p>
+    <a class="button button-primary" href="/visits/new">Add a photograph <span aria-hidden="true">→</span></a>
   </div>
   {% include "field_print.html" %}
 </section>
-<div class="workspace-grid collection">
-  <section id="your-box" class="results" aria-labelledby="results-title">
-    <div class="section-heading"><h2 id="results-title">Your box.</h2><a class="text-link" href="/capsules">Time capsules ↗</a></div>
-    <p class="shelf-intro">Your visits live here. Open a record to find the photograph, the visit, and the sources behind it.</p>
-    <div id="latest" class="visit-list" aria-live="polite">
-      {% for job in jobs %}{% include "job.html" %}{% else %}
-      <div class="empty-state"><h3>Which place comes to mind first?</h3><p>A street name and a year are enough to begin. Add a photograph if you have one.</p><a class="text-link" href="#new-visit">Make your first visit →</a></div>
-      {% endfor %}
-    </div>
-  </section>
-  <section id="new-visit" class="composer panel" aria-labelledby="composer-title">
-    <h2 id="composer-title">Build your street</h2>
-    <p class="form-lead">Start with a place, a year, and one detail that stayed with you.</p>
-    {% include "visit_form.html" %}
-  </section>
-</div>
+<section id="keepsake" class="guide-chapter keepsake-chapter" aria-labelledby="keepsake-title">
+  <div class="chapter-copy"><p class="file-tab">02 / Keepsake</p>
+    <h2 id="keepsake-title">Some things<br><em>aren’t places.</em></h2>
+    <p>Photograph a stuffed animal, a diary, a ring. Then keep adding to it over the years with voice notes, photos, videos, or a few written lines. See it all at once, or year by year.</p>
+    <a class="button button-primary" href="/dashboard#time-capsules">Explore time capsules <span aria-hidden="true">→</span></a>
+  </div>
+  <figure class="keepsake-example" aria-labelledby="bun-caption">
+    <p class="meta">Illustrated example / Family keepsake</p>
+    <div class="keepsake-print"><img src="/static/keepsake-rabbit.svg" width="400" height="400" loading="lazy" alt="Bun-Bun, a worn stuffed rabbit with a stitched patch."></div>
+    <figcaption id="bun-caption"><span class="keepsake-tag"><strong>Bun-Bun</strong><span class="meta">Since 2009</span></span>
+      <blockquote>“She’s 17 now and still sleeps with him on the bad nights.”</blockquote>
+    </figcaption>
+    <details class="sample-timeline"><summary>Bun-Bun’s memories, year by year</summary>
+      <ol><li><time>2009</time><span>Voice note · First night home</span></li><li><time>2014</time><span>Photograph · The hospital stay</span></li><li><time>2019</time><span>Video · Moving day</span></li><li><time>2021</time><span>Note · Lost, then found</span></li></ol>
+    </details>
+  </figure>
+</section>
 {% endblock %}

@@ -3,9 +3,9 @@
   <h3>Attached memories and corrections</h3>
   {% for memory in linked_memories %}
   <div class="source-entry">
-    <p class="eyebrow">{{ memory.occurred_on }} · Your {% if memory.kind == 'correction' %}correction{% else %}words and source material{% endif %}</p>
+    <p class="eyebrow">{{ memory.occurred_on }} · {% if memory.kind == 'correction' %}correction{% else %}words and source material{% endif %}</p>
     {% if memory.text %}<p class="visit-description">{{ memory.text }}</p>{% endif %}
-    {% if memory.enrichment and memory.enrichment.text %}<details class="source-details"><summary>AI {{ memory.enrichment.kind }}</summary><p class="source-excerpt">{{ memory.enrichment.text }}</p><p class="field-help">AI output may contain mistakes. It is separate from your original entry.</p></details>{% endif %}
+    {% if memory.enrichment and memory.enrichment.text %}<details class="source-details"><summary>AI {{ memory.enrichment.kind }}</summary><p class="source-excerpt">{{ memory.enrichment.text }}</p><p class="field-help">AI output may contain mistakes. It is separate from the original entry.</p></details>{% endif %}
     <a class="text-link" href="/capsules/{{ memory.capsule_id }}">Open the capsule and original entry</a>
   </div>
   {% endfor %}
