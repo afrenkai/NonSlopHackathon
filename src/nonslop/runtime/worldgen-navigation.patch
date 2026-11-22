@@ -6,3 +6,23 @@ diff --git a/hyworld2/worldgen/traj_generate.py b/hyworld2/worldgen/traj_generat
                  rank0_log(f"  Navmesh Error: {e}", "ERROR")
 +                raise
  
+diff --git a/hyworld2/worldgen/src/navi_utils.py b/hyworld2/worldgen/src/navi_utils.py
+--- a/hyworld2/worldgen/src/navi_utils.py
++++ b/hyworld2/worldgen/src/navi_utils.py
+@@ -3305,12 +3305,14 @@
+     # Save artifacts
+     with timer.track("[IO] Save results of path planning from navmesh"):
+-        save_artifacts(output_dir, mesh, nav_verts, nav_faces,
++        save_artifacts(output_dir, mesh,
++                       nav_verts=nav_verts if nav_graph is not None else None,
++                       nav_faces=nav_faces if nav_graph is not None else None,
+                        exploration_paths=exploration_paths,
+                        target_paths=target_paths,
+                        surround_paths=surround_paths,
+                        reconstruct_paths=reconstruct_paths,
+                        target_points=target_points_yup,
+                        target_radius=surround_radius,
+-                       nav_node_centers=nav_graph.centers,
++                       nav_node_centers=nav_graph.centers if nav_graph is not None else None,
+                        reconstruct_targets=recon_targets_yup,
+                        reconstruct_radius=actual_recon_radii)

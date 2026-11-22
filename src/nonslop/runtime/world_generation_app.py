@@ -46,7 +46,7 @@ with image.imports():
     memory=8192,
     volumes={"/outputs": video_volume},
     timeout=23400,
-    max_containers=2,
+    max_containers=3,
 )
 def prepare_world_generation(
     job_id: str, reference_images: list[bytes], context_json: str
@@ -110,7 +110,7 @@ def prepare_world_generation(
         "/runtime-cache": cache_volume,
     },
     timeout=21600,
-    max_containers=1,
+    max_containers=3,
 )
 def generate_world(
     job_id: str, video_anchor: bytes, context_json: str, video_observations: str
