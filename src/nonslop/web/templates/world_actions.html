@@ -1,0 +1,25 @@
+{% if job.status == 'complete' or (job.world and job.world.status in ('running', 'complete')) %}
+<div class="world-actions">
+  {% if job.world and job.world.status == 'complete' %}
+  <a class="button button-primary" href="/jobs/{{ job.job_id }}/world">Step into this space</a>
+  {% if job.status == 'complete' %}
+  <form action="/jobs/{{ job.job_id }}/world" method="post" hx-post="/jobs/{{ job.job_id }}/world" hx-target="#job-{{ job.job_id }}" hx-swap="outerHTML" hx-disabled-elt="find button">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="rebuild" value="true">
+    <button class="button button-secondary" type="submit">Rebuild this space</button>
+  </form>
+  {% endif %}
+  {% elif job.world and job.world.status == 'running' %}
+  <p role="status">Reconstructing a 3D space from {% if job.world.input_kind == 'reference_photos' %}your photographs{% else %}the generated video{% endif %}… This card updates automatically.</p>
+  {% else %}
+  {% if job.world and job.world.error %}<p class="message message-error">{{ job.world.error }}</p>{% endif %}
+  <form action="/jobs/{{ job.job_id }}/world" method="post" hx-post="/jobs/{{ job.job_id }}/world" hx-target="#job-{{ job.job_id }}" hx-swap="outerHTML" hx-disabled-elt="find button">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="button button-secondary" type="submit">Build a 3D space</button>
+  </form>
+  {% endif %}
+  <p class="field-help">{% if job.world and job.world.status == 'complete' and job.world.result and job.world.result.input_kind == 'reference_photos' %}Geometry inferred directly from your photographs.{% else %}The reconstruction uses frames from your generated video.{% endif %} Unseen surfaces remain uncertain.</p>
+</div>
+{% elif job.status in ('queued', 'running') %}
+<p class="field-help">You can build a 3D space once the video is ready.</p>
+{% endif %}

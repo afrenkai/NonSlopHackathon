@@ -1,0 +1,217 @@
+{
+  "items": [
+    {
+      "receipt": "r37",
+      "local_file": "photos/deerflow-r37.jpg",
+      "sha256": "448dabada7029648f95fc7e2ff5f0f2a243f9eb9db6e84a112b170ff9e3d356d"
+    },
+    {
+      "receipt": "r38",
+      "local_file": "photos/deerflow-r38.jpg",
+      "sha256": "cf129773edce2f3a39afc16c5ead485943f6f3923e499f857abfe9c79330b23f"
+    },
+    {
+      "receipt": "r39",
+      "local_file": "photos/deerflow-r39.jpg",
+      "sha256": "b08d75c48695a1eb8320b828f824de696fce9ae5ff8b3b1d70b3e36145897bfb"
+    },
+    {
+      "receipt": "r40",
+      "local_file": "photos/deerflow-r40.jpg",
+      "sha256": "12a9feafb0901ccd0d68d48c16e59fe983399a587b511ef7d9266c9b13ab4f68"
+    },
+    {
+      "receipt": "r41",
+      "local_file": "photos/hakotamu-DSC4570.jpg",
+      "sha256": "06060eb9bba682f79b60142905cb6aa03e0a97d5055a1689aecf28643565861f"
+    },
+    {
+      "receipt": "r42",
+      "local_file": "photos/deerflow-r42.jpg",
+      "sha256": "663e3eeb284f6dd4f78c6aa6543f734b85c3976b4751954e0c9acd6edfc324d3"
+    },
+    {
+      "receipt": "r43",
+      "local_file": "photos/deerflow-r43.jpg",
+      "sha256": "79efe94463e09e240ec44ab5412cb6e46a5b6d1fa92a62a539847a68a1af4121"
+    },
+    {
+      "receipt": "r44",
+      "local_file": "photos/deerflow-r44.jpg",
+      "sha256": "8f9605b42ccc0722c59abbedc8ae631883aebc66a7d038fceea55f6cf3021130"
+    },
+    {
+      "receipt": "r71",
+      "local_file": "photos/deerflow-r71.jpg",
+      "sha256": "accdae164df11d40c0d2d5eeb1e855ede70acc8395e5db9d0c12d1b234b80cd3"
+    },
+    {
+      "receipt": "r72",
+      "local_file": "photos/hakotamu-DSC4532.jpg",
+      "sha256": "c117791e1787f0752f1f77f0fe2508070108f77b108cd2aa8e939b9a8e2193f7"
+    },
+    {
+      "receipt": "r73",
+      "local_file": "photos/hakotamu-DSC4589.jpg",
+      "sha256": "381b80bbc71494236f4b5c1cab41589389db97dc6c5de1bce60e140586af0225"
+    },
+    {
+      "receipt": "r74",
+      "local_file": "photos/hakotamu-venue.jpg",
+      "sha256": "761ad1a3e0aa369f1b45569d4dc5d2189207f624b8b499b2c9ecfb7c1f36bd52"
+    },
+    {
+      "receipt": "r75",
+      "local_file": "photos/deerflow-r75.jpg",
+      "sha256": "7555f91c7cb138d3ced0bfe7a34697730a5dbedbfec1c42085c149f4449a4bf7"
+    },
+    {
+      "receipt": "r76",
+      "local_file": "photos/deerflow-r76.jpg",
+      "sha256": "f325c1c9bbf13ec70e0e04552feb1bdab42de8eef1cdc53c7868991768a2779e"
+    },
+    {
+      "receipt": "r136",
+      "local_file": "photos/deerflow-r136.jpg",
+      "sha256": "817356b4cc79b9ed45761b09ba2af027973ff7aa182d918ac16110392fe3a3f2"
+    },
+    {
+      "receipt": "r137",
+      "local_file": "photos/hakoshin-20231211-a.jpg",
+      "sha256": "3c2245b8fde5364c6fe6f7d0bf03ef2d0c0a1ee4abda6a5c9e8d8efb54c41a77"
+    },
+    {
+      "receipt": "r138",
+      "local_file": "photos/hakoshin-20231211-b.jpg",
+      "sha256": "9fe4ab6892409b68a29f6c203bdb38a3ac29ff6df76d3603fd0f6d70a475c0f7"
+    },
+    {
+      "receipt": "r171",
+      "local_file": "photos/deerflow-r171.jpg",
+      "sha256": "e8cb470e48df7d02130dffcf3e21ef230d3334221f3388bd45f16048101340a9",
+      "recovered_via": "https://www.instagram.com/p/Cz--LtSrlv_/embed/captioned/"
+    },
+    {
+      "receipt": "r174",
+      "local_file": "photos/deerflow-r174.jpg",
+      "sha256": "69612e860858f5634182fcc85c2a81e9597c8ae8fd21481122cf4bb43b2204bb",
+      "recovered_via": "https://www.instagram.com/p/C1Tyib_rupo/embed/captioned/"
+    },
+    {
+      "receipt": "r175",
+      "local_file": "photos/deerflow-r175.jpg",
+      "sha256": "fdad15c9dc848604d8c06a7b36a4fc8b8c0ce41bef0ce3b097dc39795fd27538",
+      "recovered_via": "https://www.instagram.com/p/C0yX9VyL0QU/embed/captioned/"
+    },
+    {
+      "receipt": "r194",
+      "local_file": "christmas-fantasy-2023-poster.pdf",
+      "sha256": "0f6f53e361a768a3a1e1cf5e5fceb74c63a3120c821c7fbf8dedbb3cd48a2cb7"
+    },
+    {
+      "receipt": "r222",
+      "local_file": "photos/deerflow-r222.jpg",
+      "sha256": "627a913d8df445f9831b9ec3322b395df8f8b26cda49feb3ce9c233365827196"
+    },
+    {
+      "receipt": "r223",
+      "local_file": "photos/mainichi-20231202.jpg",
+      "sha256": "e82896873e8b606159105b2e80074b0a2eb4b0e8cfacd9cf590756358e68e424"
+    },
+    {
+      "receipt": "r399",
+      "local_file": "photos/deerflow-r399.jpg",
+      "sha256": "25166c3b6f82e88890b4907be9e15d9faf6f4305f575c53c44b49ee795c09447"
+    },
+    {
+      "receipt": "r400",
+      "local_file": "photos/deerflow-r400.jpg",
+      "sha256": "f21bc2f24969e3b139e4ae8d1198b3ad6401c65862f84a7a6edba1955a8c722b"
+    },
+    {
+      "receipt": "r401",
+      "local_file": "photos/deerflow-r401.jpg",
+      "sha256": "07fecf77f6b88ebe032a91b8ff83a4fd01c237ed995bed4af3b01b241df411e8"
+    },
+    {
+      "receipt": "r402",
+      "local_file": "photos/deerflow-r402.jpg",
+      "sha256": "e39a9ec6ca34aad6c049b483390829014123e7cafa6ee91ccbe3527b138fdbfd"
+    },
+    {
+      "receipt": "r403",
+      "local_file": "photos/hakodate-event-2312e33.jpg",
+      "sha256": "972c8d1e0baa2c3669e08f12d34813d923b5770343c98ce8a8032164df8e4394"
+    },
+    {
+      "receipt": "r404",
+      "local_file": "photos/deerflow-r404.jpg",
+      "sha256": "d7a1dab68fc24a7589f47b7f21ea6ae87ec45304cf965d430642b1a4fbde87c4"
+    },
+    {
+      "receipt": "r408",
+      "local_file": "photos/hakodate-event-2312e34.jpg",
+      "sha256": "44e48e2583f79477630fc867defcffac8ff60059c7109089723511b7fc084d1b"
+    },
+    {
+      "receipt": "r452",
+      "local_file": "photos/deerflow-r452.jpg",
+      "sha256": "a4b86a6c2bea2613bbfdc99423500ccd731cb48f878b309bcb76994384032cd4"
+    },
+    {
+      "receipt": "r453",
+      "local_file": "photos/deerflow-r453.jpg",
+      "sha256": "98ff44fdf9611891e82356beff6a6d29a84f989fa9143487982b6a7ae5ae0e4c"
+    },
+    {
+      "receipt": "r454",
+      "local_file": "photos/deerflow-r454.jpg",
+      "sha256": "edbb001c26ec27c853dc95d320bcd6c241bbdd95b22037d4fe0c79202ccde6ec"
+    },
+    {
+      "receipt": "r455",
+      "local_file": "photos/deerflow-r455.jpg",
+      "sha256": "4d483c0c42b58d75661b8e26a76d9b4c60aae893fe26829f9de71dc1acc75fd5"
+    },
+    {
+      "receipt": "r456",
+      "local_file": "photos/deerflow-r456.jpg",
+      "sha256": "f8600409ffa5f54b456fd9bb1f1860a057d376a64b57020aaad9e72367fe5a7a"
+    },
+    {
+      "receipt": "r457",
+      "local_file": "photos/deerflow-r457.jpg",
+      "sha256": "05898dbdbfc020d4c4dd913bc2bbca4dc34dcb238fc9c55f28bf317acafb53b2"
+    },
+    {
+      "receipt": "r458",
+      "local_file": "photos/deerflow-r458.jpg",
+      "sha256": "6e24be55a80fc6f2ab6c0c750846baa2b59d0e90e8fb63e1c8989f30ee1d813d"
+    },
+    {
+      "receipt": "r459",
+      "local_file": "photos/deerflow-r459.jpg",
+      "sha256": "f6d15e80a9d51bf548e71cbaf5c4a64b0f218f9bde453e887dd56d819fb53c31"
+    },
+    {
+      "receipt": "r460",
+      "local_file": "photos/deerflow-r460.jpg",
+      "sha256": "34973ea87d8d42f6e9aeb1b9dc947349b78e5390630c9c5a6894e173fee69ba0"
+    },
+    {
+      "receipt": "r461",
+      "local_file": "photos/deerflow-r461.jpg",
+      "sha256": "aec50b1b1ec92c216fbf8163c2f233fe7c0be69029e00b90aef6ad80c50ddbc9"
+    },
+    {
+      "receipt": "r462",
+      "local_file": "photos/deerflow-r462.jpg",
+      "sha256": "75ac78732ca6b90d266c5529f6d8b00e98a38a7c5d5c186e0b7151c91d78bbcd"
+    },
+    {
+      "receipt": "r463",
+      "local_file": "photos/deerflow-r463.jpg",
+      "sha256": "7920b72b64ff52a139d07c4fe02f1383ed3b5cb99abd987c630cb1983c7bd18b"
+    }
+  ]
+}

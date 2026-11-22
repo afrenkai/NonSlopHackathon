@@ -2,6 +2,7 @@ from collections.abc import Callable
 from pathlib import Path
 from uuid import UUID
 
+from anyio import to_thread
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -11,7 +12,11 @@ from nonslop.data.videos import ArtifactStore
 from nonslop.generation.schemas import JobRecord
 from nonslop.reconstruction.service import ReconstructionService
 from nonslop.web.schemas import WebSettings
-from nonslop.web.security import csrf_token, require_api, require_csrf
+from nonslop.web.security import (
+    csrf_token,
+    require_api,
+    require_csrf,
+)
 
 
 def install_world_routes(
@@ -24,11 +29,17 @@ def install_world_routes(
     find_api_job: Callable[[UUID], JobRecord],
     capsules: CapsuleStore,
 ) -> None:
-    def start_world(job: JobRecord) -> JobRecord:
-        if job.status != "complete":
-            raise HTTPException(409, "Wait for the video to finish first.")
+    def start_world(job: JobRecord, rebuild: bool = False) -> JobRecord:
         try:
-            return service.start(job)
+            started = service.start(job, rebuild)
+            if (
+                rebuild
+                and started.world is not None
+                and started.world.status == "running"
+            ):
+                for filename in ("gaussians.ply", "camera_params.json"):
+                    artifacts.invalidate(Path(job.job_id) / filename)
+            return started
         except ValueError as error:
             raise HTTPException(409, str(error)) from error
 
@@ -50,13 +61,15 @@ def install_world_routes(
 
     @application.post("/jobs/{job_id}/world", response_class=HTMLResponse)
     async def reconstruct_browser(request: Request, job_id: UUID) -> HTMLResponse:
-        async with request.form(max_files=0, max_fields=1, max_part_size=1024) as form:
+        async with request.form(max_files=0, max_fields=2, max_part_size=1024) as form:
             require_csrf(request, str(form.get("csrf", "")))
-        job = find_public_job(job_id)
+            rebuild = str(form.get("rebuild", "")).lower() == "true"
+        job = await to_thread.run_sync(find_public_job, job_id)
+        started = await to_thread.run_sync(start_world, job, rebuild)
         return templates.TemplateResponse(
             request=request,
             name="job.html",
-            context={"job": start_world(job), "csrf": csrf_token(request)},
+            context={"job": started, "csrf": csrf_token(request)},
         )
 
     @application.get("/jobs/{job_id}/world", response_class=HTMLResponse)
@@ -74,17 +87,19 @@ def install_world_routes(
         )
 
     @application.get("/jobs/{job_id}/world/gaussians.ply")
-    def browser_splats(job_id: UUID) -> FileResponse:
+    def browser_splats(request: Request, job_id: UUID) -> FileResponse:
         return artifact_response(find_public_job(job_id), "gaussians.ply")
 
     @application.get("/jobs/{job_id}/world/cameras")
-    def browser_cameras(job_id: UUID) -> FileResponse:
+    def browser_cameras(request: Request, job_id: UUID) -> FileResponse:
         return artifact_response(find_public_job(job_id), "camera_params.json")
 
     @application.post("/api/jobs/{job_id}/world", response_model=JobRecord)
-    def reconstruct_api(request: Request, job_id: UUID) -> JobRecord:
+    def reconstruct_api(
+        request: Request, job_id: UUID, rebuild: bool = False
+    ) -> JobRecord:
         require_api(request, settings)
-        return start_world(find_api_job(job_id))
+        return start_world(find_api_job(job_id), rebuild)
 
     @application.get("/api/jobs/{job_id}/world/gaussians.ply")
     def api_splats(request: Request, job_id: UUID) -> FileResponse:

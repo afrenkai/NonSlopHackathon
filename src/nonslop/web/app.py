@@ -22,14 +22,24 @@ from nonslop.data.videos import ArtifactStore
 from nonslop.generation.protocols import GenerationGateway
 from nonslop.generation.schemas import JobRecord, SceneRequest
 from nonslop.generation.service import QueueFullError, SceneService
+from nonslop.grounding.research import research_packet_sources
 from nonslop.reconstruction.protocols import ReconstructionGateway
 from nonslop.reconstruction.service import ReconstructionService
 from nonslop.web.body_limit import BodyLimitMiddleware
 from nonslop.web.capsules import install_capsule_routes
+from nonslop.web.demo_visits import (
+    DEMO_VISITS,
+    bundled_observations,
+    saved_demo_research,
+)
 from nonslop.web.references import read_references
 from nonslop.web.schemas import WebSettings
-from nonslop.web.security import csrf_token, require_api, require_csrf
-from nonslop.web.uploads import extract_source_text
+from nonslop.web.security import (
+    csrf_token,
+    require_api,
+    require_csrf,
+)
+from nonslop.web.uploads import extract_source_text, upload_bytes
 from nonslop.web.worlds import install_world_routes
 
 
@@ -43,8 +53,11 @@ def create_app(
     reload_worlds: Callable[[], None],
     *,
     scene_service: type[SceneService] = SceneService,
+    download_video: Callable[[Path, Path], None] | None = None,
+    download_world: Callable[[Path, Path], None] | None = None,
 ) -> FastAPI:
     application = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    application.state.local_preview = False
     application.add_middleware(
         SessionMiddleware,
         secret_key=settings.session_secret.get_secret_value(),
@@ -58,6 +71,7 @@ def create_app(
     )
     assets = settings.assets_root
     templates = Jinja2Templates(directory=assets / "templates")
+    templates.env.globals["saved_demo_research"] = saved_demo_research
     application.mount(
         "/static", StaticFiles(directory=assets / "static"), name="static"
     )
@@ -65,10 +79,12 @@ def create_app(
     capsules = CapsuleStore(store)
     capsule_service = CapsuleService(capsules, archivist_gateway)
     service = scene_service(store, gateway)
-    videos = ArtifactStore(settings.output_root, settings.serving_root, reload_outputs)
+    videos = ArtifactStore(
+        settings.output_root, settings.serving_root, reload_outputs, download_video
+    )
     worlds = ReconstructionService(store, world_gateway)
     world_artifacts = ArtifactStore(
-        settings.world_root, settings.world_serving_root, reload_worlds
+        settings.world_root, settings.world_serving_root, reload_worlds, download_world
     )
 
     @application.middleware("http")
@@ -82,7 +98,7 @@ def create_app(
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; "
-            "img-src 'self' data:; media-src 'self'; connect-src 'self'; "
+            "img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; "
             "worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         )
         return response
@@ -113,43 +129,79 @@ def create_app(
     def find_api_job(job_id: UUID) -> JobRecord:
         return refreshed_job(store.get(str(job_id)))
 
-    async def submit_form(request: Request, browser: bool) -> JobRecord:
+    async def submit_form(
+        request: Request, browser: bool, *, visit_intake: bool = False
+    ) -> JobRecord:
         if browser:
             owner_id = PUBLIC_WEB_OWNER
         else:
             require_api(request, settings)
             owner_id = API_OWNER
         async with request.form(
-            max_files=settings.reference_limit + 2, max_fields=12, max_part_size=65536
+            max_files=settings.reference_limit + 3, max_fields=13, max_part_size=65536
         ) as form:
             if browser:
                 require_csrf(request, str(form.get("csrf", "")))
+            demo_key = str(form.get("visit_preset", "")) if visit_intake else ""
+            demo = DEMO_VISITS.get(demo_key)
+            if demo_key and demo is None:
+                raise HTTPException(
+                    422, "Choose a listed demo visit or your own scene."
+                )
+            references = await read_references(
+                form,
+                settings,
+                demo_photo=assets / "static" / demo.photo if demo else None,
+            )
+            if browser and not visit_intake and not references.images:
+                raise HTTPException(
+                    422, "Add at least one photograph to create a field note."
+                )
             source_text = str(form.get("source_text", ""))
             source_file = form.get("source_file")
             if isinstance(source_file, UploadFile) and source_file.filename:
                 extracted = await extract_source_text(source_file, settings)
                 source_text = "\n\n".join(filter(None, [source_text, extracted]))
+            research = list(demo.research) if demo else []
+            research_file = form.get("research_file")
+            if isinstance(research_file, UploadFile) and research_file.filename:
+                try:
+                    research.extend(
+                        research_packet_sources(
+                            await upload_bytes(research_file, settings.upload_limit)
+                        )
+                    )
+                except (TypeError, ValueError) as error:
+                    raise HTTPException(422, str(error)) from error
             try:
                 scene = SceneRequest(
-                    location=str(form.get("location", "")),
-                    year=int(str(form.get("year", "0"))),
-                    description=str(form.get("description", "")),
+                    location=demo.location if demo else str(form.get("location", "")),
+                    year=demo.year if demo else int(str(form.get("year", "0"))),
+                    description=str(form.get("description", "")).strip(),
                     source_text=source_text,
-                    use_web=str(form.get("use_web", "" if browser else "true")).lower()
+                    use_web=demo is None
+                    and str(form.get("use_web", "" if browser else "true")).lower()
                     in ("true", "on", "1"),
                     seed=int(str(form.get("seed", "42"))),
                 )
             except (ValueError, ValidationError) as error:
                 raise HTTPException(
                     422,
-                    "Add a location, a valid year, and a description. Keep context under 20,000 characters.",
+                    "Add a place and a valid year. Keep notes under 4,000 characters and source context under 20,000 characters.",
                 ) from error
-            references = await read_references(form, settings)
+            if not references.images and not scene.description:
+                raise HTTPException(422, "Add a photograph or a scene description.")
         for recent in store.recent():
             await to_thread.run_sync(service.refresh, recent)
         try:
             return await service.submit(
-                scene, references.images, owner_id, references.filenames
+                scene,
+                references.images,
+                owner_id,
+                references.filenames,
+                references.metadata,
+                research_sources=research,
+                deerflow=bundled_observations(demo.observation_file) if demo else (),
             )
         except QueueFullError as error:
             raise HTTPException(409, str(error)) from error
@@ -192,6 +244,7 @@ def create_app(
             context={
                 "csrf": csrf_token(request),
                 "jobs": jobs,
+                "demo_visits": DEMO_VISITS,
                 "capsules": page_capsules,
                 "box_page": box_page,
                 "capsule_page": capsule_page,
@@ -206,7 +259,7 @@ def create_app(
 
     @application.post("/visits/new", response_class=HTMLResponse)
     async def save_new_visit(request: Request) -> Response:
-        job = await submit_form(request, browser=True)
+        job = await submit_form(request, browser=True, visit_intake=True)
         location = f"/visits/{job.job_id}"
         if request.headers.get("HX-Request") == "true":
             return Response(headers={"HX-Redirect": location})

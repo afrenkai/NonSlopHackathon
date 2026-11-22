@@ -86,6 +86,17 @@ class JobStore:
             JobRecord.model_validate_json(row[0]) for row in rows[:JOBS_PER_PAGE]
         ], len(rows) > JOBS_PER_PAGE
 
+    def reference_images(self, job: JobRecord) -> list[bytes]:
+        if not job.has_reference:
+            return []
+        if job.reference_count == 0:
+            return [(self.root / "uploads" / f"{job.job_id}.png").read_bytes()]
+        directory = self.root / "uploads" / job.job_id
+        return [
+            (directory / f"{index}.png").read_bytes()
+            for index in range(job.reference_count)
+        ]
+
     def recent(self) -> list[JobRecord]:
         # Queue admission still refreshes work across both origins.
         with self.lock, duckdb.connect(str(self.database)) as connection:

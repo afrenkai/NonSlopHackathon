@@ -25,6 +25,7 @@ def normalize_image(payload: bytes, max_dimension: int = 2048) -> bytes:
                 raise HTTPException(413, "Use an image smaller than 20 megapixels.")
             image = ImageOps.exif_transpose(image).convert("RGB")
             image.thumbnail((max_dimension, max_dimension))
+            image.info.clear()
             output = BytesIO()
             image.save(output, format="PNG")
             return output.getvalue()

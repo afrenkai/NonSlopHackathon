@@ -25,6 +25,14 @@ def credentials_match(settings: WebSettings, api_key: str, password: str) -> boo
     return key_matches and password_matches
 
 
+def browser_workspace(request: Request) -> str:
+    workspace = request.session.get("workspace")
+    if not isinstance(workspace, str):
+        workspace = secrets.token_urlsafe(32)
+        request.session["workspace"] = workspace
+    return workspace
+
+
 def require_api(request: Request, settings: WebSettings) -> None:
     if not credentials_match(
         settings,

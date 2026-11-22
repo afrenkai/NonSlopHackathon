@@ -4,11 +4,30 @@ from anyio import to_thread
 from fastapi import HTTPException
 from starlette.datastructures import FormData, UploadFile
 
+from nonslop.grounding.photos import photo_metadata
 from nonslop.web.schemas import ReferenceBundle, WebSettings
 from nonslop.web.uploads import normalize_image, upload_bytes
 
 
-async def read_references(form: FormData, settings: WebSettings) -> ReferenceBundle:
+async def add_reference(
+    references: ReferenceBundle, content: bytes, filename: str
+) -> None:
+    references.images.append(await to_thread.run_sync(normalize_image, content))
+    references.filenames.append(filename)
+    references.metadata.append(
+        await to_thread.run_sync(photo_metadata, content, filename)
+    )
+
+
+async def read_references(
+    form: FormData, settings: WebSettings, *, demo_photo: Path | None = None
+) -> ReferenceBundle:
+    references = ReferenceBundle()
+    if demo_photo is not None:
+        content = await to_thread.run_sync(demo_photo.read_bytes)
+        await add_reference(references, content, demo_photo.name)
+        return references
+
     opening = form.get("reference_image")
     selected: list[UploadFile] = []
     if isinstance(opening, UploadFile) and opening.filename:
@@ -25,17 +44,12 @@ async def read_references(form: FormData, settings: WebSettings) -> ReferenceBun
         raise HTTPException(
             413, f"Choose at most {settings.reference_limit} reference images."
         )
-    references = ReferenceBundle()
     total = 0
     for upload in selected:
         content = await upload_bytes(upload, settings.upload_limit)
         total += len(content)
         if total > settings.total_upload_limit:
             raise HTTPException(413, "Keep the complete upload under 40 MB.")
-        references.images.append(
-            await to_thread.run_sync(
-                normalize_image, content, 768 if len(selected) > 1 else 2048
-            )
-        )
-        references.filenames.append(Path(upload.filename or "reference.png").name[:250])
+        filename = Path(upload.filename or "reference.png").name[:250]
+        await add_reference(references, content, filename)
     return references

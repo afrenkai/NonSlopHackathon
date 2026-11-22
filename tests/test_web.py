@@ -1,12 +1,16 @@
+import json
 import re
 import wave
+from base64 import b64decode
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import MagicMock
 from uuid import uuid4
 
+import httpx
 from fastapi.testclient import TestClient
 from PIL import Image
 from pydantic import SecretStr
@@ -14,6 +18,7 @@ from pydantic import SecretStr
 from nonslop.capsules.schemas import CapsuleEntry, CapsuleRecord
 from nonslop.capsules.store import CapsuleStore
 from nonslop.data.jobs import JobStore
+from nonslop.generation.prompt_writer import compose_scene_prompt, write_scene_prompt
 from nonslop.generation.schemas import (
     GenerationResult,
     GenerationTask,
@@ -25,6 +30,7 @@ from nonslop.models.world_schemas import WorldResult
 from nonslop.reconstruction.schemas import ReconstructionRecord
 from nonslop.web.app import create_app
 from nonslop.web.schemas import WebSettings
+from nonslop.web.uploads import normalize_image
 
 
 @dataclass
@@ -48,10 +54,12 @@ class RecordingGenerator:
 @dataclass
 class RecordingReconstructor:
     submitted: list[str] = field(default_factory=list)
+    references: list[list[bytes]] = field(default_factory=list)
     completed: WorldResult | None = None
 
-    def submit(self, job_id: str) -> str:
+    def submit(self, job_id: str, reference_images: list[bytes]) -> str:
         self.submitted.append(job_id)
+        self.references.append(reference_images)
         return job_id
 
     def result(self, call_id: str) -> WorldResult | None:
@@ -651,7 +659,8 @@ def test_capsule_timeline_and_original_media_are_shared_across_browsers(
     assert "A machine transcript." in restored.get(f"/capsules/{capsule_id}").text
     assert restored.get(media_url).content == audio_data.getvalue()
     visit = owner.post(
-        "/jobs",
+        "/visits/new",
+        follow_redirects=False,
         data={
             "csrf": token,
             "location": "Hester Street",
@@ -660,7 +669,7 @@ def test_capsule_timeline_and_original_media_are_shared_across_browsers(
             "use_web": "false",
         },
     )
-    assert visit.status_code == 200, visit.text
+    assert visit.status_code == 303, visit.text
     job_id = worker.submitted[0].job_id
     worker.completed = GenerationResult(
         video_path="/outputs/test.mp4", width=768, height=448, frames=124
@@ -739,7 +748,7 @@ def test_folder_images_are_ordered_retained_bounded_and_public(tmp_path: Path) -
     assert record["reference_count"] == 3
     assert len(worker.references[0]) == 3
     with Image.open(BytesIO(worker.references[0][0])) as opening:
-        assert opening.size == (768, 384) and opening.getpixel((0, 0)) == (255, 0, 0)
+        assert opening.size == (1600, 800) and opening.getpixel((0, 0)) == (255, 0, 0)
     with Image.open(BytesIO(worker.references[0][-1])) as ending:
         assert ending.getpixel((0, 0)) == (0, 0, 255)
     stranger = browser_client(settings, RecordingGenerator())
@@ -802,3 +811,336 @@ def test_landing_hero_cycles_cc0_nature_photographs(tmp_path: Path) -> None:
     notice = client.get("/static/hero/NOTICE.md").text
     assert notice.count("creativecommons.org/publicdomain/zero/1.0") >= 1
     assert all(f"`{slug}`" in notice for slug in slides)
+
+
+def test_demo_intake_uses_the_bundled_photo_and_skips_web_lookup(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("NONSLOP_PROMPT_TOKEN", "test-token")
+    settings = client_settings(tmp_path)
+    worker = RecordingGenerator()
+    client = browser_client(settings, worker)
+    intake = client.get("/visits/new")
+    csrf = csrf_from(intake.text)
+    visits = (
+        (
+            "hakodate",
+            "Hakodate Red Brick Warehouse",
+            2023,
+            "hakodate-red-brick-warehouse.png",
+            "Kanemori warehouse façades · Hakotamu",
+            (
+                "on the water in front of the Red Brick Warehouses",
+                "Falling snow is unconfirmed.",
+            ),
+        ),
+        (
+            "flatbush",
+            "25 Flatbush Ave",
+            1990,
+            "block-2106-lot-0026.jpg",
+            "NYC tax photograph · Lot 26",
+            (
+                "Certificate 231396",
+                "six years after the target year",
+                "View this as a hypothesis.",
+            ),
+        ),
+    )
+    for preset, location, year, filename, source_title, key_findings in visits:
+        assert f"{location}, {year}" in intake.text
+        photo = client.get(f"/static/demo-visits/{filename}")
+        assert photo.status_code == 200
+
+        submitted = client.post(
+            "/visits/new",
+            data={
+                "csrf": csrf,
+                "visit_preset": preset,
+                "use_web": "true",
+                "description": "A remembered view. " * 180,
+                "source_text": "Additional historical context. " * 200,
+            },
+            follow_redirects=False,
+        )
+        assert submitted.status_code == 303
+        job_id = worker.submitted[-1].job_id
+        record = client.get(f"/api/jobs/{job_id}", headers=api_headers(settings)).json()
+        assert record["scene"]["location"] == location
+        assert record["scene"]["year"] == year
+        assert record["scene"]["use_web"] is False
+        assert record["reference_names"] == [filename]
+        assert worker.references[-1] == [normalize_image(photo.content)]
+        assert record["sources"] == []
+        opening_source = record["research_sources"][0]
+        assert opening_source["title"] == source_title
+        assert opening_source["excerpt"] in worker.submitted[-1].prompt
+
+        def capture_writer_request(
+            request: httpx.Request, findings: tuple[str, ...] = key_findings
+        ) -> httpx.Response:
+            packet = json.loads(request.content)["messages"][1]["content"]
+            for finding in findings:
+                assert finding in packet
+            return httpx.Response(
+                200,
+                json=writer_payload(
+                    "integrated_multimodal_description: [Shot 1] A continuous view.\n\n"
+                    "overall_soundscape: Quiet surroundings.\n\n"
+                    "non_diegetic_music: N/A"
+                ),
+            )
+
+        with httpx.Client(
+            transport=httpx.MockTransport(capture_writer_request),
+            base_url="https://writer.test/v1",
+        ) as writer:
+            assert write_scene_prompt(worker.submitted[-1].prompt, client=writer)
+
+        for path in (submitted.headers["Location"], f"/jobs/{job_id}"):
+            page = client.get(path)
+            assert "Creating your visit" in page.text
+            assert "Research evidence" in page.text
+            assert opening_source["url"] in page.text
+            assert opening_source["excerpt"] in page.text
+
+        older = JobRecord.model_validate(record)
+        older.research_sources = []
+        older.render_prompt = "A continuous visit using the opening photograph."
+        JobStore(settings.data_root, no_operation).save(older)
+        page = client.get(submitted.headers["Location"])
+        assert opening_source["excerpt"] in page.text
+        assert "This visit started before the research notes were added" in page.text
+
+
+def research_packet_payload() -> bytes:
+    return json.dumps(
+        {
+            "schema_version": 1,
+            "query": {"location": "Trafalgar Square, London", "year": 1960},
+            "items": [
+                {
+                    "id": "pastvu:1",
+                    "provider": "PastVu",
+                    "kind": "photograph",
+                    "title": "Trafalgar Square",
+                    "record_url": "https://pastvu.com/p/1",
+                    "capture_from": 1960,
+                    "capture_to": 1960,
+                    "date_status": "target-year",
+                    "date_basis": "PastVu catalogued image date",
+                    "excerpt": "Pigeons on the north terrace.",
+                },
+                {
+                    "kind": "photograph",
+                    "title": "No usable link",
+                    "excerpt": "Skipped without a record URL.",
+                },
+            ],
+        }
+    ).encode()
+
+
+def test_research_packet_upload_joins_the_visit(tmp_path: Path) -> None:
+    settings = client_settings(tmp_path)
+    worker = RecordingGenerator()
+    client = browser_client(settings, worker)
+    response = client.post(
+        "/api/jobs",
+        headers=api_headers(settings),
+        data={
+            "location": "Trafalgar Square, London",
+            "year": "1960",
+            "description": "Standing on the north terrace.",
+            "use_web": "false",
+        },
+        files={
+            "research_file": (
+                "manifest.json",
+                research_packet_payload(),
+                "application/json",
+            )
+        },
+    )
+    assert response.status_code == 200, response.text
+    research = response.json()["research_sources"]
+    assert [entry["title"] for entry in research] == ["Trafalgar Square"]
+    assert research[0]["url"].startswith("https://pastvu.com/p/1")
+    assert research[0]["date"] == "1960 (PastVu catalogued image date)"
+    assert "PastVu" in research[0]["kind"]
+    assert "Saved research context" in worker.submitted[0].prompt
+    assert "Pigeons on the north terrace" in worker.submitted[0].prompt
+
+
+def test_research_packet_rejects_unusable_json(tmp_path: Path) -> None:
+    settings = client_settings(tmp_path)
+    worker = RecordingGenerator()
+    client = browser_client(settings, worker)
+    response = client.post(
+        "/api/jobs",
+        headers=api_headers(settings),
+        data={
+            "location": "Trafalgar Square, London",
+            "year": "1960",
+            "description": "Standing on the north terrace.",
+            "use_web": "false",
+        },
+        files={"research_file": ("manifest.json", b"not json", "application/json")},
+    )
+    assert response.status_code == 422
+    assert "research packet" in response.json()["detail"]
+    assert not worker.submitted
+
+
+def writer_client(payload: object, status: int = 200) -> httpx.Client:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status, json=payload)
+
+    return httpx.Client(
+        transport=httpx.MockTransport(handler), base_url="https://writer.test/v1"
+    )
+
+
+def writer_payload(text: str) -> dict:
+    return {"choices": [{"message": {"content": text}}]}
+
+
+def test_prompt_writer_composes_with_token(monkeypatch) -> None:
+    monkeypatch.setenv("NONSLOP_PROMPT_TOKEN", "wk-id.ws-secret")
+    prompt = (
+        "integrated_multimodal_description: [Shot 1] A slow pan across the "
+        "terrace.\n\noverall_soundscape: Pigeons and distant buses.\n\n"
+        "non_diegetic_music: N/A"
+    )
+    written = write_scene_prompt(
+        "integrated_multimodal_description: [Shot 1] evidence packet",
+        client=writer_client(writer_payload(prompt)),
+    )
+    assert written == prompt
+
+
+def test_prompt_writer_falls_back_without_token_or_bad_reply(
+    monkeypatch,
+) -> None:
+    monkeypatch.delenv("NONSLOP_PROMPT_TOKEN", raising=False)
+    packet = "integrated_multimodal_description: [Shot 1] evidence"
+    assert write_scene_prompt(packet, client=writer_client(writer_payload("x"))) is None
+    monkeypatch.setenv("NONSLOP_PROMPT_TOKEN", "wk-id.ws-secret")
+    assert write_scene_prompt("   ", client=writer_client(writer_payload("x"))) is None
+    assert (
+        write_scene_prompt(packet, client=writer_client(writer_payload("no markers")))
+        is None
+    )
+    assert write_scene_prompt(packet, client=writer_client({}, status=500)) is None
+
+
+def test_deerflow_evidence_reaches_kimi_h3_and_world(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("NONSLOP_ENV_FILE", str(tmp_path / "unused.env"))
+    from nonslop.runtime import cpu_app
+    from nonslop.web.demo_visits import DEMO_VISITS, bundled_observations
+
+    monkeypatch.setenv("NONSLOP_PROMPT_TOKEN", "test-writer-token")
+    monkeypatch.setenv("NONSLOP_PROMPT_MODEL", "moonshotai/Kimi-K3.1-Pro")
+    settings = client_settings(tmp_path)
+    worker = RecordingGenerator()
+    world = RecordingReconstructor()
+    client = browser_client(settings, worker, world)
+    headers = api_headers(settings)
+    intake = client.get("/visits/new")
+    notes = "Historical context. " * 980 + "End of supplied notes."
+    refined_prompt = (
+        "integrated_multimodal_description: [Shot 1] Warehouse gables catch "
+        "the warm lights along the quay.\n\noverall_soundscape: Quiet harbor ambience."
+        "\n\nnon_diegetic_music: N/A"
+    )
+    readings = [
+        {
+            "photo_number": 1,
+            "visible_details": ["Cool lights surround the tree at center."],
+            "uncertainty": "The opening photograph does not show the warehouse fronts.",
+        }
+    ]
+    archivist = MagicMock()
+    archivist.analyze_images.remote.return_value = ArchivistResult(
+        text="The opening image shows an illuminated tree."
+    ).model_dump_json()
+    h3 = MagicMock()
+    h3.generate.remote.return_value = GenerationResult(
+        video_path="/outputs/test.mp4", frames=124, width=768, height=448
+    ).model_dump_json()
+
+    submitted = client.post(
+        "/visits/new",
+        data={
+            "csrf": csrf_from(intake.text),
+            "visit_preset": "hakodate",
+            "source_text": notes,
+        },
+        follow_redirects=False,
+    )
+    assert submitted.status_code == 303
+    task, photos = worker.submitted[0], worker.references[0]
+    world_url = f"/api/jobs/{task.job_id}/world"
+    assert client.post(world_url, headers=headers).status_code == 409
+    assert world.submitted == []
+
+    def capture_writer_request(request: httpx.Request) -> httpx.Response:
+        parts = json.loads(request.content)["messages"][1]["content"]
+        photo_observations, evidence = parts[0]["text"].split("\n\n", 1)
+        assert "The opening image shows an illuminated tree." in photo_observations
+        packet = json.loads(evidence)
+        assert packet["scene"]["source_text"] == notes
+        assert packet["reference_metadata"]
+        assert packet["saved_research"]
+        journal = bundled_observations(DEMO_VISITS["hakodate"].observation_file)
+        assert len(journal) == 42
+        assert packet["deerflow_observations"] == [
+            observation.model_dump(mode="json") for observation in journal
+        ]
+        assert len(parts) == 3
+        assert parts[1]["text"] == "Photo 1 (opening view)"
+        assert b64decode(
+            parts[2]["image_url"]["url"].split(",", 1)[1]
+        ) == normalize_image(photos[0], 768)
+        return httpx.Response(
+            200,
+            json=writer_payload(
+                json.dumps({"prompt": refined_prompt, "photo_readings": readings})
+            ),
+        )
+
+    models = {"MemoryArchivist": archivist, "StreetGenerator": h3}
+    monkeypatch.setattr(
+        cpu_app.modal.Cls, "from_name", lambda app, name: lambda: models[name]
+    )
+    with httpx.Client(
+        transport=httpx.MockTransport(capture_writer_request),
+        base_url="https://writer.test",
+    ) as writer:
+        monkeypatch.setattr(
+            cpu_app,
+            "compose_scene_prompt",
+            lambda packet, settings, **kwargs: compose_scene_prompt(
+                packet, settings, writer, **kwargs
+            ),
+        )
+        worker.completed = GenerationResult.model_validate_json(
+            cpu_app.prepare_visit.local(task.model_dump_json(), photos)
+        )
+    h3_task, h3_photos = h3.generate.remote.call_args.args
+    assert json.loads(h3_task)["prompt"] == refined_prompt
+    assert "evidence" not in json.loads(h3_task)
+    assert h3_photos == photos
+    assert worker.completed.used_prompt == refined_prompt
+    assert worker.completed.prompt_model == "moonshotai/Kimi-K3.1-Pro"
+
+    response = client.post(world_url, headers=headers)
+    assert response.status_code == 200
+    assert response.json()["world"]["input_kind"] == "generated_video"
+    assert response.json()["result"]["used_prompt"] == refined_prompt
+    assert response.json()["result"]["photo_readings"] == readings
+    assert world.submitted == [task.job_id]
+    assert world.references == [[]]

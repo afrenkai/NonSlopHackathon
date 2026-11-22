@@ -1,0 +1,1061 @@
+{
+  "title": "Flatbush at Fulton, Brooklyn | circa 1990",
+  "coordinates": {
+    "originLonLat": [
+      -73.98009579,
+      40.68798337
+    ],
+    "unit": "metre",
+    "plane": "[x,z]; x runs southeast along Flatbush; z points southwest across it; vertical is up. Local axes approximately (0.483 E, -0.876 N) and (-0.876 E, -0.483 N)."
+  },
+  "ortho1996": {
+    "z": 19,
+    "topLeftTileXYZ": [
+      154401,
+      197168
+    ],
+    "widthPx": 1024,
+    "heightPx": 1024,
+    "originImagePx": [
+      429.1829,
+      484.637
+    ],
+    "groundMetresPerPx": 0.2264062
+  },
+  "sources": {
+    "certificate": {
+      "title": "NYC Department of Buildings, certificate of occupancy 231396, 25 April 1989 (both sides)",
+      "url": "https://a810-bisweb.nyc.gov/bisweb/CofoDocumentContentServlet?passjobnumber=null&cofomatadata1=COFO&cofomatadata2=B&cofomatadata3=000&cofomatadata4=231000&cofomatadata5=B000231396.PDF"
+    },
+    "pluto25": {
+      "title": "NYC Planning, PLUTO: block 2106 lot 24 (later tax record)",
+      "url": "https://data.cityofnewyork.us/resource/64uk-42ks.json?borough=BK&block=2106&lot=24"
+    },
+    "ortho": {
+      "title": "City of New York, April 1996 orthophotography, NYC Ortho 1996 Mosaic (after the reconstruction date)",
+      "url": "https://tiles.arcgis.com/tiles/yG5s3afENB5iO9fj/arcgis/rest/services/Ortho_1996_Mosaic/MapServer"
+    },
+    "guide": {
+      "title": "NYC Municipal Archives, Department of Finance tax assessment photographs, collection 1982-1988",
+      "url": "https://a860-collectionguides.nyc.gov/repositories/2/resources/94"
+    },
+    "archaeology": {
+      "title": "Celia J. Bergoffen, 572 Fulton Street Disposition: Phase IA Archaeological Assessment, May 2008, pp. 5-8",
+      "url": "https://s-media.nyc.gov/agencies/lpc/arch_reports/1068.pdf"
+    },
+    "demo572": {
+      "title": "NYC DOB, 572 Fulton Street, full demolition job 300205748: 3 existing stories, 30 feet",
+      "url": "https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=300205748&passdocnumber=01&requestid=1"
+    },
+    "permit572": {
+      "title": "NYC DOB, full-demolition permit issued 29 September 1992",
+      "url": "https://data.cityofnewyork.us/resource/ipu4-2q9a.json?job__=300205748"
+    },
+    "kansas": {
+      "title": "NYC DOB, 1 Flatbush, job 300224781, 1993. Owner: Kansas Fried Chicken, Inc.",
+      "url": "https://data.cityofnewyork.us/resource/ipu4-2q9a.json?job__=300224781"
+    },
+    "bank": {
+      "title": "Suzanne Spellen, Building of the Day: 33 Flatbush Avenue, 2010",
+      "url": "https://www.brownstoner.com/architecture/building-of-the-116/"
+    },
+    "pioneer": {
+      "title": "Christopher Gray, Streetscapes: Pioneer Warehouses; In Brooklyn, a Romanesque Revival Repository Complex, 7 February 1988",
+      "url": "https://www.nytimes.com/1988/02/07/realestate/streetscapes-pioneer-warehouses-brooklyn-romanesque-revival-repository-complex.html"
+    },
+    "details": {
+      "title": "Kevin Walsh, Downtown to Prospect, Brooklyn, Part 1 (2013; detail photographs, not evidence of 1990 occupancy)",
+      "url": "https://forgotten-ny.com/2013/08/downtown-to-prospect-brooklyn-part-1/"
+    },
+    "piano": {
+      "title": "Brownstoner, New Development: 96 Rockwell Place, March 2007; six-storey addition to six-storey piano factory",
+      "url": "https://www.brownstoner.com/development/new-development-4/"
+    },
+    "570": {
+      "title": "NYC Planning Commission, 570 Fulton Street, C 180459 ZMK, 2019",
+      "url": "https://www.nyc.gov/assets/planning/download/pdf/about/cpc/180459.pdf"
+    },
+    "fox": {
+      "title": "Library of Congress, HABS NY-5554, Fox Theatre: demolished 1971",
+      "url": "https://www.loc.gov/item/ny0255/"
+    },
+    "38photo": {
+      "title": "NYC Municipal Archives / NYC DOF, 1980s tax photograph, Brooklyn block 162 lot 1, 38 Flatbush (via 80s.NYC)",
+      "url": "https://80snyc.bdon.org/photos/3/00162/0001.jpg"
+    },
+    "tip": {
+      "title": "Queens Public Library, William A. Brief, 104 Rockwell Place, ca. 1988, brf-002945 (catalog description of empty triangle)",
+      "url": "https://digitalarchives.queenslibrary.org/nodes/view/23763"
+    },
+    "48124": {
+      "title": "NYC DOF / Municipal Archives, Flatbush Avenue, Block 2106 Lot 1, lvd_06_48124 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_d6e6e17e-824f-4873-ba6d-7de6d19679f9/"
+    },
+    "48125": {
+      "title": "NYC DOF / Municipal Archives, 63 Flatbush Avenue, Block 2106 Lot 4, lvd_06_48125 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_14ead364-a68b-461a-8ff5-dccd1ca35a1f/"
+    },
+    "48127": {
+      "title": "NYC DOF / Municipal Archives, 61 Flatbush Avenue, Block 2106 Lot 5, lvd_06_48127 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_95a440a7-7895-4bd6-bb8d-2494665be5b3/"
+    },
+    "48129": {
+      "title": "NYC DOF / Municipal Archives, 59 Flatbush Avenue, Block 2106 Lot 6, lvd_06_48129 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_a94cba58-6063-404f-9262-7b8fa6b22393/"
+    },
+    "48130": {
+      "title": "NYC DOF / Municipal Archives, 55-57 Flatbush Avenue, Block 2106 Lot 7, lvd_06_48130 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_601bdb5a-00e3-4e91-b524-80a78a805707/"
+    },
+    "48131": {
+      "title": "NYC DOF / Municipal Archives, 37-53 Flatbush Avenue, Block 2106 Lot 9, lvd_06_48131 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_8a70c166-c7b7-4fbf-9e60-d6802b42bb20/"
+    },
+    "48132": {
+      "title": "NYC DOF / Municipal Archives, 33-35 Flatbush Avenue, Block 2106 Lot 16, lvd_06_48132 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_2e75ebd4-a071-43b0-a585-f2d6307188ea/"
+    },
+    "48133": {
+      "title": "NYC DOF / Municipal Archives, 19 Flatbush Avenue, Block 2106 Lot 19, lvd_06_48133 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_a9cf8161-815b-4c8a-9e4b-d64a2a129d56/"
+    },
+    "48134": {
+      "title": "NYC DOF / Municipal Archives, 572 Fulton Street, Block 2106 Lot 40, lvd_06_48134 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_0d008f76-d698-4b27-b7da-eff1399945bd/"
+    },
+    "48135": {
+      "title": "NYC DOF / Municipal Archives, 560 Fulton Street, Block 2106 Lot 35, lvd_06_48135 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_8ebf35be-6948-4f68-b7e3-af6a0f3b54d4/"
+    },
+    "48136": {
+      "title": "NYC DOF / Municipal Archives, 15-17 Flatbush Avenue, Block 2106 Lot 26, lvd_06_48136 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_3fa7930d-9051-41a4-98e0-16af03763ddb/"
+    },
+    "48137": {
+      "title": "NYC DOF / Municipal Archives, 1 Flatbush Avenue, Block 2106 Lot 29, lvd_06_48137 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_ad25f17d-811f-4750-8791-bbb8c2cb3b37/"
+    },
+    "48138": {
+      "title": "NYC DOF / Municipal Archives, 21 Flatbush Avenue, Block 2106 Lot 24, lvd_06_48138 (1980s)",
+      "url": "https://nycrecords.access.preservica.com/uncategorized/IO_cb2227f6-1f47-437f-b193-b1bd748a6b22/"
+    }
+  },
+  "buildings": [
+    {
+      "id": "anchor",
+      "name": "25 Flatbush Avenue",
+      "bin": "3059164",
+      "lot": "3021060024",
+      "levelsVisible": 5,
+      "heightM": 21.296,
+      "surveyHeightFt": 69.87,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          -8.386,
+          -21.78
+        ],
+        [
+          -8.372,
+          -23.608
+        ],
+        [
+          -6.214,
+          -23.726
+        ],
+        [
+          -6.248,
+          -22.021
+        ],
+        [
+          -2.348,
+          -22.026
+        ],
+        [
+          -2.353,
+          -24.227
+        ],
+        [
+          5.131,
+          -24.237
+        ],
+        [
+          7.114,
+          -24.24
+        ],
+        [
+          7.11,
+          -25.916
+        ],
+        [
+          7.106,
+          -27.503
+        ],
+        [
+          13.58,
+          -27.511
+        ],
+        [
+          13.57,
+          -15.18
+        ],
+        [
+          12.431,
+          -15.178
+        ],
+        [
+          12.443,
+          -10.519
+        ],
+        [
+          13.531,
+          -10.52
+        ],
+        [
+          13.535,
+          -9.131
+        ],
+        [
+          13.558,
+          -0.36
+        ],
+        [
+          13.558,
+          -0.012
+        ],
+        [
+          -6.808,
+          0.016
+        ],
+        [
+          -13.557,
+          0.009
+        ],
+        [
+          -13.283,
+          -21.944
+        ]
+      ],
+      "geometrySource": "NYC Building Footprints (later survey)",
+      "geometryURL": "https://data.cityofnewyork.us/resource/5zhs-2jue.json?bin=3059164",
+      "form": "load-bearing appearance; five-storey commercial loft with a bracketed metal cornice, masonry piers, stone bands, large second-storey display windows and upper sashes. Construction system not established.",
+      "sources": [
+        "48136",
+        "48133",
+        "48138",
+        "certificate",
+        "pluto25",
+        "details"
+      ],
+      "limitations": "The 21 Flatbush / lot 24 exposure is a substitute card. The building is visible beside lots 26 and 19. The April 1989 certificate for 19-27 Flatbush (alteration 1858/85, completed 24 March 1989) specifies three stores and offices on floors 2-5. It reports 45 ft, versus 69.87 ft in the later footprint survey. The scene uses the latter as a roofline proxy, not a verified 1990 height. Period storefront finishes and the extent of the alteration remain uncertain."
+    },
+    {
+      "id": "corner",
+      "name": "1 Flatbush Avenue",
+      "bin": "3059166",
+      "lot": "3021060029",
+      "levelsVisible": 2,
+      "heightM": 10.058,
+      "surveyHeightFt": 33,
+      "demolitionYear": 2016,
+      "polygon": [
+        [
+          -40.551,
+          -29.541
+        ],
+        [
+          -32.204,
+          -16.292
+        ],
+        [
+          -32.205,
+          -16.23
+        ],
+        [
+          -32.381,
+          0.05
+        ],
+        [
+          -56.097,
+          -0.006
+        ],
+        [
+          -58.786,
+          -2.519
+        ],
+        [
+          -59.565,
+          -8.864
+        ],
+        [
+          -60.143,
+          -13.575
+        ],
+        [
+          -58.465,
+          -17.833
+        ]
+      ],
+      "geometrySource": "NYC Building Historic (archived pre-demolition footprint)",
+      "geometryURL": "https://services6.arcgis.com/yG5s3afENB5iO9fj/arcgis/rest/services/BUILDING_HISTORIC_view/FeatureServer/0/query?where=BIN%3D3059166&outFields=*&outSR=4326&f=pjson",
+      "form": "Low corner restaurant with a clipped prow, strip windows, projecting striped fascia and paired pole signs.",
+      "sources": [
+        "48137",
+        "kansas"
+      ],
+      "limitations": "Sign wording is legible in the photograph; the 1993 permit corroborates the owner, not the exact sign design in 1990."
+    },
+    {
+      "id": "annex",
+      "name": "15-17 Flatbush Avenue",
+      "bin": "3059165",
+      "lot": "3021060026",
+      "levelsVisible": 2,
+      "heightM": 8.839,
+      "surveyHeightFt": 29,
+      "demolitionYear": 2016,
+      "polygon": [
+        [
+          -12.9,
+          -13.208
+        ],
+        [
+          -12.866,
+          0.024
+        ],
+        [
+          -26.157,
+          0.042
+        ],
+        [
+          -32.381,
+          0.05
+        ],
+        [
+          -32.205,
+          -16.23
+        ],
+        [
+          -32.204,
+          -16.292
+        ],
+        [
+          -40.551,
+          -29.541
+        ],
+        [
+          -34.14,
+          -33.569
+        ],
+        [
+          -25.793,
+          -20.32
+        ],
+        [
+          -25.472,
+          -18.383
+        ],
+        [
+          -24.61,
+          -13.192
+        ],
+        [
+          -18.852,
+          -13.2
+        ]
+      ],
+      "geometrySource": "NYC Building Historic (archived pre-demolition footprint)",
+      "geometryURL": "https://services6.arcgis.com/yG5s3afENB5iO9fj/arcgis/rest/services/BUILDING_HISTORIC_view/FeatureServer/0/query?where=BIN%3D3059165&outFields=*&outSR=4326&f=pjson",
+      "form": "Two-storey commercial infill with broad upper windows, a flat coping and shopfronts.",
+      "sources": [
+        "48136",
+        "48135"
+      ],
+      "limitations": "Separate old footprint between the restaurant and the taller loft. Signs and the rear return are incompletely resolved."
+    },
+    {
+      "id": "fulton",
+      "name": "560 Fulton Street (later 570)",
+      "bin": "3059167",
+      "lot": "3021060035",
+      "levelsVisible": 3,
+      "heightM": 12.497,
+      "surveyHeightFt": 41,
+      "demolitionYear": 2022,
+      "polygon": [
+        [
+          3.345,
+          -30.692
+        ],
+        [
+          -0.994,
+          -27.966
+        ],
+        [
+          -2.564,
+          -30.457
+        ],
+        [
+          -12.922,
+          -23.95
+        ],
+        [
+          -13.162,
+          -23.799
+        ],
+        [
+          -14.185,
+          -25.424
+        ],
+        [
+          -24.805,
+          -18.752
+        ],
+        [
+          -25.793,
+          -20.32
+        ],
+        [
+          -34.14,
+          -33.569
+        ],
+        [
+          -8.583,
+          -49.626
+        ]
+      ],
+      "geometrySource": "NYC Building Historic (archived pre-demolition footprint)",
+      "geometryURL": "https://services6.arcgis.com/yG5s3afENB5iO9fj/arcgis/rest/services/BUILDING_HISTORIC_view/FeatureServer/0/query?where=BIN%3D3059167&outFields=*&outSR=4326&f=pjson",
+      "form": "Three-storey industrial loft, five wide factory-window bays in a pale masonry frame, dark spandrels, shallow cornice and low shopfront band.",
+      "sources": [
+        "48135",
+        "570"
+      ],
+      "limitations": "Photo title is 560 Fulton. Matched by block and lot 35; later redevelopment address is 570. No modern tower is used."
+    },
+    {
+      "id": "disputed",
+      "name": "572 Fulton Street",
+      "bin": null,
+      "lot": "3021060040",
+      "levelsVisible": 3,
+      "heightM": 9.144,
+      "surveyHeightFt": null,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          -8.581,
+          -49.632
+        ],
+        [
+          -2.908,
+          -53.206
+        ],
+        [
+          3.59,
+          -42.892
+        ],
+        [
+          -2.083,
+          -39.318
+        ]
+      ],
+      "geometrySource": "Provisional rectangle at lot 35 east party line; not a surveyed footprint",
+      "geometryURL": "https://a810-bisweb.nyc.gov/bisweb/JobsQueryByNumberServlet?passjobnumber=300205748&passdocnumber=01&requestid=1",
+      "form": "Narrow three-storey shop, four segment-headed upper openings across, cornice, exposed plain end wall.",
+      "sources": [
+        "48134",
+        "48135",
+        "demo572",
+        "permit572",
+        "archaeology"
+      ],
+      "limitations": "Disputed. A 1980s photo and a 1992 full-demolition filing identify a 30 ft, three-storey building on lot 40. A 2008 archaeological report reading the 1969, 1979 and 1989 Sanborn sheets instead calls the lot parking. Model gives priority to photograph and DOB for existence, using the report's 22 by 40 ft historic dimensions only as a provisional size. View this as a hypothesis."
+    },
+    {
+      "id": "bank",
+      "name": "33-35 Flatbush Avenue",
+      "bin": "3059162",
+      "lot": "3021060016",
+      "levelsVisible": 7,
+      "heightM": 28.145,
+      "surveyHeightFt": 92.34,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          54.199,
+          -46.525
+        ],
+        [
+          53.78,
+          -44.873
+        ],
+        [
+          53.659,
+          -44.394
+        ],
+        [
+          52.621,
+          -44.82
+        ],
+        [
+          46.4,
+          -47.37
+        ],
+        [
+          45.577,
+          -44.124
+        ],
+        [
+          42.513,
+          -32.032
+        ],
+        [
+          40.898,
+          -25.661
+        ],
+        [
+          39.553,
+          -20.352
+        ],
+        [
+          47.081,
+          -18.438
+        ],
+        [
+          45.042,
+          -10.389
+        ],
+        [
+          42.552,
+          -0.566
+        ],
+        [
+          27.232,
+          -0.58
+        ],
+        [
+          29.193,
+          -8.32
+        ],
+        [
+          33.051,
+          -23.542
+        ],
+        [
+          39.342,
+          -48.366
+        ],
+        [
+          40.344,
+          -52.322
+        ]
+      ],
+      "geometrySource": "NYC Building Footprints (later survey)",
+      "geometryURL": "https://data.cityofnewyork.us/resource/5zhs-2jue.json?bin=3059162",
+      "form": "Restrained neoclassical bank and office loft; six window axes on the upper floors, round-headed top surrounds and a two-level glazed base.",
+      "sources": [
+        "48132",
+        "48133",
+        "bank"
+      ],
+      "limitations": "Seven visible levels: five over the two-level base. Modern PLUTO counts eight; the photo governs the street elevation. No later movie-set bank name shown."
+    },
+    {
+      "id": "warehouse",
+      "name": "Pioneer Warehouses / 41 Flatbush Avenue",
+      "bin": "3059161",
+      "lot": "3021060009",
+      "levelsVisible": 10,
+      "heightM": 41.953,
+      "surveyHeightFt": 137.64,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          54.207,
+          -46.535
+        ],
+        [
+          58.315,
+          -44.815
+        ],
+        [
+          96.361,
+          -28.893
+        ],
+        [
+          96.058,
+          -27.696
+        ],
+        [
+          92.472,
+          -13.547
+        ],
+        [
+          89.174,
+          -0.533
+        ],
+        [
+          42.56,
+          -0.576
+        ],
+        [
+          45.049,
+          -10.399
+        ],
+        [
+          47.089,
+          -18.448
+        ],
+        [
+          49.349,
+          -27.368
+        ],
+        [
+          50.049,
+          -30.128
+        ],
+        [
+          42.52,
+          -32.042
+        ],
+        [
+          45.585,
+          -44.134
+        ],
+        [
+          46.407,
+          -47.38
+        ],
+        [
+          52.629,
+          -44.83
+        ],
+        [
+          53.667,
+          -44.404
+        ],
+        [
+          53.788,
+          -44.883
+        ]
+      ],
+      "geometrySource": "NYC Building Footprints (later survey)",
+      "geometryURL": "https://data.cityofnewyork.us/resource/5zhs-2jue.json?bin=3059161",
+      "form": "Romanesque Revival commercial storage complex; broad buff-brick elevation, small dark openings alternating with blind recesses, masonry base, arched entry, ships' prows and dated urns.",
+      "sources": [
+        "48131",
+        "pioneer",
+        "details"
+      ],
+      "limitations": "Modeled before the 2010s office conversion, with blocked openings rather than the present large glazing. Four construction campaigns commemorated: 1896, 1902, 1910, 1914."
+    },
+    {
+      "id": "piano",
+      "name": "55-57 Flatbush Avenue",
+      "bin": "3059160",
+      "lot": "3021060007",
+      "levelsVisible": 6,
+      "heightM": 23.774,
+      "surveyHeightFt": 171.0,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          107.942,
+          -24.034
+        ],
+        [
+          105.26,
+          -13.45
+        ],
+        [
+          101.981,
+          -0.511
+        ],
+        [
+          96.661,
+          -0.516
+        ],
+        [
+          89.166,
+          -0.523
+        ],
+        [
+          92.464,
+          -13.537
+        ],
+        [
+          96.05,
+          -27.686
+        ],
+        [
+          96.353,
+          -28.883
+        ],
+        [
+          99.47,
+          -27.579
+        ],
+        [
+          103.131,
+          -26.047
+        ]
+      ],
+      "geometrySource": "NYC Building Footprints (later survey)",
+      "geometryURL": "https://data.cityofnewyork.us/resource/5zhs-2jue.json?bin=3059160",
+      "form": "Six-storey piano factory with broad industrial sash groups above a glazed showroom.",
+      "sources": [
+        "48130",
+        "piano"
+      ],
+      "limitations": "Height estimated from period photo and adjoining cornice; excludes the six-floor residential addition documented in 2007. The modern 171 ft height must not be used."
+    },
+    {
+      "id": "furniture",
+      "name": "59 Flatbush Avenue",
+      "bin": "3059159",
+      "lot": "3021060006",
+      "levelsVisible": 6,
+      "heightM": 23.774,
+      "surveyHeightFt": 86.0,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          113.558,
+          -21.684
+        ],
+        [
+          111.517,
+          -13.629
+        ],
+        [
+          108.191,
+          -0.505
+        ],
+        [
+          101.981,
+          -0.511
+        ],
+        [
+          105.26,
+          -13.45
+        ],
+        [
+          107.942,
+          -24.034
+        ]
+      ],
+      "geometrySource": "NYC Building Footprints (later survey)",
+      "geometryURL": "https://data.cityofnewyork.us/resource/5zhs-2jue.json?bin=3059159",
+      "form": "Narrow matching white or light-painted loft face, multi-light factory sash, deep shop window and furniture sign.",
+      "sources": [
+        "48129",
+        "48130"
+      ],
+      "limitations": "Four small-window upper rows over a showroom and shop read as six levels in the photograph. Cornice steps near the piano factory. Period roof height estimated; later survey records 86 ft and PLUTO seven floors."
+    },
+    {
+      "id": "shop61",
+      "name": "61 Flatbush Avenue",
+      "bin": "3059158",
+      "lot": "3021060005",
+      "levelsVisible": 3,
+      "heightM": 13.716,
+      "surveyHeightFt": 45.0,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          116.671,
+          -10.413
+        ],
+        [
+          114.159,
+          -0.499
+        ],
+        [
+          108.191,
+          -0.505
+        ],
+        [
+          111.517,
+          -13.629
+        ],
+        [
+          113.558,
+          -21.684
+        ],
+        [
+          118.795,
+          -19.492
+        ],
+        [
+          118.955,
+          -19.425
+        ],
+        [
+          117.331,
+          -13.013
+        ]
+      ],
+      "geometrySource": "NYC Building Footprints (later survey)",
+      "geometryURL": "https://data.cityofnewyork.us/resource/5zhs-2jue.json?bin=3059158",
+      "form": "Narrow three-storey shop with plain light masonry and paired rectangular windows.",
+      "sources": [
+        "48127",
+        "48125"
+      ],
+      "limitations": "Texture, paint colour, storefront occupancy and rear treatments are approximations."
+    },
+    {
+      "id": "uniform",
+      "name": "63 Flatbush Avenue",
+      "bin": "3059157",
+      "lot": "3021060004",
+      "levelsVisible": 3,
+      "heightM": 11.278,
+      "surveyHeightFt": 37.0,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          123.473,
+          -11.576
+        ],
+        [
+          120.664,
+          -0.493
+        ],
+        [
+          114.352,
+          -0.499
+        ],
+        [
+          114.159,
+          -0.499
+        ],
+        [
+          116.671,
+          -10.413
+        ],
+        [
+          117.331,
+          -13.013
+        ],
+        [
+          118.955,
+          -19.425
+        ],
+        [
+          124.838,
+          -16.963
+        ]
+      ],
+      "geometrySource": "NYC Building Footprints (later survey)",
+      "geometryURL": "https://data.cityofnewyork.us/resource/5zhs-2jue.json?bin=3059157",
+      "form": "Narrow three-storey outfitter; projecting blade, showroom below, blind billboard-bearing side wall to vacant lot.",
+      "sources": [
+        "48125",
+        "48124",
+        "tip"
+      ],
+      "limitations": "Nevins Uniforms / tuxedo signage appears in tax photograph; graphic lettering and 1990 tenancy are not independently verified. The southern tip is not filled with buildings."
+    },
+    {
+      "id": "opposite",
+      "name": "38 Flatbush Avenue",
+      "bin": "3000483",
+      "lot": "3001620001",
+      "levelsVisible": 7,
+      "heightM": 28.072,
+      "surveyHeightFt": 92.1,
+      "demolitionYear": null,
+      "polygon": [
+        [
+          -75.624,
+          31.332
+        ],
+        [
+          -73.739,
+          31.328
+        ],
+        [
+          -73.743,
+          30.309
+        ],
+        [
+          -42.819,
+          30.241
+        ],
+        [
+          14.025,
+          30.117
+        ],
+        [
+          14.467,
+          30.116
+        ],
+        [
+          14.471,
+          31.169
+        ],
+        [
+          16.107,
+          31.165
+        ],
+        [
+          16.103,
+          30.112
+        ],
+        [
+          21.838,
+          30.1
+        ],
+        [
+          23.075,
+          33.98
+        ],
+        [
+          18.321,
+          37.195
+        ],
+        [
+          17.777,
+          36.392
+        ],
+        [
+          16.363,
+          37.348
+        ],
+        [
+          16.908,
+          38.151
+        ],
+        [
+          -43.984,
+          79.331
+        ],
+        [
+          -44.46,
+          78.629
+        ],
+        [
+          -44.606,
+          78.413
+        ],
+        [
+          -46.145,
+          79.454
+        ],
+        [
+          -45.652,
+          80.181
+        ],
+        [
+          -45.523,
+          80.371
+        ],
+        [
+          -46.107,
+          80.766
+        ],
+        [
+          -50.493,
+          83.733
+        ],
+        [
+          -53.681,
+          79.031
+        ],
+        [
+          -52.654,
+          78.337
+        ],
+        [
+          -53.696,
+          76.799
+        ],
+        [
+          -54.723,
+          77.494
+        ],
+        [
+          -56.62,
+          74.697
+        ],
+        [
+          -62.533,
+          65.976
+        ],
+        [
+          -79.53,
+          40.908
+        ],
+        [
+          -79.332,
+          40.774
+        ],
+        [
+          -78.274,
+          40.058
+        ],
+        [
+          -79.232,
+          38.644
+        ],
+        [
+          -80.295,
+          39.363
+        ],
+        [
+          -80.489,
+          39.494
+        ],
+        [
+          -83.636,
+          34.853
+        ],
+        [
+          -83.521,
+          34.635
+        ],
+        [
+          -81.256,
+          30.325
+        ],
+        [
+          -75.628,
+          30.313
+        ]
+      ],
+      "geometrySource": "NYC Building Footprints (later survey)",
+      "geometryURL": "https://data.cityofnewyork.us/resource/5zhs-2jue.json?bin=3000483",
+      "form": "Triangular postwar office block with horizontal ribbon windows, solid corner piers and recessed dark base, opposite the older lofts.",
+      "sources": [
+        "38photo",
+        "fox",
+        "details"
+      ],
+      "limitations": "Current outline and height used as proxies; banding follows the tax image rather than later renovations. The Fox Theatre that occupied this block was demolished in 1971."
+    }
+  ],
+  "openSites": [
+    {
+      "id": "parking",
+      "name": "Break in the street wall, lot 19",
+      "sources": [
+        "48133",
+        "ortho"
+      ],
+      "note": "Cars in the gap between the loft and bank. Do not insert the present 66 Rockwell tower."
+    },
+    {
+      "id": "south-tip",
+      "name": "Flatbush / Rockwell tip",
+      "sources": [
+        "48124",
+        "48125",
+        "tip"
+      ],
+      "note": "Vacant, partly fenced triangle; no modern landscape plan assumed."
+    }
+  ]
+}
