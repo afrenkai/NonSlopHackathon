@@ -1,38 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Photographs & keepsakes{% endblock %}
+{% block title %}Photographs & field notes{% endblock %}
 {% block styles %}<link rel="stylesheet" href="/static/field-print.css"><link rel="stylesheet" href="/static/guide.css">{% endblock %}
 {% block content %}
 <section id="intro" class="guide-hero" aria-labelledby="guide-title">
   <div><p class="eyebrow">Memory Worlds / A field guide</p>
-    <h1 id="guide-title">Places you remember.<br><em>Things you kept.</em></h1>
+    <h1 id="guide-title">Places you remember.<br><em>Photographs you kept.</em></h1>
   </div>
-  <div class="guide-welcome"><p>Revisit a place through a photograph, or gather the stories that belong to a keepsake.</p>
+  <div class="guide-welcome"><p>Revisit a remembered scene through a photograph. Add the details you remember whenever you want to.</p>
     <a class="button button-primary" href="/dashboard">Open the dashboard <span aria-hidden="true">→</span></a>
   </div>
 </section>
 <section id="photograph" class="guide-chapter photo-chapter" aria-labelledby="photo-title">
   <div class="chapter-copy"><p class="file-tab">01 / Photograph</p>
     <h2 id="photo-title">Step back<br>inside the<br><em>photograph.</em></h2>
-    <p>A picture remembers one wall. You remember the radio playing behind you. Put the two together and step inside.</p>
+    <p>One photograph is enough to begin. Add more views or the details you remember, and step inside.</p>
     <a class="button button-primary" href="/visits/new">Add a photograph <span aria-hidden="true">→</span></a>
   </div>
   {% include "field_print.html" %}
-</section>
-<section id="keepsake" class="guide-chapter keepsake-chapter" aria-labelledby="keepsake-title">
-  <div class="chapter-copy"><p class="file-tab">02 / Keepsake</p>
-    <h2 id="keepsake-title">Some things<br><em>aren’t places.</em></h2>
-    <p>Photograph a stuffed animal, a diary, a ring. Then keep adding to it over the years with voice notes, photos, videos, or a few written lines. See it all at once, or year by year.</p>
-    <a class="button button-primary" href="/dashboard#time-capsules">Explore time capsules <span aria-hidden="true">→</span></a>
-  </div>
-  <figure class="keepsake-example" aria-labelledby="bun-caption">
-    <p class="meta">Illustrated example / Family keepsake</p>
-    <div class="keepsake-print"><img src="/static/keepsake-rabbit.svg" width="400" height="400" loading="lazy" alt="Bun-Bun, a worn stuffed rabbit with a stitched patch."></div>
-    <figcaption id="bun-caption"><span class="keepsake-tag"><strong>Bun-Bun</strong><span class="meta">Since 2009</span></span>
-      <blockquote>“She’s 17 now and still sleeps with him on the bad nights.”</blockquote>
-    </figcaption>
-    <details class="sample-timeline"><summary>Bun-Bun’s memories, year by year</summary>
-      <ol><li><time>2009</time><span>Voice note · First night home</span></li><li><time>2014</time><span>Photograph · The hospital stay</span></li><li><time>2019</time><span>Video · Moving day</span></li><li><time>2021</time><span>Note · Lost, then found</span></li></ol>
-    </details>
-  </figure>
 </section>
 {% endblock %}

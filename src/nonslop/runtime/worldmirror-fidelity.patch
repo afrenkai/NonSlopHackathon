@@ -1,0 +1,24 @@
+diff --git a/hyworld2/worldrecon/hyworldmirror/utils/inference_utils.py b/hyworld2/worldrecon/hyworldmirror/utils/inference_utils.py
+--- a/hyworld2/worldrecon/hyworldmirror/utils/inference_utils.py
++++ b/hyworld2/worldrecon/hyworldmirror/utils/inference_utils.py
+@@ -586,7 +586,7 @@ def _voxel_prune_gaussians(means, scales, quats, colors, opacities, weights, voxel_s
+             out[:, d].scatter_add_(0, inv, vals[:, d] * w)
+         return out / wsum.unsqueeze(-1)
+ 
+-    m_opa = torch.zeros(K, dtype=opacities.dtype).scatter_add_(0, inv, w * w) / wsum
++    m_opa = torch.zeros(K, dtype=opacities.dtype).scatter_add_(0, inv, opacities * w) / wsum
+     m_quats = torch.zeros(K, 4, dtype=quats.dtype)
+     for d in range(4):
+         m_quats[:, d].scatter_add_(0, inv, quats[:, d] * w)
+diff --git a/hyworld2/worldrecon/hyworldmirror/utils/save_utils.py b/hyworld2/worldrecon/hyworldmirror/utils/save_utils.py
+--- a/hyworld2/worldrecon/hyworldmirror/utils/save_utils.py
++++ b/hyworld2/worldrecon/hyworldmirror/utils/save_utils.py
+@@ -198,7 +198,8 @@ def save_gs_ply(path: Path,
+     means, scales, rotations, rgbs, opacities = (
+         t.float() for t in (means, scales, rotations, rgbs, opacities)
+     )
++    opacities = torch.logit(opacities, eps=torch.finfo(opacities.dtype).eps)
+     plydata = _build_gs_ply_data(means, scales, rotations, rgbs, opacities, quantile_threshold=0.98)
+     plydata.write(str(path))
+ 
+ 

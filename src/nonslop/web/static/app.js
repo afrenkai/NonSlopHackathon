@@ -16,6 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function showReferences() {
     const opening = document.getElementById("reference-image");
     const count = (opening?.files.length || 0) + referencePickers.reduce((total, picker) => total + picker.files.length, 0);
+    if (opening) {
+      opening.required = !referencePickers.some((picker) => picker.files.length > 0);
+      opening.setCustomValidity(count > 8 ? "Choose at most 8 reference images total." : "");
+    }
     for (const picker of referencePickers) {
       picker.setCustomValidity(count > 8 ? "Choose at most 8 reference images total." : "");
     }
@@ -37,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   document.getElementById("reference-image")?.addEventListener("change", showReferences);
+  showReferences();
 });
 
 document.addEventListener("htmx:beforeRequest", (event) => {

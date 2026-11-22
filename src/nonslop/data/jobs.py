@@ -62,6 +62,17 @@ class JobStore:
             ).fetchone()
         return None if row is None else JobRecord.model_validate_json(row[0])
 
+    def reference_images(self, job: JobRecord) -> list[bytes]:
+        if not job.has_reference:
+            return []
+        if job.reference_count == 0:
+            return [(self.root / "uploads" / f"{job.job_id}.png").read_bytes()]
+        directory = self.root / "uploads" / job.job_id
+        return [
+            (directory / f"{index}.png").read_bytes()
+            for index in range(job.reference_count)
+        ]
+
     def recent(self, owner_id: str | None = None) -> list[JobRecord]:
         with self.lock, duckdb.connect(str(self.database)) as connection:
             if owner_id is None:

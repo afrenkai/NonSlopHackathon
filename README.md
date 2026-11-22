@@ -1,15 +1,21 @@
 # Memory Worlds
 
-A prototype for revisiting a lost street from photographs, descriptions,
-newspaper scans, and archive material. FastAPI serves a small HTMX interface;
-pi-H3 generates a 5.2-second street visit with audio on Modal. WorldMirror turns
-the video into a Gaussian-splat space; dated time capsules hold original notes,
-photos, audio, video, and linked visits.
+A prototype for revisiting remembered scenes, indoors or outdoors, from one or
+a few photographs, descriptions, scans, and archive material. FastAPI serves a
+small HTMX interface; pi-H3 generates a 5.2-second visit with audio on Modal.
+WorldMirror reconstructs a Gaussian-splat space directly from supplied photographs,
+or from generated video for legacy text-only API requests. Field notes retain
+photographs, optional remembered details, source context, and generated visits.
 
 The implementation roadmap is maintained in [todo.md](todo.md): video → 3D
-space with HY-WorldMirror → time capsules, with an isolated SGLang-Omni service.
+space with HY-WorldMirror, with an isolated SGLang-Omni service.
 
 Live website: https://afrenkai--nonslop-streets-web.us-east.modal.run
+
+The Field Notes guide opens at `/`; `/dashboard` holds the browser's field notes,
+and `/visits/new` opens the photograph intake sheet. The upstream
+guide, paper palette, typography, and navigation are integrated with the protected
+browser workspaces.
 
 ## Run locally with model workers
 
@@ -19,9 +25,9 @@ From the repo root with Python 3.13, install once with `uv sync --locked --group
 uv run scripts/local_preview.py
 ```
 
-Open **http://127.0.0.1:8742/**. Use one server at a time; stop it with Ctrl+C. Visits, capsules, dated entries, and original media use the local store. Keep the browser cookie to return after restarting. On Windows, the database, uploads and session key live under `%LOCALAPPDATA%\NonSlop\cpu-preview`; on other systems they live under `$XDG_DATA_HOME/NonSlop/cpu-preview` (default `~/.local/share/NonSlop/cpu-preview`). Override this with `--data-root /absolute/private/path`, outside the checkout and its parent. Keep this directory private; never serve it with a static file server.
+Open **http://127.0.0.1:8742/**. Use one server at a time; stop it with Ctrl+C. Field notes, photographs, and generated media use the local store. Keep the browser cookie to return after restarting. On Windows, the database, uploads and session key live under `%LOCALAPPDATA%\NonSlop\cpu-preview`; on other systems they live under `$XDG_DATA_HOME/NonSlop/cpu-preview` (default `~/.local/share/NonSlop/cpu-preview`). Override this with `--data-root /absolute/private/path`, outside the checkout and its parent. Keep this directory private; never serve it with a static file server.
 
-Video generation, 3D reconstruction, reference-image comparison, and capsule transcription/observations run on the existing private Modal workers using your Modal credentials. Generated videos and 3D files download on demand into the private local cache and are served through the same owner-protected routes. Web context lookup is enabled. Uploads selected for generation or AI processing are sent to Modal, and GPU calls incur normal Modal charges; model weights stay on Modal. `.env` is loaded without overriding existing environment variables. Image scans need local English Tesseract; audio/video uploads need `ffprobe` on `PATH`.
+Video generation, 3D reconstruction, and reference-image observations run on the existing private Modal workers using your Modal credentials. Generated videos and 3D files download on demand into the private local cache and are served through the same owner-protected routes. Web context lookup is enabled. Uploads selected for generation or AI processing are sent to Modal, and GPU calls incur normal Modal charges; model weights stay on Modal. `.env` is loaded without overriding existing environment variables. Image scans need local English Tesseract.
 
 ## Run on Modal
 
@@ -99,20 +105,31 @@ worker is a separate private Modal app, `nonslop-video`.
 
 ## Evidence and uploads
 
-Enter a street/place, year, and description. An optional PNG, JPEG, or WebP
-photograph anchors the first frame. Optional UTF-8 text/Markdown or an image scan
+Start a browser field note with at least one PNG, JPEG, or WebP photograph and
+add a place or scene and year. Written notes are optional; the photographs anchor
+the first frame and the reconstructed space. Optional UTF-8 text/Markdown or an image scan
 supplies historical context; scans use English Tesseract OCR. Files are limited
 to 10 MB each and images to 20 megapixels.
 
 The HTMX form also accepts an image folder or multiple selected photographs.
 Use up to eight references, 10 MB per file, and 40 MB total. References are
 ordered by filename; an explicit opening photograph takes precedence. All
-references are retained and compared by Omni to inform the prompt. pi-H3 uses
-the first and last as native frame conditions. Multi-image references are
-resized to at most 768 pixels on their longest edge for the vision context.
+references are retained at up to 2048 pixels on their longest edge and inspected
+by Omni to inform the prompt, including single-photo submissions. pi-H3 uses
+the opening photograph as its native frame condition. Other photographs provide
+supporting evidence; filename order does not force an ending view. Copies sent to
+Omni are resized to at most 768 pixels on their longest edge.
 AI observations are shown separately from the supplied historical evidence.
 
-Web grounding queries Internet Archive for the street and exact year, then a
+Available EXIF capture time, GPS coordinates, camera model, and focal length are
+retained separately and included in the generation context and source ledger.
+Normalized images carry no embedded metadata. Metadata does not override the
+requested memory year or establish a camera pose; scan dates may describe
+digitization. GPS is a prompt clue, not a reverse-geocoded or verified address.
+Focal length alone is not treated as a calibrated intrinsic matrix.
+
+Web grounding queries Internet Archive using all comma-separated location terms
+and the exact year, then a
 ten-year window if needed. Source links, excerpts, dates, and retrieval notices
 are retained with each scene. Search results require relevance review; they do
 not certify an exact reconstruction. H3's hosted Context-IR is not part of its
@@ -126,18 +143,43 @@ references. Poll `GET /api/jobs/{job_id}`; retrieve completed media from
 `GET /api/jobs/{job_id}/video`. There is room for four outstanding jobs and one
 GPU worker processes them in sequence.
 
-After a video finishes, use **Build a 3D space**, then **Step into this space**.
-The Spark/three.js viewer supports keyboard, pointer, and touch movement and
-shows input camera positions. Reconstruction uses six sampled frames and a
-500k input-splat cap. Geometry is inferred and unscaled; gaps and distorted
-regions do not establish what was historically present.
+With photographs, use **Build a 3D space from photographs** immediately, then
+**Step into this space**. Reconstruction does not wait for or consume the
+generated video. Choose overlapping views of the same scene; photos with different
+aspect ratios use centered crops matching the opening view, without stretching.
+The full normalized references remain available in the source ledger. With no
+photographs, the existing **Build a 3D space** action becomes available after video
+generation and reconstructs six sampled frames. Each space records which inputs
+produced its geometry. Reconstruction uses up to a 756-pixel input edge and a
+1.5-million-splat export cap. Existing visits can use **Rebuild this space** to
+apply the current reconstruction without regenerating their video. Cached 3D
+assets are invalidated when a rebuild starts.
 
-Open **Time capsules** to anchor an object or place with a photograph. Add dated
-entries in your own words, upload original image/audio/video files, and link
-visits or corrections. Whole-capsule and timeline views use HTMX; undocumented
-periods remain empty. Optional transcripts and observations are labeled AI
-output and never replace original entries. Original media stays within its
-browser workspace.
+The pinned WorldMirror export patch preserves predicted opacity during voxel
+merging and writes standard PLY opacity logits. Scale-outlier filtering remains
+enabled to remove excessively large splats. Edge filtering remains
+enabled with less aggressive normal and depth thresholds. These changes retain
+more observed surfaces; larger assets use more download bandwidth and GPU memory.
+
+The Spark/three.js viewer supports keyboard, pointer, and touch movement and
+shows input camera positions. Projection uses WorldMirror's estimated focal lengths,
+principal point, and processed image dimensions rather than a fixed field of view.
+Older assets without image dimensions assume a centered principal point. Geometry
+is inferred and unscaled; single-photo depth and unseen surfaces remain uncertain.
+Historical sources and remembered details inform generation, not measured geometry.
+Spark uses its native platform-specific detail budget rather than a fixed 150k
+display cap. Its blur settings match WorldMirror's classic Gaussian rasterization
+rather than applying the opacity compensation intended for antialiased training.
+
+Live photo-input validation on November 22, 2026 completed with both one and two
+indoor example photographs. The updated two-photo rebuild produced 605,046 exported
+splats (41.1 MB), two camera poses, and 756 × 504 calibration dimensions. The owner’s
+3D page, camera JSON, and PLY download returned HTTP 200. This verifies the deployed reconstruction
+path, not metric geometric accuracy or interactive browser rendering. The
+companion 124-frame video with audio completed. Native renders of the exported
+splats show improved bed and window coverage at both input views and an
+interpolated viewpoint. Soft boundaries, grainy walls, floating artifacts, and
+unobserved regions remain; memory-quality fidelity remains unfinished.
 
 HTMX handles forms, uploads, polling, and view changes. The bundled JavaScript
 for the 3D renderer is built with `npm ci` then `npm run build` when its source

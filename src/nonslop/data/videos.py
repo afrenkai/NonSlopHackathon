@@ -19,6 +19,10 @@ class ArtifactStore:
         self.lock = RLock()
         serving_root.mkdir(parents=True, exist_ok=True)
 
+    def invalidate(self, relative_path: Path) -> None:
+        with self.lock:
+            (self.serving_root / relative_path).unlink(missing_ok=True)
+
     def materialize(self, relative_path: Path) -> Path:
         with self.lock:
             destination = self.serving_root / relative_path

@@ -4,6 +4,7 @@ from anyio import to_thread
 from fastapi import HTTPException
 from starlette.datastructures import FormData, UploadFile
 
+from nonslop.grounding.photos import photo_metadata
 from nonslop.web.schemas import ReferenceBundle, WebSettings
 from nonslop.web.uploads import normalize_image, upload_bytes
 
@@ -32,10 +33,10 @@ async def read_references(form: FormData, settings: WebSettings) -> ReferenceBun
         total += len(content)
         if total > settings.total_upload_limit:
             raise HTTPException(413, "Keep the complete upload under 40 MB.")
-        references.images.append(
-            await to_thread.run_sync(
-                normalize_image, content, 768 if len(selected) > 1 else 2048
-            )
+        references.images.append(await to_thread.run_sync(normalize_image, content))
+        filename = Path(upload.filename or "reference.png").name[:250]
+        references.filenames.append(filename)
+        references.metadata.append(
+            await to_thread.run_sync(photo_metadata, content, filename)
         )
-        references.filenames.append(Path(upload.filename or "reference.png").name[:250])
     return references

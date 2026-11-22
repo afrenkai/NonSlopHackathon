@@ -1,10 +1,15 @@
 <form action="/visits/new" method="post" enctype="multipart/form-data" class="form-stack" hx-post="/visits/new" hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
   <p class="field-help public-notice"><strong>Your collection.</strong> Your uploads and memories are available in this browser’s workspace.</p>
   <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="field upload-field">
+    <label for="reference-image">Photograph <span class="optional">Required</span></label>
+    <input id="reference-image" name="reference_image" type="file" accept="image/png,image/jpeg,image/webp" required aria-describedby="reference-help">
+    <p class="field-help" id="reference-help">Start with a photograph, or choose images from the folder and multi-image pickers below. PNG, JPEG, or WebP. Available capture dates and location metadata are retained as context.</p>
+  </div>
   <div class="place-fields">
     <div class="field">
-      <label for="location">Place or street</label>
-      <input id="location" name="location" type="text" placeholder="Street, town, country" minlength="3" maxlength="250" required autocomplete="off">
+      <label for="location">Place or scene</label>
+      <input id="location" name="location" type="text" placeholder="Grandma’s kitchen, a favorite park, a family gathering…" minlength="3" maxlength="250" required autocomplete="off">
     </div>
     <div class="field year-field">
       <label for="year">Year</label>
@@ -12,13 +17,8 @@
     </div>
   </div>
   <div class="field">
-    <label for="description">What would you like to revisit?</label>
-    <textarea id="description" name="description" rows="4" minlength="5" maxlength="4000" required placeholder="A slow walk past the corner shop, late afternoon light on the brickwork, a bus passing in the distance…"></textarea>
-  </div>
-  <div class="field upload-field">
-    <label for="reference-image">Opening photograph <span class="optional">Optional</span></label>
-    <input id="reference-image" name="reference_image" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="reference-help">
-    <p class="field-help" id="reference-help">Use a street photograph to anchor the first frame. PNG, JPEG, or WebP.</p>
+    <label for="description">Anything you remember beyond the photograph? <span class="optional">Optional</span></label>
+    <textarea id="description" name="description" rows="4" maxlength="4000" placeholder="Sounds, names, colors, or details just outside the frame…"></textarea>
   </div>
   <details class="source-details">
     <summary>Add multiple reference images <span class="optional">Optional</span></summary>
@@ -31,7 +31,7 @@
         <label for="reference-images">Or select multiple images</label>
         <input id="reference-images" name="reference_images" type="file" accept="image/png,image/jpeg,image/webp" multiple data-reference-picker>
       </div>
-      <p class="field-help">Up to 8 images total, 10 MB each, 40 MB per upload. Folder images are ordered by filename. The opening photograph comes first when supplied. All images inform the prompt; pi-H3 uses the first and last as frame anchors.</p>
+      <p class="field-help">Up to 8 images total, 10 MB each, 40 MB per upload. Choose overlapping views of the same scene for a more grounded 3D space. Folder images are ordered by filename; the opening photograph comes first when supplied. Additional photographs provide supporting views.</p>
       <p id="reference-selection" class="field-help" role="status" aria-live="polite"></p>
     </div>
   </details>
