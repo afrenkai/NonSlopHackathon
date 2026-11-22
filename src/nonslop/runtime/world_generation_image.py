@@ -100,4 +100,21 @@ def build_world_generation_image(settings: WorldGenerationSettings) -> modal.Ima
             copy=True,
         )
         .run_commands(f"git -C {source_directory} apply /opt/worldgen-navigation.patch")
+        .add_local_file(
+            Path(__file__).with_name("fused-ssim-sm90.patch"),
+            "/opt/fused-ssim-sm90.patch",
+            copy=True,
+        )
+        .run_commands(
+            "git clone --filter=blob:none https://github.com/rahul-goel/fused-ssim.git "
+            "/opt/fused-ssim",
+            "git -C /opt/fused-ssim checkout "
+            "328dc9836f513d00c4b5bc38fe30478b4435cbb5",
+            "git -C /opt/fused-ssim apply /opt/fused-ssim-sm90.patch",
+            "uv build --wheel --no-build-isolation --out-dir /opt/nonslop-wheels "
+            "/opt/fused-ssim",
+            "uv pip install --system --no-deps --reinstall "
+            "/opt/nonslop-wheels/fused_ssim-*.whl",
+            "rm -rf /cache",
+        )
     )

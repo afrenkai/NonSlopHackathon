@@ -33,7 +33,6 @@ def run_world_generation(
     job_directory = job_directory.resolve()
     scene_directory = job_directory / "worldgen"
     scene_directory.mkdir(parents=True, exist_ok=True)
-    result_directory = scene_directory / "trained"
     source_directory = Path(settings.source_root)
     worldgen_directory = source_directory / "hyworld2" / "worldgen"
     render_directory = scene_directory / "render_results"
@@ -153,6 +152,16 @@ def run_world_generation(
             scene_directory / "gs_data" / "points.ply",
         ],
     )
+    return train_generated_world(job_directory, settings)
+
+
+def train_generated_world(
+    job_directory: Path, settings: WorldGenerationSettings
+) -> WorldResult:
+    job_directory = job_directory.resolve()
+    scene_directory = job_directory / "worldgen"
+    result_directory = scene_directory / "trained"
+    worldgen_directory = Path(settings.source_root) / "hyworld2" / "worldgen"
     steps = settings.training_steps
     refinement_stop = max(1, steps // 2)
     run_native_stage(

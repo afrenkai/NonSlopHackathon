@@ -36,7 +36,10 @@ with preparation_image.imports():
     from nonslop.reconstruction.images import prepare_review_image
 
 with image.imports():
-    from nonslop.world_generation.pipeline import run_world_generation
+    from nonslop.world_generation.pipeline import (
+        run_world_generation,
+        train_generated_world,
+    )
     from nonslop.world_generation.vlm import world_generation_vlm
 
 
@@ -117,24 +120,7 @@ def generate_world(
 ) -> str:
     identifier = UUID(job_id)
     context = ReconstructionContext.model_validate_json(context_json)
-    cache_root = Path("/runtime-cache/worldgen")
-    os.environ.update(
-        {
-            "XDG_CACHE_HOME": str(cache_root),
-            "TORCH_HOME": str(cache_root / "torch"),
-            "TORCH_EXTENSIONS_DIR": str(cache_root / "torch_extensions"),
-            "TORCHINDUCTOR_CACHE_DIR": str(cache_root / "torchinductor"),
-            "TRITON_CACHE_DIR": str(cache_root / "triton"),
-            "NUMBA_CACHE_DIR": str(cache_root / "numba"),
-            "UV_CACHE_DIR": str(cache_root / "uv"),
-        }
-    )
-    model_volume.reload()
-    world_volume.reload()
-    legacy_cache = Path.home() / ".cache" / "huggingface" / "hub"
-    legacy_cache.parent.mkdir(parents=True, exist_ok=True)
-    if not legacy_cache.exists():
-        legacy_cache.symlink_to(Path("/models/hf/hub"), target_is_directory=True)
+    prepare_world_runtime()
     directory = Path("/worlds") / str(identifier)
     directory.mkdir(parents=True, exist_ok=True)
     anchor = directory / "worldgen-video-anchor.png"
@@ -166,8 +152,69 @@ def generate_world(
         cache_volume.commit()
 
 
+def prepare_world_runtime() -> None:
+    cache_root = Path("/runtime-cache/worldgen")
+    os.environ.update(
+        {
+            "XDG_CACHE_HOME": str(cache_root),
+            "TORCH_HOME": str(cache_root / "torch"),
+            "TORCH_EXTENSIONS_DIR": str(cache_root / "torch_extensions"),
+            "TORCHINDUCTOR_CACHE_DIR": str(cache_root / "torchinductor"),
+            "TRITON_CACHE_DIR": str(cache_root / "triton"),
+            "NUMBA_CACHE_DIR": str(cache_root / "numba"),
+            "UV_CACHE_DIR": str(cache_root / "uv"),
+        }
+    )
+    model_volume.reload()
+    world_volume.reload()
+    legacy_cache = Path.home() / ".cache" / "huggingface" / "hub"
+    legacy_cache.parent.mkdir(parents=True, exist_ok=True)
+    if not legacy_cache.exists():
+        legacy_cache.symlink_to(Path("/models/hf/hub"), target_is_directory=True)
+
+
+@app.function(
+    image=image,
+    gpu="H200",
+    cpu=16,
+    memory=131072,
+    volumes={
+        "/models": model_volume,
+        "/worlds": world_volume,
+        "/runtime-cache": cache_volume,
+    },
+    timeout=21600,
+    max_containers=3,
+)
+def train_world(job_id: str) -> str:
+    identifier = UUID(job_id)
+    prepare_world_runtime()
+    directory = Path("/worlds") / str(identifier)
+    try:
+        context = ReconstructionContext.model_validate_json(
+            (directory / "worldgen-context.json").read_text()
+        )
+        result = train_generated_world(directory, settings)
+        result.context_applied = True
+        result.evidence_count = len(context.sources)
+        return result.model_dump_json()
+    finally:
+        world_volume.commit()
+        cache_volume.commit()
+
+
 @app.local_entrypoint()
-def main(job_id: str, context_path: str, reference_directory: str = "") -> None:
+def main(
+    job_id: str,
+    context_path: str = "",
+    reference_directory: str = "",
+    resume_training: bool = False,
+) -> None:
+    if resume_training:
+        print(train_world.remote(job_id))
+        return
+    if not context_path:
+        raise ValueError("Provide --context-path or use --resume-training.")
     references = (
         [
             path.read_bytes()
