@@ -36,7 +36,7 @@
   <div class="{% if request.app.state.local_preview %}context-notices{% else %}message message-error{% endif %}" role="status">{{ job.error or 'The generation could not finish. Please try another visit.' }}</div>
   {% else %}
   <div class="generation-state">
-    {% if job.has_reference %}<img class="reference-thumbnail" src="/jobs/{{ job.job_id }}/reference" alt="Your opening street photograph" loading="lazy">{% endif %}
+    {% if job.has_reference %}<img class="reference-thumbnail" src="/jobs/{{ job.job_id }}/reference" alt="Opening street photograph" loading="lazy">{% endif %}
     <div class="generation-copy">
       <div class="progress-line" aria-hidden="true"></div>
       <p>{% if job.status == 'running' and job.reference_count > 1 %}Reading your reference photographs and creating the visit.{% elif job.status == 'running' %}Building the street, its movement, and its sound.{% else %}Your material is saved. Your visit will begin when the model is ready.{% endif %}</p>
@@ -44,7 +44,7 @@
     </div>
   </div>
   {% endif %}
-  <p class="eyebrow record-label">Your words</p>
+  <p class="eyebrow record-label">Contributor’s words</p>
   <p class="visit-description personal-words">{{ job.scene.description }}</p>
   {% if job.notices %}
   <div class="context-notices">

@@ -19,7 +19,7 @@ From the repo root with Python 3.13, install once with `uv sync --locked --group
 uv run --offline --no-sync python scripts/local_preview.py
 ```
 
-Open **http://127.0.0.1:8742/**. Use one server at a time; stop it with Ctrl+C. Capsules, dated entries, and original media use the real local store. Keep the browser cookie to return after restarting. On Windows, the database, uploads and session key live under `%LOCALAPPDATA%\NonSlop\cpu-preview`; on other systems they live under `~/.local/share/NonSlop/cpu-preview`. Keep this directory private; never serve it with a static file server.
+Open **http://127.0.0.1:8742/**. Use one server at a time; stop it with Ctrl+C. Capsules, dated entries, and original media use the real local store. The shared collection is at **http://127.0.0.1:8742/dashboard**. Other browsers on this computer can view it without the original cookie. On Windows, the database, uploads and session key live under `%LOCALAPPDATA%\NonSlop\cpu-preview`; on other systems they live under `~/.local/share/NonSlop/cpu-preview`. Keep this directory private; never serve it with a static file server.
 
 Visit submissions save supplied text and reference images, even if web search is checked. No archive lookup, video, 3D space, transcript or AI observations are produced. Worker requests show an offline result instead of polling. Image scans need local English Tesseract; audio/video uploads need `ffprobe` on `PATH`. Text/Markdown and photographs need neither.
 
@@ -70,11 +70,9 @@ Create the Modal secret `nonslop-access` with three different values:
 - `APP_PASSWORD`: at least 8 characters.
 - `SESSION_SECRET`: at least 32 random characters.
 
-The website opens directly, without an API key or password form. Each browser
-has its own signed, Secure, HttpOnly, SameSite=Strict session, with CSRF-protected
-forms. Visits, uploaded images, and videos are restricted to that browser's
-workspace. Keep the browser cookies to return to its visits. Existing visits
-from the former shared workspace remain accessible through the authenticated API.
+The landing page is a field guide with illustrated photograph and keepsake examples. `/dashboard` lists recent visits in the Box alongside shared time capsules. No account is required. Website visits, reference photos, generated worlds, capsule entries, and their original media are visible to anyone with access to this app, including records previously scoped to a browser. Do not upload material that should stay private. This change does not deploy the app or expose the loopback preview on the internet.
+
+Browser forms use signed, HttpOnly, SameSite=Strict sessions for CSRF protection, not to restrict who can see the collection.
 
 API requests still require both `X-API-Key` and `X-Password` headers. These are
 server-side credentials, configured by the deployment CLI rather than entered
@@ -136,8 +134,7 @@ Open **Time capsules** to anchor an object or place with a photograph. Add dated
 entries in your own words, upload original image/audio/video files, and link
 visits or corrections. Whole-capsule and timeline views use HTMX; undocumented
 periods remain empty. Optional transcripts and observations are labeled AI
-output and never replace original entries. Original media stays within its
-browser workspace.
+output and never replace original entries. Original media can be opened or downloaded by other visitors to the shared collection.
 
 HTMX handles forms, uploads, polling, and view changes. The bundled JavaScript
 for the 3D renderer is built with `npm ci` then `npm run build` when its source
@@ -172,7 +169,7 @@ uv run --group checks pytest -q tests
 uv run modal run -m nonslop.runtime.modal_app
 ```
 
-Verified on November 22, 2026: nine focused web/CLI tests, Ruff, and Black passed.
+Historical verification of the earlier, workspace-isolated deployment (before the shared dashboard): nine focused web/CLI tests, Ruff, and Black passed.
 The live website opens without login (HTTP 200), enforces CSRF (403), and rejects
 API requests without credentials (401). Browser workspace isolation, media
 access, cookie restoration, and CLI/`.env` precedence are covered by tests.

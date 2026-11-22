@@ -1,5 +1,5 @@
-{% set submit_url = '/visits/new' if standalone_intake else '/jobs' %}
-<form action="{{ submit_url }}" method="post" enctype="multipart/form-data" class="form-stack" hx-post="{{ submit_url }}"{% if not standalone_intake %} hx-target="#latest" hx-swap="afterbegin show:top"{% endif %} hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
+<form action="/visits/new" method="post" enctype="multipart/form-data" class="form-stack" hx-post="/visits/new" hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
+  <p class="field-help public-notice"><strong>Public collection.</strong> Anyone who opens this app can see what you add, including your uploaded files.</p>
   <input type="hidden" name="csrf" value="{{ csrf }}">
   <div class="place-fields">
     <div class="field">

@@ -14,34 +14,34 @@
   </nav>
   {% if capsule.anchor_filename %}
     <figure class="ks-print ks-anchor">
-      <img src="{{ capsule_url }}/anchor" alt="Your photograph of {{ capsule.title }}">
-      <figcaption>Your photograph</figcaption>
+      <img src="{{ capsule_url }}/anchor" alt="Photograph of {{ capsule.title }}">
+      <figcaption>Photograph</figcaption>
     </figure>
   {% elif view == 'whole' and entries %}
     <p class="ks-center-label">{{ capsule.title }}</p>
   {% endif %}
-  {% if view == 'timeline' %}<p class="ks-view-note">Only the dates you’ve added appear here.</p>{% endif %}
+  {% if view == 'timeline' %}<p class="ks-view-note">Only dates with a saved memory appear here.</p>{% endif %}
   {% if entries %}
     <div class="ks-pages {{ 'capsule-gallery' if view == 'whole' else 'ks-timeline' }}">
-      {% set labels = {'text': 'Your note', 'image': 'Your photograph', 'audio': 'Your voice note', 'video': 'Your video', 'correction': 'Your correction'} %}
+      {% set labels = {'text': 'Note', 'image': 'Photograph', 'audio': 'Voice note', 'video': 'Video', 'correction': 'Correction'} %}
       {% for entry in entries %}
         <article class="ks-item" data-entry-id="{{ entry.entry_id }}">
           {% if view == 'timeline' %}<span class="ks-year" aria-hidden="true">{{ entry.occurred_on.year }}</span>{% endif %}
           <div class="ks-page">
             <header class="ks-entry-heading">
-              <h3>{{ 'Your linked visit' if entry.kind == 'text' and not entry.text.strip() and entry.linked_job_id else labels[entry.kind] }}</h3>
+              <h3>{{ 'Linked visit' if entry.kind == 'text' and not entry.text.strip() and entry.linked_job_id else labels[entry.kind] }}</h3>
               <time class="ks-meta" datetime="{{ entry.occurred_on }}">{{ entry.occurred_on.strftime('%d %b %Y') }}</time>
             </header>
             {% if entry.media_filename %}
               {% set media_url = capsule_url ~ '/entries/' ~ entry.entry_id ~ '/media' %}
               {% if entry.kind == 'image' %}
-                <img class="ks-image" src="{{ media_url }}" alt="Your photograph from {{ entry.occurred_on }}" loading="lazy">
+                <img class="ks-image" src="{{ media_url }}" alt="Photograph from {{ entry.occurred_on }}" loading="lazy">
               {% elif entry.kind == 'audio' %}
                 <audio id="ks-player-{{ entry.entry_id }}" hx-preserve controls preload="metadata" src="{{ media_url }}">Your browser cannot play this recording.</audio>
               {% elif entry.kind == 'video' %}
                 <video id="ks-player-{{ entry.entry_id }}" hx-preserve controls playsinline preload="metadata" src="{{ media_url }}">Your browser cannot play this recording.</video>
               {% endif %}
-              <a class="ks-link" href="{{ media_url }}" download>Download your original</a>
+              <a class="ks-link" href="{{ media_url }}" download>Download original</a>
             {% endif %}
             {% if entry.text %}<p class="ks-words{% if entry.text|length <= 200 %} ks-short{% endif %}">{{ entry.text }}</p>{% endif %}
             {% if entry.linked_job_id %}<a class="ks-link" href="/visits/{{ entry.linked_job_id }}">Open the linked visit and 3D space <span aria-hidden="true">→</span></a>{% endif %}

@@ -12,9 +12,9 @@ from nonslop.capsules.media import read_memory_media
 from nonslop.capsules.schemas import CapsuleEntry, CapsuleRecord, CapsuleView
 from nonslop.capsules.service import CapsuleService
 from nonslop.capsules.store import CapsuleStore
-from nonslop.data.jobs import JobStore
+from nonslop.data.jobs import PUBLIC_WEB_OWNER, JobStore
 from nonslop.web.schemas import WebSettings
-from nonslop.web.security import browser_workspace, csrf_token, require_csrf
+from nonslop.web.security import csrf_token, require_csrf
 
 
 def install_capsule_routes(
@@ -25,8 +25,8 @@ def install_capsule_routes(
     jobs: JobStore,
     templates: Jinja2Templates,
 ) -> None:
-    def find_capsule(request: Request, capsule_id: UUID) -> CapsuleRecord:
-        capsule = store.get(capsule_id, browser_workspace(request))
+    def find_capsule(capsule_id: UUID) -> CapsuleRecord:
+        capsule = store.get(capsule_id)
         if capsule is None:
             raise HTTPException(404, "Capsule not found.")
         return capsule
@@ -34,10 +34,7 @@ def install_capsule_routes(
     def timeline(
         request: Request, capsule: CapsuleRecord, view: CapsuleView
     ) -> HTMLResponse:
-        entries = [
-            service.refresh(entry)
-            for entry in store.entries(capsule.capsule_id, capsule.owner_id)
-        ]
+        entries = [service.refresh(entry) for entry in store.entries(capsule)]
         return templates.TemplateResponse(
             request=request,
             name="capsule_entries.html",
@@ -59,7 +56,7 @@ def install_capsule_routes(
             request=request,
             name="capsules.html",
             context={
-                "capsules": store.recent(browser_workspace(request)),
+                "capsules": store.public_page()[0],
                 "csrf": csrf_token(request),
             },
         )
@@ -71,7 +68,7 @@ def install_capsule_routes(
             try:
                 capsule = CapsuleRecord(
                     capsule_id=uuid4(),
-                    owner_id=browser_workspace(request),
+                    owner_id=PUBLIC_WEB_OWNER,
                     created_at=datetime.now(UTC),
                     title=str(form.get("title", "")).strip(),
                     description=str(form.get("description", "")),
@@ -97,18 +94,15 @@ def install_capsule_routes(
 
     @application.get("/capsules/{capsule_id}", response_class=HTMLResponse)
     def capsule_page(request: Request, capsule_id: UUID) -> HTMLResponse:
-        capsule = find_capsule(request, capsule_id)
-        entries = [
-            service.refresh(entry)
-            for entry in store.entries(capsule_id, capsule.owner_id)
-        ]
+        capsule = find_capsule(capsule_id)
+        entries = [service.refresh(entry) for entry in store.entries(capsule)]
         return templates.TemplateResponse(
             request=request,
             name="capsule.html",
             context={
                 "capsule": capsule,
                 "entries": entries,
-                "jobs": jobs.recent(capsule.owner_id),
+                "jobs": jobs.public_page()[0],
                 "csrf": csrf_token(request),
                 "today": date.today(),
                 "view": "timeline",
@@ -124,11 +118,11 @@ def install_capsule_routes(
     def capsule_entries(
         request: Request, capsule_id: UUID, view: CapsuleView = "timeline"
     ) -> HTMLResponse:
-        return timeline(request, find_capsule(request, capsule_id), view)
+        return timeline(request, find_capsule(capsule_id), view)
 
     @application.post("/capsules/{capsule_id}/entries", response_class=HTMLResponse)
     async def append_entry(request: Request, capsule_id: UUID) -> HTMLResponse:
-        capsule = find_capsule(request, capsule_id)
+        capsule = find_capsule(capsule_id)
         async with request.form(max_files=1, max_fields=7, max_part_size=65536) as form:
             require_csrf(request, str(form.get("csrf", "")))
             try:
@@ -147,16 +141,15 @@ def install_capsule_routes(
                 raise HTTPException(
                     422, "Add a valid date and keep your words under 20,000 characters."
                 ) from error
-            if entry.linked_job_id is not None:
-                linked_job = jobs.get(str(entry.linked_job_id))
-                if linked_job is None or linked_job.owner_id != capsule.owner_id:
-                    raise HTTPException(404, "Linked visit not found.")
+            if (
+                entry.linked_job_id is not None
+                and jobs.get_public(str(entry.linked_job_id)) is None
+            ):
+                raise HTTPException(404, "Linked visit not found.")
             if entry.kind == "correction" and (
                 not entry.text.strip() or entry.linked_job_id is None
             ):
-                raise HTTPException(
-                    422, "A correction needs your words and a linked visit."
-                )
+                raise HTTPException(422, "A correction needs text and a linked visit.")
             media_bytes = None
             media = form.get("media")
             if isinstance(media, UploadFile) and media.filename:
@@ -177,15 +170,15 @@ def install_capsule_routes(
                 and entry.linked_job_id is None
             ):
                 raise HTTPException(
-                    422, "Add your words, a recording, an image, or a linked visit."
+                    422, "Add text, a recording, an image, or a linked visit."
                 )
             use_ai = form.get("use_ai") == "true"
         await to_thread.run_sync(service.append, entry, media_bytes, use_ai)
         return timeline(request, capsule, "timeline")
 
     @application.get("/capsules/{capsule_id}/anchor")
-    def capsule_anchor(request: Request, capsule_id: UUID) -> FileResponse:
-        capsule = find_capsule(request, capsule_id)
+    def capsule_anchor(capsule_id: UUID) -> FileResponse:
+        capsule = find_capsule(capsule_id)
         if capsule.anchor_filename is None:
             raise HTTPException(404, "Anchor image not found.")
         return FileResponse(
@@ -194,8 +187,8 @@ def install_capsule_routes(
         )
 
     @application.get("/capsules/{capsule_id}/entries/{entry_id}/media")
-    def entry_media(request: Request, capsule_id: UUID, entry_id: UUID) -> FileResponse:
-        capsule = find_capsule(request, capsule_id)
+    def entry_media(capsule_id: UUID, entry_id: UUID) -> FileResponse:
+        capsule = find_capsule(capsule_id)
         entry = store.get_entry(entry_id, capsule.owner_id)
         if (
             entry is None

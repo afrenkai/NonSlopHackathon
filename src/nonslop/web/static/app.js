@@ -1,4 +1,12 @@
+// A bookmark can target a new document or a fragment on an already-open landing page.
+function followMovedSection() {
+  if (location.pathname !== "/") return;
+  if (location.hash === "#your-box") location.replace("/dashboard#box");
+  else if (location.hash === "#new-visit") location.replace("/visits/new");
+}
+window.addEventListener("hashchange", followMovedSection);
 document.addEventListener("DOMContentLoaded", () => {
+  followMovedSection();
   const yearInput = document.getElementById("year");
   if (yearInput) {
     yearInput.max = String(new Date().getFullYear());

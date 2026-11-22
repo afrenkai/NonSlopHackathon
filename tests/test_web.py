@@ -2,7 +2,7 @@ import re
 import wave
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
@@ -11,6 +11,8 @@ from fastapi.testclient import TestClient
 from PIL import Image
 from pydantic import SecretStr
 
+from nonslop.capsules.schemas import CapsuleEntry, CapsuleRecord
+from nonslop.capsules.store import CapsuleStore
 from nonslop.data.jobs import JobStore
 from nonslop.generation.schemas import (
     GenerationResult,
@@ -20,6 +22,7 @@ from nonslop.generation.schemas import (
 )
 from nonslop.models.inference_schemas import ArchivistResult, MediaType
 from nonslop.models.world_schemas import WorldResult
+from nonslop.reconstruction.schemas import ReconstructionRecord
 from nonslop.web.app import create_app
 from nonslop.web.schemas import WebSettings
 
@@ -112,6 +115,19 @@ def csrf_from(html: str) -> str:
     return match.group(1)
 
 
+def template_context(response: object) -> dict:
+    # Starlette's TestClient adds template context to the underlying httpx response.
+    context = getattr(response, "context", None)
+    assert isinstance(context, dict)
+    return context
+
+
+def capsule_id_from(html: str) -> str:
+    match = re.search(r'data-capsule-id="([^"]+)"', html)
+    assert match is not None
+    return match.group(1)
+
+
 def api_headers(settings: WebSettings) -> dict[str, str]:
     return {
         "X-API-Key": settings.api_key.get_secret_value(),
@@ -119,17 +135,142 @@ def api_headers(settings: WebSettings) -> dict[str, str]:
     }
 
 
-def test_field_guide_leads_into_live_workspace(tmp_path: Path) -> None:
+def test_field_guide_is_static_and_leads_to_the_dashboard(tmp_path: Path) -> None:
     client = browser_client(client_settings(tmp_path), RecordingGenerator())
     home = client.get("/")
     assert home.status_code == 200
     assert "Memory Worlds" in home.text
-    for part in ("new-visit", "your-box", "src-memory", "src-letter", "src-guess"):
+    for part in ("photograph", "keepsake"):
         assert f'id="{part}"' in home.text
-    assert 'href="/capsules"' in home.text
-    assert 'action="/jobs"' in home.text
+    assert 'href="/dashboard"' in home.text
+    assert "<form" not in home.text
+    assert "set-cookie" not in home.headers
+    assert {"jobs", "capsules", "csrf"}.isdisjoint(template_context(home))
     assert client.get("/static/kitchen.svg").status_code == 200
     assert "Memory Worlds" in client.get("/capsules").text
+
+
+def test_dashboard_pages_the_two_legacy_collections_independently(
+    tmp_path: Path,
+) -> None:
+    settings = client_settings(tmp_path)
+    jobs = JobStore(settings.data_root, no_operation)
+    capsules = CapsuleStore(jobs)
+    start = datetime.now(UTC)
+    for number in range(31):
+        timestamp = start + timedelta(seconds=number)
+        owner = f"old-workspace-{number}"
+        capsules.create(
+            CapsuleRecord(
+                capsule_id=uuid4(),
+                owner_id=owner,
+                created_at=timestamp,
+                title=f"Notebook {number:02}",
+            )
+        )
+        if number < 14:
+            jobs.save(
+                JobRecord(
+                    job_id=str(uuid4()),
+                    owner_id="api" if number == 13 else owner,
+                    created_at=timestamp,
+                    status="failed",
+                    render_prompt="A street.",
+                    scene=SceneRequest(
+                        location=f"Street {number:02}",
+                        year=1990,
+                        description="The old market.",
+                    ),
+                )
+            )
+    client = browser_client(settings, RecordingGenerator())
+    for box_page, capsule_page in ((1, 1), (2, 1), (1, 2), (2, 2)):
+        response = client.get(
+            "/dashboard", params={"box_page": box_page, "capsule_page": capsule_page}
+        )
+        assert response.status_code == 200
+        context = template_context(response)
+        assert (
+            context["box_page"] == box_page and context["capsule_page"] == capsule_page
+        )
+        assert context["more_jobs"] is (box_page == 1)
+        assert context["more_capsules"] is (capsule_page == 1)
+        assert context["csrf"]
+        assert len(context["jobs"]) == (12 if box_page == 1 else 1)
+        assert len(context["capsules"]) == (30 if capsule_page == 1 else 1)
+        assert ("Street 00" in response.text) == (box_page == 2)
+        assert ("Notebook 00" in response.text) == (capsule_page == 2)
+        assert (
+            "Street 13" not in response.text and "old-workspace-" not in response.text
+        )
+    assert client.get("/dashboard?box_page=0").status_code == 422
+    assert client.get("/dashboard?capsule_page=-1").status_code == 422
+
+
+def test_unrelated_legacy_workspaces_can_link_a_capsule_to_a_visit(
+    tmp_path: Path,
+) -> None:
+    settings = client_settings(tmp_path)
+    jobs = JobStore(settings.data_root, no_operation)
+    capsules = CapsuleStore(jobs)
+    now = datetime.now(UTC)
+    job = JobRecord(
+        job_id=str(uuid4()),
+        owner_id="legacy-photo-workspace",
+        created_at=now,
+        status="complete",
+        scene=SceneRequest(
+            location="Market square", year=1990, description="The clock tower."
+        ),
+        render_prompt="The square.",
+        world=ReconstructionRecord(status="complete"),
+    )
+    jobs.save(job)
+    capsule = CapsuleRecord(
+        capsule_id=uuid4(),
+        owner_id="legacy-notebook-workspace",
+        created_at=now,
+        title="A pocket watch",
+    )
+    capsules.create(capsule)
+    capsules.append(
+        CapsuleEntry(
+            entry_id=uuid4(),
+            capsule_id=capsule.capsule_id,
+            owner_id=capsule.owner_id,
+            created_at=now,
+            occurred_on=now.date(),
+            kind="text",
+            text="An older note.",
+        )
+    )
+
+    client = browser_client(settings, RecordingGenerator())
+    url = f"/capsules/{capsule.capsule_id}"
+    page = client.get(url)
+    assert "An older note." in page.text
+    assert f'value="{job.job_id}"' in page.text
+    linked = client.post(
+        f"{url}/entries",
+        data={
+            "csrf": csrf_from(page.text),
+            "linked_job_id": job.job_id,
+            "occurred_on": "1990-05-06",
+            "text": "The clock was blue.",
+            "correction": "true",
+        },
+    )
+    assert linked.status_code == 200
+    for target in (f"/visits/{job.job_id}", f"/jobs/{job.job_id}/world"):
+        html = client.get(target).text
+        assert "The clock was blue." in html and f'href="{url}"' in html
+        for private_value in (
+            job.owner_id,
+            capsule.owner_id,
+            *api_headers(settings).values(),
+            settings.session_secret.get_secret_value(),
+        ):
+            assert private_value not in html and private_value not in page.text
 
 
 def test_photo_intake_opens_the_saved_visit(tmp_path: Path) -> None:
@@ -158,10 +299,10 @@ def test_photo_intake_opens_the_saved_visit(tmp_path: Path) -> None:
         target = response.headers["HX-Redirect" if use_htmx else "Location"]
         assert target == f"/visits/{worker.submitted[-1].job_id}"
         assert "Mill Street" in client.get(target).text
-        assert browser_client(settings, worker).get(target).status_code == 404
+        assert "Mill Street" in browser_client(settings, worker).get(target).text
 
 
-def test_first_intake_submissions_from_two_tabs_share_workspace(tmp_path: Path) -> None:
+def test_first_intake_submissions_from_two_tabs_share_the_box(tmp_path: Path) -> None:
     first_tab = browser_client(client_settings(tmp_path), RecordingGenerator())
     intake = first_tab.get("/visits/new")
     assert intake.status_code == 200
@@ -195,9 +336,11 @@ def test_public_site_keeps_api_credentials_and_browser_csrf(tmp_path: Path) -> N
     client = browser_client(settings, RecordingGenerator())
     home = client.get("/", follow_redirects=False)
     assert home.status_code == 200
-    assert "Build your street" in home.text
     assert 'name="api_key"' not in home.text and 'name="password"' not in home.text
-    cookie = home.headers["set-cookie"].lower()
+    intake = client.get("/visits/new")
+    for value in api_headers(settings).values():
+        assert value not in home.text and value not in intake.text
+    cookie = intake.headers["set-cookie"].lower()
     assert "httponly" in cookie and "secure" in cookie and "samesite=strict" in cookie
     assert client.get("/login", follow_redirects=False).headers["location"] == "/"
     assert client.post("/api/jobs").status_code == 401
@@ -214,6 +357,7 @@ def test_public_site_keeps_api_credentials_and_browser_csrf(tmp_path: Path) -> N
         == 401
     )
     assert client.post("/jobs").status_code == 403
+    assert client.post("/capsules", data={"title": "No token"}).status_code == 403
     assert client.post("/jobs", data={"csrf": "wrong"}).status_code == 403
 
 
@@ -260,7 +404,35 @@ def test_image_and_text_job_survives_restart_and_protects_video(tmp_path: Path) 
         ]
         == "complete"
     )
-    assert restarted.get(f"/jobs/{job_id}/video").status_code == 404
+    for suffix in (
+        "",
+        "/video",
+        "/reference",
+        "/references/0",
+        "/world",
+        "/world/cameras",
+        "/world/gaussians.ply",
+    ):
+        assert restarted.get(f"/jobs/{job_id}{suffix}").status_code == 404
+    assert restarted.get(f"/visits/{job_id}").status_code == 404
+    assert job_id not in restarted.get("/dashboard").text
+    token = csrf_from(restarted.get("/capsules").text)
+    assert (
+        restarted.post(f"/jobs/{job_id}/world", data={"csrf": token}).status_code == 404
+    )
+    capsule = restarted.post("/capsules", data={"title": "Family album", "csrf": token})
+    capsule_id = capsule_id_from(capsule.text)
+    assert job_id not in restarted.get(f"/capsules/{capsule_id}").text
+    assert (
+        restarted.post(
+            f"/capsules/{capsule_id}/entries",
+            data={"csrf": token, "occurred_on": "1990-02-01", "linked_job_id": job_id},
+        ).status_code
+        == 404
+    )
+    for suffix in ("", "/video", "/world/cameras", "/world/gaussians.ply"):
+        assert restarted.get(f"/api/jobs/{job_id}{suffix}").status_code == 401
+    assert restarted.post(f"/api/jobs/{job_id}/world").status_code == 401
     assert (
         restarted.get(
             f"/api/jobs/{job_id}/video", headers=api_headers(settings)
@@ -269,20 +441,20 @@ def test_image_and_text_job_survives_restart_and_protects_video(tmp_path: Path) 
     )
 
 
-def test_browser_jobs_are_isolated_and_survive_session_restore(tmp_path: Path) -> None:
+def test_browser_visits_and_worlds_are_public_after_restart(tmp_path: Path) -> None:
     settings = client_settings(tmp_path)
     worker = RecordingGenerator()
     world = RecordingReconstructor()
     owner = browser_client(settings, worker, world)
-    visitor = browser_client(settings, worker)
-    token = csrf_from(owner.get("/").text)
+    visitor = TestClient(owner.app, base_url=str(owner.base_url))
+    token = csrf_from(owner.get("/visits/new").text)
     image_data = BytesIO()
     Image.new("RGB", (16, 16), "red").save(image_data, format="PNG")
     submitted = owner.post(
         "/jobs",
         data={
             "csrf": token,
-            "location": "Private remembered street",
+            "location": "Mill Street",
             "year": "1905",
             "description": "A street remembered by its owner.",
             "use_web": "false",
@@ -292,11 +464,11 @@ def test_browser_jobs_are_isolated_and_survive_session_restore(tmp_path: Path) -
     assert submitted.status_code == 200, submitted.text
     job_id = worker.submitted[0].job_id
     assert owner.post(f"/jobs/{job_id}/world", data={"csrf": token}).status_code == 409
-    assert job_id in owner.get("/").text
-    assert job_id not in visitor.get("/").text
-    for suffix in ("", "/reference", "/video"):
-        assert visitor.get(f"/jobs/{job_id}{suffix}").status_code == 404
-    assert owner.get(f"/jobs/{job_id}/reference").status_code == 200
+    assert job_id not in owner.get("/").text
+    assert job_id in visitor.get("/dashboard").text
+    assert visitor.get(f"/jobs/{job_id}").status_code == 200
+    assert visitor.get(f"/jobs/{job_id}/video").status_code == 409
+    assert visitor.get(f"/jobs/{job_id}/reference").content == worker.references[0][0]
     settings.output_root.mkdir()
     video = settings.output_root / f"{job_id}.mp4"
     video.write_bytes(b"private-video")
@@ -304,14 +476,17 @@ def test_browser_jobs_are_isolated_and_survive_session_restore(tmp_path: Path) -
         video_path=str(video), width=768, height=448, frames=124
     )
     assert (
-        owner.get(f"/jobs/{job_id}/video", headers={"Range": "bytes=0-3"}).status_code
+        visitor.get(f"/jobs/{job_id}/video", headers={"Range": "bytes=0-3"}).status_code
         == 206
     )
     assert owner.post(f"/jobs/{job_id}/world").status_code == 403
-    visitor_csrf = csrf_from(visitor.get("/").text)
+    visitor_csrf = csrf_from(visitor.get("/visits/new").text)
+    assert (
+        visitor.post(f"/jobs/{job_id}/world", data={"csrf": token}).status_code == 403
+    )
     assert (
         visitor.post(f"/jobs/{job_id}/world", data={"csrf": visitor_csrf}).status_code
-        == 404
+        == 200
     )
     for attempt in range(2):
         assert (
@@ -329,14 +504,14 @@ def test_browser_jobs_are_isolated_and_survive_session_restore(tmp_path: Path) -
         ply_path=str(world_directory / "gaussians.ply"),
         camera_path=str(world_directory / "camera_params.json"),
     )
-    assert "Step into this space" in owner.get(f"/jobs/{job_id}").text
-    assert owner.get(f"/jobs/{job_id}/world").status_code == 200
-    assert owner.get(f"/jobs/{job_id}/world/gaussians.ply").content.startswith(b"ply\n")
-    for suffix in ("", "/gaussians.ply", "/cameras"):
-        assert visitor.get(f"/jobs/{job_id}/world{suffix}").status_code == 404
+    assert f'href="/jobs/{job_id}/world"' in visitor.get(f"/jobs/{job_id}").text
+    assert visitor.get(f"/jobs/{job_id}/world").status_code == 200
+    assert visitor.get(f"/jobs/{job_id}/world/gaussians.ply").content.startswith(
+        b"ply\n"
+    )
+    assert visitor.get(f"/jobs/{job_id}/world/cameras").json() == {"num_cameras": 1}
     restored = browser_client(settings, RecordingGenerator())
-    restored.cookies.update(owner.cookies)
-    assert job_id in restored.get("/").text
+    assert job_id in restored.get("/dashboard").text
     assert restored.get(f"/jobs/{job_id}/video").content == b"private-video"
 
 
@@ -359,7 +534,7 @@ def test_invalid_upload_does_not_start_generation(tmp_path: Path) -> None:
     assert worker.submitted == []
 
 
-def test_capsule_timeline_preserves_originals_and_browser_ownership(
+def test_capsule_timeline_and_original_media_are_shared_across_browsers(
     tmp_path: Path,
 ) -> None:
     settings = client_settings(tmp_path)
@@ -367,7 +542,7 @@ def test_capsule_timeline_preserves_originals_and_browser_ownership(
     worker = RecordingGenerator()
     world = RecordingReconstructor()
     owner = browser_client(settings, worker, world, archivist)
-    visitor = browser_client(settings, RecordingGenerator())
+    visitor = TestClient(owner.app, base_url=str(owner.base_url))
     token = csrf_from(owner.get("/capsules").text)
     image_data = BytesIO()
     Image.new("RGB", (16, 16), "red").save(image_data, format="PNG")
@@ -381,23 +556,24 @@ def test_capsule_timeline_preserves_originals_and_browser_ownership(
         files={"anchor": ("bear.png", image_data.getvalue(), "image/png")},
     )
     assert response.status_code == 200, response.text
-    capsule_match = re.search(r'data-capsule-id="([^"]+)"', response.text)
-    assert capsule_match is not None
-    capsule_id = capsule_match.group(1)
+    capsule_id = capsule_id_from(response.text)
     assert owner.get(f"/capsules/{capsule_id}/anchor").content == image_data.getvalue()
-    assert "My old bear" not in visitor.get("/capsules").text
-    assert visitor.get(f"/capsules/{capsule_id}").status_code == 404
-    assert visitor.get(f"/capsules/{capsule_id}/anchor").status_code == 404
+    assert "My old bear" in visitor.get("/capsules").text
+    assert capsule_id in visitor.get("/dashboard").text
+    visitor_token = csrf_from(visitor.get(f"/capsules/{capsule_id}").text)
+    assert (
+        visitor.get(f"/capsules/{capsule_id}/anchor").content == image_data.getvalue()
+    )
     assert (
         owner.post(
             f"/capsules/{capsule_id}/entries", data={"text": "Missing CSRF"}
         ).status_code
         == 403
     )
-    added = owner.post(
+    added = visitor.post(
         f"/capsules/{capsule_id}/entries",
         data={
-            "csrf": token,
+            "csrf": visitor_token,
             "occurred_on": "2020-05-02",
             "text": "These are my original words.",
         },
@@ -426,7 +602,12 @@ def test_capsule_timeline_preserves_originals_and_browser_ownership(
     assert entry_match is not None
     media_url = f"/capsules/{capsule_id}/entries/{entry_match.group(1)}/media"
     assert owner.get(media_url).content == audio_data.getvalue()
-    assert visitor.get(media_url).status_code == 404
+    assert visitor.get(media_url).content == audio_data.getvalue()
+    other = visitor.post(
+        "/capsules", data={"csrf": visitor_token, "title": "Other album"}
+    )
+    other_id = capsule_id_from(other.text)
+    assert visitor.get(media_url.replace(capsule_id, other_id)).status_code == 404
     archivist.completed = ArchivistResult(text="A machine transcript.")
     whole = owner.get(f"/capsules/{capsule_id}/entries?view=whole")
     assert "capsule-gallery" in whole.text
@@ -436,7 +617,7 @@ def test_capsule_timeline_preserves_originals_and_browser_ownership(
         and "My recorded memory." in whole.text
     )
     restored = browser_client(settings, RecordingGenerator())
-    restored.cookies.update(owner.cookies)
+
     assert "A machine transcript." in restored.get(f"/capsules/{capsule_id}").text
     assert restored.get(media_url).content == audio_data.getvalue()
     visit = owner.post(
@@ -460,10 +641,10 @@ def test_capsule_timeline_preserves_originals_and_browser_ownership(
         ply_path="/worlds/test/gaussians.ply",
         camera_path="/worlds/test/camera_params.json",
     )
-    correction = owner.post(
+    correction = visitor.post(
         f"/capsules/{capsule_id}/entries",
         data={
-            "csrf": token,
+            "csrf": visitor_token,
             "occurred_on": "2006-05-01",
             "text": "The shop sign was green.",
             "correction": "true",
@@ -473,7 +654,7 @@ def test_capsule_timeline_preserves_originals_and_browser_ownership(
     assert correction.status_code == 200, correction.text
     linked = owner.get(f"/visits/{job_id}")
     assert (
-        "Step into this space" in linked.text
+        f'href="/jobs/{job_id}/world"' in linked.text
         and "The shop sign was green." in linked.text
     )
     assert "The shop sign was green." in owner.get(f"/jobs/{job_id}/world").text
@@ -500,11 +681,11 @@ def test_queue_admission_is_atomic(tmp_path: Path) -> None:
     assert store.active_count() == 4
 
 
-def test_folder_images_are_ordered_retained_bounded_and_private(tmp_path: Path) -> None:
+def test_folder_images_are_ordered_retained_bounded_and_public(tmp_path: Path) -> None:
     settings = client_settings(tmp_path)
     worker = RecordingGenerator()
     owner = browser_client(settings, worker)
-    token = csrf_from(owner.get("/").text)
+    token = csrf_from(owner.get("/visits/new").text)
     uploads: list[tuple[str, tuple[str, bytes, str]]] = []
     for name, color in (("03.jfif", "blue"), ("01.png", "red"), ("02", "green")):
         content = BytesIO()
@@ -534,6 +715,11 @@ def test_folder_images_are_ordered_retained_bounded_and_private(tmp_path: Path) 
     stranger = browser_client(settings, RecordingGenerator())
     for index in range(3):
         assert owner.get(f"/jobs/{job_id}/references/{index}").status_code == 200
+        assert (
+            stranger.get(f"/jobs/{job_id}/references/{index}").content
+            == worker.references[0][index]
+        )
+    for index in (-1, 3):
         assert stranger.get(f"/jobs/{job_id}/references/{index}").status_code == 404
     oversized = owner.post(
         "/api/jobs",
