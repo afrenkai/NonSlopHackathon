@@ -24,10 +24,33 @@ class SceneRequest(BaseModel):
     seed: int = Field(default=42, ge=0, le=4294967295)
 
 
+class DeerFlowObservation(BaseModel):
+    receipt: str
+    url: HttpUrl
+    observation: str
+    page: int
+    crop: tuple[float, float, float, float]
+
+
+class VisitEvidence(BaseModel):
+    scene: SceneRequest
+    reference_metadata: list[PhotoMetadata]
+    retrieved_sources: list[SourceEvidence]
+    saved_research: list[SourceEvidence]
+    deerflow_observations: list[DeerFlowObservation] = Field(default_factory=list)
+
+
 class GenerationTask(BaseModel):
     job_id: str
     prompt: str
     seed: int
+    evidence: VisitEvidence | None = None
+
+
+class PhotoReading(BaseModel):
+    photo_number: int = Field(ge=1)
+    visible_details: list[str] = Field(min_length=1, max_length=5)
+    uncertainty: str
 
 
 class GenerationResult(BaseModel):
@@ -36,6 +59,9 @@ class GenerationResult(BaseModel):
     height: int
     frames: int
     reference_observations: str = ""
+    prompt_model: str = ""
+    used_prompt: str = ""
+    photo_readings: list[PhotoReading] = Field(default_factory=list)
 
 
 class JobRecord(BaseModel):
@@ -46,6 +72,7 @@ class JobRecord(BaseModel):
     scene: SceneRequest
     render_prompt: str
     sources: list[SourceEvidence] = Field(default_factory=list)
+    research_sources: list[SourceEvidence] = Field(default_factory=list)
     notices: list[str] = Field(default_factory=list)
     has_reference: bool = False
     reference_count: int = 0

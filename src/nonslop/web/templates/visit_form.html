@@ -1,26 +1,39 @@
 <form action="/visits/new" method="post" enctype="multipart/form-data" class="form-stack" hx-post="/visits/new" hx-encoding="multipart/form-data" hx-disabled-elt="find button[type='submit']" hx-indicator="#submit-progress">
-  <p class="field-help public-notice"><strong>Your collection.</strong> Your uploads and memories are available in this browser’s workspace.</p>
   <input type="hidden" name="csrf" value="{{ csrf }}">
-  <div class="field upload-field">
-    <label for="reference-image">Photograph <span class="optional">Required</span></label>
-    <input id="reference-image" name="reference_image" type="file" accept="image/png,image/jpeg,image/webp" required aria-describedby="reference-help">
-    <p class="field-help" id="reference-help">Start with a photograph, or choose images from the folder and multi-image pickers below. PNG, JPEG, or WebP. Available capture dates and location metadata are retained as context.</p>
+  <fieldset class="visit-presets">
+    <legend>Choose a visit</legend>
+    <label class="checkbox-field"><input type="radio" name="visit_preset" value="" checked> Your own scene</label>
+    {% for key, demo in demo_visits.items() %}
+    <label class="checkbox-field">
+      <input type="radio" name="visit_preset" value="{{ key }}" data-location="{{ demo.location }}" data-year="{{ demo.year }}" data-photo="/static/{{ demo.photo }}">
+      {{ demo.location }}, {{ demo.year }}
+    </label>
+    {% endfor %}
+  </fieldset>
+  <p class="field-help public-notice"><strong>Your collection.</strong> Your uploads and memories are available in this browser’s workspace.</p>
+  <div class="field">
+    <div id="reference-upload" class="field upload-field">
+      <label for="reference-image">Photograph <span class="optional">Optional</span></label>
+      <input id="reference-image" name="reference_image" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="reference-help">
+      <p class="field-help" id="reference-help">Upload a PNG, JPEG, or WebP, or use the folder and multi-image pickers below. If you skip the photo, add a description.</p>
+    </div>
+    <img id="reference-preview" class="reference-preview" alt="Photograph preview" hidden>
   </div>
   <div class="place-fields">
     <div class="field">
       <label for="location">Place or scene</label>
-      <input id="location" name="location" type="text" placeholder="Grandma’s kitchen, a favorite park, a family gathering…" minlength="3" maxlength="250" required autocomplete="off">
+      <input id="location" name="location" type="text" placeholder="Grandma’s kitchen, a favorite park, a family gathering…" minlength="3" maxlength="250" autocomplete="off">
     </div>
     <div class="field year-field">
       <label for="year">Year</label>
-      <input id="year" name="year" type="number" min="1800" max="2026" placeholder="2006" inputmode="numeric" required>
+      <input id="year" name="year" type="number" min="1800" max="2026" placeholder="2006" inputmode="numeric">
     </div>
   </div>
   <div class="field">
-    <label for="description">Anything you remember beyond the photograph? <span class="optional">Optional</span></label>
+    <label for="description">What do you remember about the scene?</label>
     <textarea id="description" name="description" rows="4" maxlength="4000" placeholder="Sounds, names, colors, or details just outside the frame…"></textarea>
   </div>
-  <details class="source-details">
+  <details id="reference-options" class="source-details">
     <summary>Add multiple reference images <span class="optional">Optional</span></summary>
     <div class="details-content form-stack">
       <div class="field upload-field">
@@ -47,11 +60,27 @@
         <input id="source-file" name="source_file" type="file" accept=".txt,.md,image/png,image/jpeg,image/webp" aria-describedby="source-help">
         <p class="field-help" id="source-help">A text file or a newspaper image scan. Text is extracted from image scans.</p>
       </div>
+      <div class="field upload-field">
+        <label for="research-file">Saved research packet</label>
+        <input id="research-file" name="research_file" type="file" accept=".json,application/json" aria-describedby="research-help">
+        <p class="field-help" id="research-help">Optional: a scene_scout manifest or another evidence JSON with a list of items. Its records join the research evidence shown with the visit.</p>
+      </div>
     </div>
   </details>
   <label class="checkbox-field" for="use-web">
     <input id="use-web" name="use_web" type="checkbox" value="true" {% if request.app.state.local_preview %}disabled{% else %}checked{% endif %}>
-    <span><strong>Find context on the web</strong><span class="field-help">{% if request.app.state.local_preview %}Off in the local preview. Your materials stay on this computer.{% else %}Look up this place and show the sources used with the result.{% endif %}</span></span>
+    <span>
+      <strong>Find context on the web</strong>
+      <span id="web-context-help" class="field-help">
+        {% if request.app.state.local_preview %}
+        Off in the local preview. Your materials stay on this computer.
+        {% else %}
+        Look up this place and show the sources used with the result.<br>
+        may take up to 30 minutes with DeerFlow
+        {% endif %}
+      </span>
+      <span id="demo-context-help" class="field-help" hidden>Web lookup is off for demo visits.</span>
+    </span>
   </label>
   <div class="form-submit">
     <button class="button button-primary button-full" type="submit">{% if request.app.state.local_preview %}Save visit sources{% else %}Create a visit{% endif %}</button>

@@ -28,8 +28,6 @@ def install_world_routes(
     find_job: Callable[[UUID, str | None], JobRecord],
 ) -> None:
     def start_world(job: JobRecord, rebuild: bool = False) -> JobRecord:
-        if not job.has_reference and job.status != "complete":
-            raise HTTPException(409, "Wait for the video to finish first.")
         try:
             started = service.start(job, rebuild)
             if (

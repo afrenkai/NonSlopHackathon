@@ -21,17 +21,17 @@ class ReconstructionService:
                     return self.refresh(current)
                 if current.world.status == "complete" and not rebuild:
                     return current
+            if current.status != "complete":
+                raise ValueError("Wait for the video to finish first.")
             if self.store.active_world_count() >= 2:
                 raise ValueError(
                     "Two spaces are already queued. Wait for one to finish."
                 )
             try:
-                references = self.store.reference_images(current)
                 current.world = ReconstructionRecord(
                     status="running",
-                    call_id=self.gateway.submit(current.job_id, references),
-                    input_kind="reference_photos" if references else "generated_video",
-                    input_count=len(references),
+                    call_id=self.gateway.submit(current.job_id, []),
+                    input_kind="generated_video",
                 )
             except Exception:
                 self.logger.exception(

@@ -12,21 +12,70 @@ document.addEventListener("DOMContentLoaded", () => {
     yearInput.max = String(new Date().getFullYear());
     yearInput.placeholder = String(new Date().getFullYear() - 20);
   }
+  const opening = document.getElementById("reference-image");
+  if (!opening) return;
+
+  const locationInput = document.getElementById("location");
+  const descriptionInput = document.getElementById("description");
+  const useWeb = document.getElementById("use-web");
+  const webUnavailable = useWeb.disabled;
+  const preview = document.getElementById("reference-preview");
+  const presets = [...document.querySelectorAll('input[name="visit_preset"]')];
   const referencePickers = [...document.querySelectorAll("[data-reference-picker]")];
+  let activePreset;
+  let customFields;
+  let previewObjectUrl;
+
   function showReferences() {
-    const opening = document.getElementById("reference-image");
-    const count = (opening?.files.length || 0) + referencePickers.reduce((total, picker) => total + picker.files.length, 0);
-    if (opening) {
-      opening.required = !referencePickers.some((picker) => picker.files.length > 0);
-      opening.setCustomValidity(count > 8 ? "Choose at most 8 reference images total." : "");
-    }
-    for (const picker of referencePickers) {
+    const files = referencePickers.flatMap((picker) => [...picker.files]);
+    const count = activePreset ? 1 : opening.files.length + files.length;
+    descriptionInput.required = count === 0;
+    for (const picker of [opening, ...referencePickers]) {
       picker.setCustomValidity(count > 8 ? "Choose at most 8 reference images total." : "");
     }
     const selection = document.getElementById("reference-selection");
     const ignored = referencePickers.reduce((total, picker) => total + Number(picker.dataset.ignoredFiles || 0), 0);
-    if (selection) selection.textContent = `${count} reference ${count === 1 ? "image" : "images"} selected.${ignored ? ` ${ignored} unsupported or hidden files skipped.` : ""}`;
+    selection.textContent = `${count} reference ${count === 1 ? "image" : "images"} selected.${ignored ? ` ${ignored} unsupported or hidden files skipped.` : ""}`;
+
+    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl = undefined;
+    if (!activePreset) {
+      const firstAdditional = files.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "accent" }))[0];
+      const file = opening.files[0] ?? firstAdditional;
+      if (file) previewObjectUrl = URL.createObjectURL(file);
+    }
+    const photo = activePreset?.dataset.photo ?? previewObjectUrl;
+    preview.hidden = !photo;
+    preview.alt = activePreset?.dataset.location ?? "Uploaded photograph preview";
+    if (photo) preview.src = photo;
+    else preview.removeAttribute("src");
   }
+
+  function selectVisit() {
+    const preset = presets.find((option) => option.checked && option.value);
+    if (preset && !activePreset) {
+      customFields = { location: locationInput.value, year: yearInput.value, useWeb: useWeb.checked };
+    }
+    if (preset || activePreset) {
+      locationInput.value = preset?.dataset.location ?? customFields.location;
+      yearInput.value = preset?.dataset.year ?? customFields.year;
+      useWeb.checked = preset ? false : customFields.useWeb;
+    }
+    activePreset = preset;
+    const isDemo = Boolean(preset);
+    for (const input of [locationInput, yearInput]) {
+      input.readOnly = isDemo;
+      input.required = !isDemo;
+    }
+    for (const picker of [opening, ...referencePickers]) picker.disabled = isDemo;
+    useWeb.disabled = isDemo || webUnavailable;
+    document.getElementById("reference-upload").hidden = isDemo;
+    document.getElementById("reference-options").hidden = isDemo;
+    document.getElementById("web-context-help").hidden = isDemo;
+    document.getElementById("demo-context-help").hidden = !isDemo;
+    showReferences();
+  }
+
   for (const picker of referencePickers) {
     picker.addEventListener("change", () => {
       if (picker.hasAttribute("webkitdirectory")) {
@@ -40,8 +89,9 @@ document.addEventListener("DOMContentLoaded", () => {
       showReferences();
     });
   }
-  document.getElementById("reference-image")?.addEventListener("change", showReferences);
-  showReferences();
+  opening.addEventListener("change", showReferences);
+  for (const option of presets) option.addEventListener("change", selectVisit);
+  selectVisit();
 });
 
 document.addEventListener("htmx:beforeRequest", (event) => {
