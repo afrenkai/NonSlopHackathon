@@ -47,6 +47,8 @@ def create_app(
     reload_worlds: Callable[[], None],
     *,
     scene_service: type[SceneService] = SceneService,
+    download_video: Callable[[Path, Path], None] | None = None,
+    download_world: Callable[[Path, Path], None] | None = None,
 ) -> FastAPI:
     application = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     application.add_middleware(
@@ -69,10 +71,12 @@ def create_app(
     capsules = CapsuleStore(store)
     capsule_service = CapsuleService(capsules, archivist_gateway)
     service = scene_service(store, gateway)
-    videos = ArtifactStore(settings.output_root, settings.serving_root, reload_outputs)
+    videos = ArtifactStore(
+        settings.output_root, settings.serving_root, reload_outputs, download_video
+    )
     worlds = ReconstructionService(store, world_gateway)
     world_artifacts = ArtifactStore(
-        settings.world_root, settings.world_serving_root, reload_worlds
+        settings.world_root, settings.world_serving_root, reload_worlds, download_world
     )
 
     @application.middleware("http")

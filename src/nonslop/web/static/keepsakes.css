@@ -21,7 +21,6 @@
 }
 .ks-topline { align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--hair); }
 .ks-cover { position: relative; margin: 0 0 clamp(1.5rem, 4vw, 3rem); }
-.ks-cover > .ks-meta, .ks-sheet-head > .ks-meta { color: var(--stamp); }
 .ks-cover h1 { margin-block: .4rem .65rem; font-size: clamp(3rem, 6vw, 5.6rem); }
 .ks-cover h1.ks-name { font: 400 clamp(3.6rem, 7vw, 6.5rem)/.95 var(--script); color: var(--blue); letter-spacing: -.025em; }
 .ks-lead, .ks-description { max-width: 60ch; font-size: 1.075rem; }

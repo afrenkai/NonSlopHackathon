@@ -9,19 +9,19 @@ photos, audio, video, and linked visits.
 The implementation roadmap is maintained in [todo.md](todo.md): video → 3D
 space with HY-WorldMirror → time capsules, with an isolated SGLang-Omni service.
 
-Existing deployment (not this redesign): https://afrenkai--nonslop-streets-web.us-east.modal.run
+Live website: https://afrenkai--nonslop-streets-web.us-east.modal.run
 
-## Local CPU preview
+## Run locally with model workers
 
-From the repo root with Python 3.13, install once with `uv sync --locked --group checks`. Then start the browser app without network access, model downloads, or Modal credentials:
+From the repo root with Python 3.13, install once with `uv sync --locked --group checks`. Authenticate with `uv run -m modal setup` using the workspace containing the deployed apps below, then start the website:
 
 ```bash
-uv run --offline --no-sync python scripts/local_preview.py
+uv run scripts/local_preview.py
 ```
 
-Open **http://127.0.0.1:8742/**. Use one server at a time; stop it with Ctrl+C. Capsules, dated entries, and original media use the real local store. Keep the browser cookie to return after restarting. On Windows, the database, uploads and session key live under `%LOCALAPPDATA%\NonSlop\cpu-preview`; on other systems they live under `~/.local/share/NonSlop/cpu-preview`. Keep this directory private; never serve it with a static file server.
+Open **http://127.0.0.1:8742/**. Use one server at a time; stop it with Ctrl+C. Visits, capsules, dated entries, and original media use the local store. Keep the browser cookie to return after restarting. On Windows, the database, uploads and session key live under `%LOCALAPPDATA%\NonSlop\cpu-preview`; on other systems they live under `$XDG_DATA_HOME/NonSlop/cpu-preview` (default `~/.local/share/NonSlop/cpu-preview`). Override this with `--data-root /absolute/private/path`, outside the checkout and its parent. Keep this directory private; never serve it with a static file server.
 
-Visit submissions save supplied text and reference images, even if web search is checked. No archive lookup, video, 3D space, transcript or AI observations are produced. Worker requests show an offline result instead of polling. Image scans need local English Tesseract; audio/video uploads need `ffprobe` on `PATH`. Text/Markdown and photographs need neither.
+Video generation, 3D reconstruction, reference-image comparison, and capsule transcription/observations run on the existing private Modal workers using your Modal credentials. Generated videos and 3D files download on demand into the private local cache and are served through the same owner-protected routes. Web context lookup is enabled. Uploads selected for generation or AI processing are sent to Modal, and GPU calls incur normal Modal charges; model weights stay on Modal. `.env` is loaded without overriding existing environment variables. Image scans need local English Tesseract; audio/video uploads need `ffprobe` on `PATH`.
 
 ## Run on Modal
 

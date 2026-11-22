@@ -1,30 +1,26 @@
 {% extends "base.html" %}
-{% block title %}Field notes & your box{% endblock %}
+{% block title %}Your box{% endblock %}
 {% block styles %}<link rel="stylesheet" href="/static/field-print.css">{% endblock %}
 {% block content %}
 <section class="spread" aria-labelledby="spread-title">
   <div class="lead">
-    <p class="eyebrow">Memory Worlds &nbsp; / &nbsp; Field notes № 01</p>
-    <h1 id="spread-title">Step back<br>inside the<br><em>photograph.</em></h1>
-    <p>A picture remembers one wall. You remember the radio playing behind you. Put the two together and step inside.</p>
+    <h1 id="spread-title">Revisit<br>your<br><em>memories.</em></h1>
     <div class="actions"><a class="button button-primary" href="#new-visit">Start a visit <span aria-hidden="true">→</span></a><a class="text-link" href="#your-box">Open your box</a></div>
   </div>
   {% include "field_print.html" %}
 </section>
-<div class="folio"><span class="meta">End of field note / 01</span><span class="hand">Now, the place you remember.</span></div>
 <div class="workspace-grid collection">
   <section id="your-box" class="results" aria-labelledby="results-title">
-    <p class="eyebrow">Personal archive / Places</p>
     <div class="section-heading"><h2 id="results-title">Your box.</h2><a class="text-link" href="/capsules">Time capsules ↗</a></div>
     <p class="shelf-intro">Your visits live here. Open a record to find the photograph, the visit, and the sources behind it.</p>
     <div id="latest" class="visit-list" aria-live="polite">
       {% for job in jobs %}{% include "job.html" %}{% else %}
-      <div class="empty-state"><p class="eyebrow">Unfiled / No visits yet</p><h3>Which place comes to mind first?</h3><p>A street name and a year are enough to begin. Add a photograph if you have one.</p><a class="text-link" href="#new-visit">Make your first visit →</a></div>
+      <div class="empty-state"><h3>Which place comes to mind first?</h3><p>A street name and a year are enough to begin. Add a photograph if you have one.</p><a class="text-link" href="#new-visit">Make your first visit →</a></div>
       {% endfor %}
     </div>
   </section>
   <section id="new-visit" class="composer panel" aria-labelledby="composer-title">
-    <p class="eyebrow">New visit / Intake sheet</p><h2 id="composer-title">Build your street</h2>
+    <h2 id="composer-title">Build your street</h2>
     <p class="form-lead">Start with a place, a year, and one detail that stayed with you.</p>
     {% include "visit_form.html" %}
   </section>

@@ -2,6 +2,7 @@ from collections.abc import Callable
 from pathlib import Path
 from uuid import UUID
 
+from anyio import to_thread
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -56,11 +57,12 @@ def install_world_routes(
     async def reconstruct_browser(request: Request, job_id: UUID) -> HTMLResponse:
         async with request.form(max_files=0, max_fields=1, max_part_size=1024) as form:
             require_csrf(request, str(form.get("csrf", "")))
-        job = find_job(job_id, browser_workspace(request))
+        job = await to_thread.run_sync(find_job, job_id, browser_workspace(request))
+        started = await to_thread.run_sync(start_world, job)
         return templates.TemplateResponse(
             request=request,
             name="job.html",
-            context={"job": start_world(job), "csrf": csrf_token(request)},
+            context={"job": started, "csrf": csrf_token(request)},
         )
 
     @application.get("/jobs/{job_id}/world", response_class=HTMLResponse)

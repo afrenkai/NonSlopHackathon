@@ -49,12 +49,12 @@
     </div>
   </details>
   <label class="checkbox-field" for="use-web">
-    <input id="use-web" name="use_web" type="checkbox" value="true" {% if request.app.state.local_preview %}disabled{% else %}checked{% endif %}>
-    <span><strong>Find context on the web</strong><span class="field-help">{% if request.app.state.local_preview %}Off in the local preview. Your materials stay on this computer.{% else %}Look up this place and show the sources used with the result.{% endif %}</span></span>
+    <input id="use-web" name="use_web" type="checkbox" value="true" checked>
+    <span><strong>Find context on the web</strong><span class="field-help">Look up this place and show the sources used with the result.</span></span>
   </label>
   <div class="form-submit">
-    <button class="button button-primary button-full" type="submit">{% if request.app.state.local_preview %}Save visit sources{% else %}Create a visit{% endif %}</button>
+    <button class="button button-primary button-full" type="submit">Create a visit</button>
     <p id="submit-progress" class="htmx-indicator" role="status">Gathering your source material…</p>
   </div>
-  <p class="interpretation-note">{% if request.app.state.local_preview %}Local preview: you can save a visit record and link it to a capsule. Video and 3D generation are offline.{% else %}Each visit is a generated interpretation of the supplied evidence. Review the sources and details alongside your video.{% endif %}</p>
+  <p class="interpretation-note">Each visit is a generated interpretation of the supplied evidence. Review the sources and details alongside your video.</p>
 </form>

@@ -6,11 +6,16 @@ from threading import RLock
 
 class ArtifactStore:
     def __init__(
-        self, root: Path, serving_root: Path, reload: Callable[[], None]
+        self,
+        root: Path,
+        serving_root: Path,
+        reload: Callable[[], None],
+        download: Callable[[Path, Path], None] | None = None,
     ) -> None:
         self.root = root
         self.serving_root = serving_root
         self.reload = reload
+        self.download = download
         self.lock = RLock()
         serving_root.mkdir(parents=True, exist_ok=True)
 
@@ -21,6 +26,9 @@ class ArtifactStore:
                 self.reload()
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 temporary = destination.with_suffix(".partial")
-                copyfile(self.root / relative_path, temporary)
+                if self.download is None:
+                    copyfile(self.root / relative_path, temporary)
+                else:
+                    self.download(relative_path, temporary)
                 temporary.replace(destination)
             return destination

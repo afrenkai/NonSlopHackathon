@@ -4,7 +4,7 @@
       <p class="eyebrow">{{ job.scene.year }}</p>
       {% if request.url.path.startswith('/visits/') %}<h2>Visit record</h2>{% else %}<h3><a href="/visits/{{ job.job_id }}">{{ job.scene.location }}</a></h3>{% endif %}
     </div>
-    <span class="status status-{{ job.status }}">{% if job.status == 'complete' %}Ready to visit{% elif job.status == 'failed' and request.app.state.local_preview %}Sources saved{% elif job.status == 'failed' %}Couldn’t complete{% elif job.status == 'running' %}Creating your visit{% else %}Waiting to begin{% endif %}</span>
+    <span class="status status-{{ job.status }}">{% if job.status == 'complete' %}Ready to visit{% elif job.status == 'failed' %}Couldn’t complete{% elif job.status == 'running' %}Creating your visit{% else %}Waiting to begin{% endif %}</span>
   </div>
   {% if job.result and job.result.reference_observations %}<details class="source-details"><summary>AI observations of your photographs</summary><p class="source-excerpt">{{ job.result.reference_observations }}</p><p class="field-help">These observations informed the prompt. They may contain mistakes and are separate from historical evidence.</p></details>{% endif %}
   {% if job.status == 'complete' and job.result %}
@@ -33,7 +33,7 @@
     <p class="field-help">Geometry inferred from generated video. Unseen details and historical accuracy remain uncertain.</p>
   </div>
   {% elif job.status == 'failed' %}
-  <div class="{% if request.app.state.local_preview %}context-notices{% else %}message message-error{% endif %}" role="status">{{ job.error or 'The generation could not finish. Please try another visit.' }}</div>
+  <div class="message message-error" role="status">{{ job.error or 'The generation could not finish. Please try another visit.' }}</div>
   {% else %}
   <div class="generation-state">
     {% if job.has_reference %}<img class="reference-thumbnail" src="/jobs/{{ job.job_id }}/reference" alt="Your opening street photograph" loading="lazy">{% endif %}
@@ -52,5 +52,5 @@
   </div>
   {% endif %}
   {% include "source_ledger.html" %}
-  <div class="visit-footer"><span>{% if request.app.state.local_preview and not job.result %}Source record · not generated{% else %}Generated interpretation{% endif %}</span><time>{{ job.created_at|string|replace('T', ' ') }}</time></div>
+  <div class="visit-footer"><span>Generated interpretation</span><time>{{ job.created_at|string|replace('T', ' ') }}</time></div>
 </article>

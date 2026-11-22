@@ -8,7 +8,6 @@
     <p class="ks-meta">Started <time datetime="{{ capsule.created_at.date() }}">{{ capsule.created_at.strftime('%d %b %Y') }}</time></p>
   </div>
   <header class="ks-cover">
-    <p class="ks-meta">Keepsake notebook</p>
     <h1 class="ks-name">{{ capsule.title }}</h1>
     {% if capsule.description %}<p class="ks-description">{{ capsule.description }}</p>{% endif %}
     <a class="ks-jump" href="#memory-date">Add a memory <span aria-hidden="true">↘</span></a>
@@ -19,7 +18,7 @@
     {% include "capsule_entries.html" %}
 
     <section class="panel ks-sheet" aria-labelledby="ks-add">
-      <header class="ks-sheet-head"><p class="ks-meta">A new page</p><h2 id="ks-add">Add a memory</h2></header>
+      <header class="ks-sheet-head"><h2 id="ks-add">Add a memory</h2></header>
       <form action="/capsules/{{ capsule.capsule_id }}/entries" method="post" enctype="multipart/form-data" class="form-stack"
             hx-post="/capsules/{{ capsule.capsule_id }}/entries" hx-encoding="multipart/form-data" hx-disabled-elt="find button"
             hx-target="#capsule-entries" hx-swap="outerHTML show:#capsule-entries:top">
@@ -37,7 +36,7 @@
           <input id="memory-media" name="media" type="file" accept="image/png,image/jpeg,image/webp,audio/wav,audio/mpeg,audio/mp4,audio/ogg,audio/flac,video/mp4,video/webm,video/quicktime" aria-describedby="ks-media-help">
           <p class="field-help" id="ks-media-help">Up to 10 MB. Your original file is saved.</p>
         </div>
-        <label class="checkbox-field"><input name="use_ai" type="checkbox" value="true" {% if request.app.state.local_preview %}disabled{% else %}checked{% endif %}><span>Create an AI transcript or observations from my upload.<span class="field-help">{% if request.app.state.local_preview %}Off in the local preview. You can still save the original file.{% else %}Machine notes stay separate from your original.{% endif %}</span></span></label>
+        <label class="checkbox-field"><input name="use_ai" type="checkbox" value="true" checked><span>Create an AI transcript or observations from my upload.<span class="field-help">Machine notes stay separate from your original.</span></span></label>
         <div class="field ks-visit-field">
           <label for="linked-visit">Connect a visit <span class="optional">Optional</span></label>
           <select id="linked-visit" name="linked_job_id">

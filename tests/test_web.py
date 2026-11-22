@@ -1,4 +1,5 @@
 import re
+import tempfile
 import wave
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -7,9 +8,11 @@ from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
 
+import modal
 from fastapi.testclient import TestClient
 from PIL import Image
 from pydantic import SecretStr
+from pytest import MonkeyPatch
 
 from nonslop.data.jobs import JobStore
 from nonslop.generation.schemas import (
@@ -20,6 +23,9 @@ from nonslop.generation.schemas import (
 )
 from nonslop.models.inference_schemas import ArchivistResult, MediaType
 from nonslop.models.world_schemas import WorldResult
+from nonslop.runtime.archivist import ModalArchivistGateway
+from nonslop.runtime.gateway import ModalGenerationGateway, ModalReconstructionGateway
+from nonslop.runtime.local_app import preview_app
 from nonslop.web.app import create_app
 from nonslop.web.schemas import WebSettings
 
@@ -110,6 +116,83 @@ def csrf_from(html: str) -> str:
     match = re.search(r'name="csrf" value="([^"]+)"', html)
     assert match is not None
     return match.group(1)
+
+
+def test_local_website_uses_workers_and_downloads_private_artifacts(
+    tmp_path: Path, monkeypatch: MonkeyPatch
+) -> None:
+    worker = RecordingGenerator()
+    world = RecordingReconstructor()
+    archivist = RecordingArchivist()
+    monkeypatch.setattr(ModalGenerationGateway, "submit", worker.submit)
+    monkeypatch.setattr(ModalGenerationGateway, "result", worker.result)
+    monkeypatch.setattr(ModalReconstructionGateway, "submit", world.submit)
+    monkeypatch.setattr(ModalReconstructionGateway, "result", world.result)
+    monkeypatch.setattr(ModalArchivistGateway, "submit", archivist.submit)
+    monkeypatch.setattr(ModalArchivistGateway, "result", archivist.result)
+    downloads: list[Path] = []
+
+    def download(volume: modal.Volume, relative_path: Path, destination: Path) -> None:
+        downloads.append(relative_path)
+        destination.write_bytes(b"remote artifact")
+
+    monkeypatch.setattr(
+        "nonslop.runtime.local_app.download_volume_artifact",
+        download,
+    )
+    for variable in ("TMPDIR", "TEMP", "TMP"):
+        monkeypatch.setenv(variable, str(tmp_path))
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    app = preview_app(tmp_path / "local")
+    owner = TestClient(app, base_url="http://127.0.0.1")
+    visitor = TestClient(app, base_url="http://127.0.0.1")
+    home = owner.get("/")
+    assert 'value="true" checked' in home.text
+    assert "Save visit sources" not in home.text
+    token = csrf_from(home.text)
+    created = owner.post(
+        "/jobs",
+        data={
+            "csrf": token,
+            "location": "Hester Street",
+            "year": "1905",
+            "description": "A remembered storefront.",
+        },
+    )
+    assert created.status_code == 200
+    assert "Creating your visit" in created.text
+    job_id = worker.submitted[0].job_id
+    worker.completed = GenerationResult(
+        video_path=f"/outputs/{job_id}.mp4", width=768, height=448, frames=124
+    )
+    assert owner.get(f"/jobs/{job_id}").status_code == 200
+    video_url = f"/jobs/{job_id}/video"
+    assert visitor.get(video_url).status_code == 404
+    assert downloads == []
+    video = owner.get(video_url, headers={"Range": "bytes=0-5"})
+    assert video.status_code == 206 and video.content == b"remote"
+    assert owner.get(video_url).content == b"remote artifact"
+    assert downloads == [Path(f"{job_id}.mp4")]
+    assert owner.post(f"/jobs/{job_id}/world", data={"csrf": token}).status_code == 200
+    assert world.submitted == [job_id]
+    world.completed = WorldResult(
+        job_id=job_id,
+        ply_path=f"/worlds/{job_id}/gaussians.ply",
+        camera_path=f"/worlds/{job_id}/camera_params.json",
+    )
+    assert owner.get(f"/jobs/{job_id}/world").status_code == 200
+    for suffix, filename in (
+        ("gaussians.ply", "gaussians.ply"),
+        ("cameras", "camera_params.json"),
+    ):
+        artifact_url = f"/jobs/{job_id}/world/{suffix}"
+        assert visitor.get(artifact_url).status_code == 404
+        assert owner.get(artifact_url).content == b"remote artifact"
+        assert Path(job_id) / filename in downloads
+    restored = TestClient(preview_app(tmp_path / "local"), base_url="http://127.0.0.1")
+    restored.cookies.update(owner.cookies)
+    assert restored.get(video_url).status_code == 200
+    assert owner.get("/", headers={"Host": "untrusted.example"}).status_code == 400
 
 
 def api_headers(settings: WebSettings) -> dict[str, str]:
