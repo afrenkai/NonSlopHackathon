@@ -1,9 +1,10 @@
 from collections.abc import Callable
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID
 
 from anyio import to_thread
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -16,7 +17,7 @@ from starlette.responses import Response
 from nonslop.capsules.protocols import ArchivistGateway
 from nonslop.capsules.service import CapsuleService
 from nonslop.capsules.store import CapsuleStore
-from nonslop.data.jobs import JobStore
+from nonslop.data.jobs import API_OWNER, PUBLIC_WEB_OWNER, JobStore
 from nonslop.data.videos import ArtifactStore
 from nonslop.generation.protocols import GenerationGateway
 from nonslop.generation.schemas import JobRecord, SceneRequest
@@ -27,12 +28,7 @@ from nonslop.web.body_limit import BodyLimitMiddleware
 from nonslop.web.capsules import install_capsule_routes
 from nonslop.web.references import read_references
 from nonslop.web.schemas import WebSettings
-from nonslop.web.security import (
-    browser_workspace,
-    csrf_token,
-    require_api,
-    require_csrf,
-)
+from nonslop.web.security import csrf_token, require_api, require_csrf
 from nonslop.web.uploads import extract_source_text
 from nonslop.web.worlds import install_world_routes
 
@@ -45,6 +41,8 @@ def create_app(
     commit_data: Callable[[], None],
     reload_outputs: Callable[[], None],
     reload_worlds: Callable[[], None],
+    *,
+    scene_service: type[SceneService] = SceneService,
 ) -> FastAPI:
     application = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     application.add_middleware(
@@ -66,7 +64,7 @@ def create_app(
     store = JobStore(settings.data_root, commit_data)
     capsules = CapsuleStore(store)
     capsule_service = CapsuleService(capsules, archivist_gateway)
-    service = SceneService(store, gateway)
+    service = scene_service(store, gateway)
     videos = ArtifactStore(settings.output_root, settings.serving_root, reload_outputs)
     worlds = ReconstructionService(store, world_gateway)
     world_artifacts = ArtifactStore(
@@ -104,18 +102,23 @@ def create_app(
             status_code=error.status_code,
         )
 
-    def find_job(job_id: UUID, owner_id: str | None = None) -> JobRecord:
-        job = store.get(str(job_id))
-        if job is None or (owner_id is not None and job.owner_id != owner_id):
+    def refreshed_job(job: JobRecord | None) -> JobRecord:
+        if job is None:
             raise HTTPException(404, "Scene not found.")
         return worlds.refresh(service.refresh(job))
 
+    def find_public_job(job_id: UUID) -> JobRecord:
+        return refreshed_job(store.get_public(str(job_id)))
+
+    def find_api_job(job_id: UUID) -> JobRecord:
+        return refreshed_job(store.get(str(job_id)))
+
     async def submit_form(request: Request, browser: bool) -> JobRecord:
         if browser:
-            owner_id = browser_workspace(request)
+            owner_id = PUBLIC_WEB_OWNER
         else:
             require_api(request, settings)
-            owner_id = "api"
+            owner_id = API_OWNER
         async with request.form(
             max_files=settings.reference_limit + 2, max_fields=12, max_part_size=65536
         ) as form:
@@ -151,8 +154,7 @@ def create_app(
         except QueueFullError as error:
             raise HTTPException(409, str(error)) from error
 
-    def video_response(job_id: UUID, owner_id: str | None = None) -> FileResponse:
-        job = find_job(job_id, owner_id)
+    def video_response(job: JobRecord) -> FileResponse:
         if job.status != "complete":
             raise HTTPException(409, "This scene is not ready yet.")
         try:
@@ -174,27 +176,51 @@ def create_app(
 
     @application.get("/", response_class=HTMLResponse)
     def home(request: Request) -> Response:
-        jobs = [
-            worlds.refresh(service.refresh(job))
-            for job in store.recent(owner_id=browser_workspace(request))
-        ]
+        return templates.TemplateResponse(request=request, name="index.html")
+
+    @application.get("/dashboard", response_class=HTMLResponse)
+    def dashboard(
+        request: Request,
+        box_page: Annotated[int, Query(ge=1, le=2**31 - 1)] = 1,
+        capsule_page: Annotated[int, Query(ge=1, le=2**31 - 1)] = 1,
+    ) -> Response:
+        jobs, more_jobs = store.public_page(box_page)
+        page_capsules, more_capsules = capsules.public_page(capsule_page)
         return templates.TemplateResponse(
             request=request,
-            name="index.html",
-            context={"csrf": csrf_token(request), "jobs": jobs},
+            name="dashboard.html",
+            context={
+                "csrf": csrf_token(request),
+                "jobs": jobs,
+                "capsules": page_capsules,
+                "box_page": box_page,
+                "capsule_page": capsule_page,
+                "more_jobs": more_jobs,
+                "more_capsules": more_capsules,
+            },
         )
+
+    @application.get("/visits/new", response_class=RedirectResponse, status_code=303)
+    def new_visit() -> RedirectResponse:
+        return RedirectResponse("/dashboard?add=photo", status_code=303)
+
+    @application.post("/visits/new", response_class=HTMLResponse)
+    async def save_new_visit(request: Request) -> Response:
+        job = await submit_form(request, browser=True)
+        location = f"/visits/{job.job_id}"
+        if request.headers.get("HX-Request") == "true":
+            return Response(headers={"HX-Redirect": location})
+        return RedirectResponse(location, status_code=303)
 
     @application.get("/visits/{job_id}", response_class=HTMLResponse)
     def visit_page(request: Request, job_id: UUID) -> HTMLResponse:
         return templates.TemplateResponse(
             request=request,
-            name="index.html",
+            name="visit.html",
             context={
                 "csrf": csrf_token(request),
-                "jobs": [find_job(job_id, browser_workspace(request))],
-                "linked_memories": capsules.linked_entries(
-                    job_id, browser_workspace(request)
-                ),
+                "job": find_public_job(job_id),
+                "linked_memories": capsules.linked_entries(job_id),
             },
         )
 
@@ -213,28 +239,26 @@ def create_app(
             request=request,
             name="job.html",
             context={
-                "job": find_job(job_id, browser_workspace(request)),
+                "job": find_public_job(job_id),
                 "csrf": csrf_token(request),
             },
         )
 
     @application.get("/jobs/{job_id}/video")
-    def browser_video(request: Request, job_id: UUID) -> FileResponse:
-        return video_response(job_id, browser_workspace(request))
+    def browser_video(job_id: UUID) -> FileResponse:
+        return video_response(find_public_job(job_id))
 
     @application.get("/jobs/{job_id}/reference")
-    def browser_reference(request: Request, job_id: UUID) -> FileResponse:
-        job = find_job(job_id, browser_workspace(request))
+    def browser_reference(job_id: UUID) -> FileResponse:
+        job = find_public_job(job_id)
         path = settings.data_root / "uploads" / f"{job.job_id}.png"
         if not job.has_reference or not path.is_file():
             raise HTTPException(404, "Reference image not found.")
         return FileResponse(path, media_type="image/png")
 
     @application.get("/jobs/{job_id}/references/{index}")
-    def browser_reference_image(
-        request: Request, job_id: UUID, index: int
-    ) -> FileResponse:
-        job = find_job(job_id, browser_workspace(request))
+    def browser_reference_image(job_id: UUID, index: int) -> FileResponse:
+        job = find_public_job(job_id)
         if not 0 <= index < job.reference_count:
             raise HTTPException(404, "Reference image not found.")
         path = settings.data_root / "uploads" / job.job_id / f"{index}.png"
@@ -247,15 +271,22 @@ def create_app(
     @application.get("/api/jobs/{job_id}", response_model=JobRecord)
     def api_job(request: Request, job_id: UUID) -> JobRecord:
         require_api(request, settings)
-        return find_job(job_id)
+        return find_api_job(job_id)
 
     @application.get("/api/jobs/{job_id}/video")
     def api_video(request: Request, job_id: UUID) -> FileResponse:
         require_api(request, settings)
-        return video_response(job_id)
+        return video_response(find_api_job(job_id))
 
     install_world_routes(
-        application, settings, worlds, world_artifacts, templates, find_job, capsules
+        application,
+        settings,
+        worlds,
+        world_artifacts,
+        templates,
+        find_public_job,
+        find_api_job,
+        capsules,
     )
     install_capsule_routes(
         application, settings, capsules, capsule_service, store, templates

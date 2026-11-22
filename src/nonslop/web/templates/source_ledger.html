@@ -1,0 +1,27 @@
+{% if job.has_reference %}
+<details class="source-details result-sources">
+  <summary>{% if job.reference_count > 1 %}{{ job.reference_count }} reference photographs{% else %}Opening photograph{% endif %}</summary>
+  <div class="reference-gallery">
+    {% for name in job.reference_names %}
+    <figure><a href="/jobs/{{ job.job_id }}/references/{{ loop.index0 }}"><img src="/jobs/{{ job.job_id }}/references/{{ loop.index0 }}" alt="View reference {{ loop.index }}: {{ name }}" loading="lazy"></a><figcaption>{{ name }}{% if loop.first %} · Opening frame{% elif loop.last %} · Ending frame{% endif %}</figcaption></figure>
+    {% else %}<figure><a href="/jobs/{{ job.job_id }}/reference"><img src="/jobs/{{ job.job_id }}/reference" alt="View the opening photograph" loading="lazy"></a></figure>{% endfor %}
+  </div>
+</details>
+{% endif %}
+{% if job.scene.source_text %}
+<details class="source-details result-sources"><summary>Supplied context</summary><p class="field-help">The notes or extracted text submitted with this visit.</p><p class="source-excerpt">{{ job.scene.source_text }}</p></details>
+{% endif %}
+{% if job.sources %}
+<details class="source-details result-sources"{% if expanded_sources %} open{% endif %}>
+  <summary>Archive matches <span class="source-count">{{ job.sources|length }}</span></summary>
+  <div class="source-list">
+    {% for source in job.sources %}
+    <div class="source-entry">
+      <p class="source-meta">{{ source.kind }}{% if source.date %} · {{ source.date }}{% endif %}</p>
+      {% if source.url %}<a class="source-title" href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a>{% else %}<p class="source-title">{{ source.title }}</p>{% endif %}
+      {% if source.excerpt %}<p class="source-excerpt">{{ source.excerpt }}</p>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</details>
+{% endif %}

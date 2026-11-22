@@ -1,0 +1,7 @@
+<dialog class="add-dialog" id="add-{{ kind }}" aria-labelledby="add-{{ kind }}-title">
+  <header class="dialog-head">
+    <h2 id="add-{{ kind }}-title">{{ 'Add a photograph' if kind == 'photo' else 'Add a keepsake' }}</h2>
+    <button type="button" class="dialog-close" data-close-dialog aria-label="Close form">×</button>
+  </header>
+  {% include 'visit_form.html' if kind == 'photo' else 'keepsake_form.html' %}
+</dialog>
