@@ -17,7 +17,7 @@ class SourceEvidence(BaseModel):
 
 class SceneRequest(BaseModel):
     location: str = Field(min_length=3, max_length=250)
-    year: int = Field(ge=1800, le=datetime.now().year)
+    year: int | None = Field(default=None, ge=1800, le=datetime.now().year)
     description: str = Field(default="", max_length=4000)
     source_text: str = Field(default="", max_length=20000)
     use_web: bool = True

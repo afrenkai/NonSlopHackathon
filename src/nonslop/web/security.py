@@ -12,6 +12,7 @@ def environment_settings() -> WebSettings:
         api_key=SecretStr(os.environ["APP_API_KEY"]),
         password=SecretStr(os.environ["APP_PASSWORD"]),
         session_secret=SecretStr(os.environ["SESSION_SECRET"]),
+        world_generation_enabled=os.environ.get("WORLD_GENERATION_ENABLED") == "1",
     )
 
 

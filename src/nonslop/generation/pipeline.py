@@ -1,4 +1,5 @@
 from io import BytesIO
+from math import sqrt
 from pathlib import Path
 
 import torch
@@ -122,6 +123,22 @@ def reference_frame(content: bytes, width: int, height: int) -> Image.Image:
         )
 
 
+def reference_video_size(content: bytes, settings: ModelSettings) -> tuple[int, int]:
+    with Image.open(BytesIO(content)) as source:
+        scale = sqrt(settings.width * settings.height / (source.width * source.height))
+        width = max(
+            settings.spatial_alignment,
+            round(source.width * scale / settings.spatial_alignment)
+            * settings.spatial_alignment,
+        )
+        height = max(
+            settings.spatial_alignment,
+            round(source.height * scale / settings.spatial_alignment)
+            * settings.spatial_alignment,
+        )
+        return width, height
+
+
 @torch.inference_mode()
 def generate_video(
     pipeline: ModularPipeline,
@@ -131,16 +148,21 @@ def generate_video(
     output_root: Path,
 ) -> GenerationResult:
     settings = ModelSettings()
+    width, height = (
+        reference_video_size(reference_images[0], settings)
+        if reference_images
+        else (settings.width, settings.height)
+    )
     image = (
-        reference_frame(reference_images[0], settings.width, settings.height)
+        reference_frame(reference_images[0], width, height)
         if reference_images
         else None
     )
     output = pipeline(
         prompt=task.prompt,
         image=image,
-        height=settings.height,
-        width=settings.width,
+        height=height,
+        width=width,
         num_frames=settings.frames,
         num_inference_steps=settings.steps,
         generator=torch.Generator().manual_seed(task.seed),
@@ -150,6 +172,7 @@ def generate_video(
         color_encoder.decode(output.pop("dwd_pixels")).add_(1).mul_(0.5).clamp_(0, 1)
     )
     frames = video_frames(video)
+    frame_count = frames.shape[0]
     output_root.mkdir(parents=True, exist_ok=True)
     path = output_root / f"{task.job_id}.mp4"
     temporary = output_root / f"{task.job_id}.partial.mp4"
@@ -165,7 +188,7 @@ def generate_video(
     torch.cuda.empty_cache()
     return GenerationResult(
         video_path=str(path),
-        width=settings.width,
-        height=settings.height,
-        frames=settings.frames,
+        width=width,
+        height=height,
+        frames=frame_count,
     )

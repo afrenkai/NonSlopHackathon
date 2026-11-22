@@ -11,5 +11,6 @@ class ModelSettings:
     model_volume: str = "nonslop-models"
     width: int = 768
     height: int = 448
-    frames: int = 124
+    spatial_alignment: int = 64
+    frames: int = 209
     steps: int = 4

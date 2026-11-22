@@ -33,9 +33,10 @@ def build_scene_prompt(
     )
     description = scene.description.strip()
     memory = f"Remembered details: {description} " if description else ""
+    period = f" in {scene.year}" if scene.year is not None else ""
     return (
         "integrated_multimodal_description: [Shot 1] A realistic, continuous "
-        f"first-person visit to the remembered scene at {scene.location} in {scene.year}. "
+        f"first-person visit to the remembered scene at {scene.location}{period}. "
         f"{reference}"
         "The camera makes a small, slow movement near the original viewpoint, "
         "revealing gentle parallax in one uninterrupted shot. Choose a viewpoint and "

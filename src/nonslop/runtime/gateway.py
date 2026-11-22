@@ -2,6 +2,7 @@ import modal
 
 from nonslop.generation.schemas import GenerationResult, GenerationTask
 from nonslop.models.world_schemas import WorldResult
+from nonslop.reconstruction.context_schemas import ReconstructionContext
 
 
 class ModalGenerationGateway:
@@ -21,11 +22,26 @@ class ModalGenerationGateway:
 
 
 class ModalReconstructionGateway:
-    def __init__(self, worker: modal.Cls) -> None:
+    def __init__(
+        self, worker: modal.Function, world_worker: modal.Function | None = None
+    ) -> None:
         self.worker = worker
+        self.world_worker = world_worker
 
-    def submit(self, job_id: str, reference_images: list[bytes]) -> str:
-        return self.worker().reconstruct.spawn(job_id, reference_images).object_id
+    def submit(
+        self,
+        job_id: str,
+        reference_images: list[bytes],
+        context: ReconstructionContext,
+        *,
+        complete_world: bool = False,
+    ) -> str:
+        worker = self.world_worker if complete_world else self.worker
+        if worker is None:
+            raise ValueError("The world-generation worker is not deployed.")
+        return worker.spawn(
+            job_id, reference_images, context.model_dump_json()
+        ).object_id
 
     def result(self, call_id: str) -> WorldResult | None:
         try:

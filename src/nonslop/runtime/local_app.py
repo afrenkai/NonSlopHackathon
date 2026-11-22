@@ -88,7 +88,10 @@ def preview_app(data_root: Path | None = None) -> FastAPI:
             modal.Function.from_name("nonslop-streets", "prepare_visit")
         ),
         ModalReconstructionGateway(
-            modal.Cls.from_name("nonslop-world", "WorldReconstructor")
+            modal.Function.from_name("nonslop-world", "prepare_reconstruction"),
+            modal.Function.from_name(
+                "nonslop-world-generation", "prepare_world_generation"
+            ),
         ),
         ModalArchivistGateway(
             modal.Cls.from_name("nonslop-inference", "MemoryArchivist")

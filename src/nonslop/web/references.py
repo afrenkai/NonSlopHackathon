@@ -49,7 +49,10 @@ async def read_references(
         content = await upload_bytes(upload, settings.upload_limit)
         total += len(content)
         if total > settings.total_upload_limit:
-            raise HTTPException(413, "Keep the complete upload under 40 MB.")
+            raise HTTPException(
+                413,
+                f"Keep the complete upload under {settings.total_upload_limit // (1024 * 1024)} MB.",
+            )
         filename = Path(upload.filename or "reference.png").name[:250]
         await add_reference(references, content, filename)
     return references

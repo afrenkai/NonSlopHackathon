@@ -12,7 +12,9 @@ async def upload_bytes(upload: UploadFile, limit: int) -> bytes:
     payload = await upload.read(limit + 1)
     await upload.close()
     if len(payload) > limit:
-        raise HTTPException(413, "Each uploaded file must be 10 MB or smaller.")
+        raise HTTPException(
+            413, f"Each uploaded file must be {limit // (1024 * 1024)} MB or smaller."
+        )
     return payload
 
 

@@ -56,6 +56,7 @@ def create_app(
 ) -> FastAPI:
     application = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     application.state.local_preview = False
+    application.state.world_generation_enabled = settings.world_generation_enabled
     application.add_middleware(
         SessionMiddleware,
         secret_key=settings.session_secret.get_secret_value(),
@@ -144,7 +145,7 @@ def create_app(
                 settings,
                 demo_photo=assets / "static" / demo.photo if demo else None,
             )
-            if browser and not visit_intake and not references.images:
+            if browser and not references.images:
                 raise HTTPException(
                     422, "Add at least one photograph to create a field note."
                 )
@@ -167,7 +168,15 @@ def create_app(
             try:
                 scene = SceneRequest(
                     location=demo.location if demo else str(form.get("location", "")),
-                    year=demo.year if demo else int(str(form.get("year", "0"))),
+                    year=(
+                        demo.year
+                        if demo
+                        else (
+                            int(str(form["year"]))
+                            if str(form.get("year", "")).strip()
+                            else None
+                        )
+                    ),
                     description=str(form.get("description", "")).strip(),
                     source_text=source_text,
                     use_web=demo is None
@@ -178,7 +187,7 @@ def create_app(
             except (ValueError, ValidationError) as error:
                 raise HTTPException(
                     422,
-                    "Add a place and a valid year. Keep notes under 4,000 characters and source context under 20,000 characters.",
+                    "Add a place and, if known, a valid year. Keep notes under 4,000 characters and source context under 20,000 characters.",
                 ) from error
             if not references.images and not scene.description:
                 raise HTTPException(422, "Add a photograph or a scene description.")
@@ -202,7 +211,9 @@ def create_app(
         if job.status != "complete":
             raise HTTPException(409, "This scene is not ready yet.")
         try:
-            path = videos.materialize(Path(f"{job.job_id}.mp4"))
+            assert job.result is not None
+            video_id = UUID(Path(job.result.video_path).stem)
+            path = videos.materialize(Path(f"{video_id}.mp4"))
         except FileNotFoundError as error:
             raise HTTPException(
                 404, "The generated video is not available yet."
@@ -238,6 +249,7 @@ def create_app(
                 "jobs": jobs,
                 "box_page": box_page,
                 "more_jobs": more_jobs,
+                "demo_visits": DEMO_VISITS,
             },
         )
 

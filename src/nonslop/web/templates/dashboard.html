@@ -1,33 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Memories{% endblock %}
-{% block styles %}<link rel="stylesheet" href="/static/keepsakes.css"><link rel="stylesheet" href="/static/guide.css">{% endblock %}
+{% block styles %}<link rel="stylesheet" href="/static/guide.css">{% endblock %}
 {% block content %}
 <header class="page-intro dashboard-intro">
   <h1>Memories</h1>
-  <nav class="dashboard-index" aria-label="Jump to a collection"><a href="#box">The Box ↓</a><a href="#keepsakes">Keepsakes ↓</a></nav>
 </header>
-<div class="dashboard-shelves">
   <section id="box" aria-labelledby="box-title">
     <header class="shelf-heading"><div><h2 id="box-title">The Box</h2></div><button type="button" aria-haspopup="dialog" aria-controls="add-photo" class="button button-primary">Start a visit</button></header>
     <ul class="record-index">
-      {% for job in jobs %}<li><a class="record-link" href="/visits/{{ job.job_id }}"><span class="record-year">{{ job.scene.year }}</span><span class="record-name">{{ job.scene.location }}</span><span aria-hidden="true">↗</span></a></li>
-      {% else %}<li class="dashboard-empty"><h3>No visits yet.</h3><p>Start with a place and a year. The first saved visit will appear here.</p></li>{% endfor %}
+      {% for job in jobs %}<li><a class="record-link" href="/visits/{{ job.job_id }}"><span class="record-year">{{ job.scene.year or 'Undated' }}</span><span class="record-name">{{ job.scene.location }}</span><span aria-hidden="true">↗</span></a></li>
+      {% else %}<li class="dashboard-empty"><h3>No visits yet.</h3><p>Start with a photograph. Details and a year are optional. Your first saved visit will appear here.</p></li>{% endfor %}
     </ul>
     {% if box_page|default(1) > 1 or more_jobs %}<nav class="dashboard-index" aria-label="Visit pages">
-      {% if box_page > 1 %}<a href="/dashboard?box_page={{ box_page - 1 }}&amp;capsule_page={{ capsule_page }}#box">← Newer visits</a>{% endif %}
-      {% if more_jobs %}<a href="/dashboard?box_page={{ box_page + 1 }}&amp;capsule_page={{ capsule_page }}#box">Older visits →</a>{% endif %}
+      {% if box_page > 1 %}<a href="/dashboard?box_page={{ box_page - 1 }}#box">← Newer visits</a>{% endif %}
+      {% if more_jobs %}<a href="/dashboard?box_page={{ box_page + 1 }}#box">Older visits →</a>{% endif %}
     </nav>{% endif %}
   </section>
-  <section id="keepsakes" aria-labelledby="capsules-title"><header class="shelf-heading"><div><h2 id="capsules-title">Keepsakes</h2></div><button type="button" aria-haspopup="dialog" class="button button-secondary" aria-controls="add-keepsake">Add a keepsake</button></header>
-    <div class="capsule-shelf">
-      {% for capsule in capsules %}{% include "capsule_card.html" %}{% else %}<div class="dashboard-empty"><h3>No keepsakes yet.</h3><p>Add an object and its first memory.</p></div>{% endfor %}
-    </div>
-    {% if capsule_page|default(1) > 1 or more_capsules %}<nav class="dashboard-index" aria-label="Keepsake pages">
-      {% if capsule_page > 1 %}<a href="/dashboard?box_page={{ box_page }}&amp;capsule_page={{ capsule_page - 1 }}#keepsakes">← Newer keepsakes</a>{% endif %}
-      {% if more_capsules %}<a href="/dashboard?box_page={{ box_page }}&amp;capsule_page={{ capsule_page + 1 }}#keepsakes">Older keepsakes →</a>{% endif %}
-    </nav>{% endif %}
-  </section>
-</div>
 {% with kind="photo" %}{% include "add_dialog.html" %}{% endwith %}
-{% with kind="keepsake" %}{% include "add_dialog.html" %}{% endwith %}
 {% endblock %}

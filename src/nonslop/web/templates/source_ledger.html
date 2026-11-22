@@ -22,7 +22,7 @@
 {% endif %}
 {% if job.sources %}
 <details class="source-details result-sources"{% if expanded_sources %} open{% endif %}>
-  <summary>Archive matches <span class="source-count">{{ job.sources|length }}</span></summary>
+  <summary>Retrieved context <span class="source-count">{{ job.sources|length }}</span></summary>
   <div class="source-list">
     {% for source in job.sources %}
     <div class="source-entry">

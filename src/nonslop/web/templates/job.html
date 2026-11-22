@@ -1,7 +1,7 @@
 <article id="job-{{ job.job_id }}" class="visit-card panel"{% if job.status in ('queued', 'running') or (job.world and job.world.status == 'running') %} hx-get="/jobs/{{ job.job_id }}" hx-trigger="every 5s" hx-swap="outerHTML" aria-busy="true"{% endif %}>
   <div class="visit-heading">
     <div>
-      <p class="eyebrow">{{ job.scene.year }}</p>
+      <p class="eyebrow">{{ job.scene.year or 'Undated' }}</p>
       {% if request.url.path.startswith('/visits/') %}<h2>Visit record</h2>{% else %}<h3><a href="/visits/{{ job.job_id }}">{{ job.scene.location }}</a></h3>{% endif %}
     </div>
     <span class="status status-{{ job.status }}">{% if job.status == 'complete' %}Ready to visit{% elif job.status == 'failed' and request.app.state.local_preview %}Sources saved{% elif job.status == 'failed' %}Couldn’t complete{% elif job.status == 'running' %}Creating your visit{% else %}Waiting to begin{% endif %}</span>
@@ -16,7 +16,7 @@
     {% endfor %}
   </details>
   {% endif %}
-  {% if job.result and job.result.reference_observations %}<details class="source-details"><summary>Omni’s initial photo observations</summary><p class="source-excerpt">{{ job.result.reference_observations }}</p></details>{% endif %}
+  {% if job.result and job.result.reference_observations %}<details class="source-details"><summary>Omni’s initial photo observations</summary><p class="source-excerpt">{{ job.result.reference_observations }}</p><p class="field-help">These observations informed the prompt. They may contain mistakes and are separate from historical evidence.</p></details>{% endif %}
   {% if job.result and job.result.used_prompt %}<details class="source-details"><summary>Prompt used by H3</summary><p class="field-help">{% if job.result.prompt_model %}Composed by {{ job.result.prompt_model }} from the supplied evidence.{% else %}Composed from the visit template.{% endif %}</p><p class="source-excerpt">{{ job.result.used_prompt }}</p></details>{% elif job.result and job.result.prompt_model %}<p class="field-help">The visit prompt was composed by {{ job.result.prompt_model }} from the supplied evidence.</p>{% endif %}
   {% if job.status == 'complete' and job.result %}
   <div class="video-wrap">
@@ -45,7 +45,7 @@
   {% if research %}
   <section class="visit-research" aria-labelledby="research-{{ job.job_id }}">
     <h3 id="research-{{ job.job_id }}">Research evidence</h3>
-    <p class="field-help">{% if job.research_sources %}These saved observations guide the video. New 3D builds use frames from the video.{% else %}Saved observations for this location. This visit started before the research notes were added to the video prompt.{% endif %}</p>
+    <p class="field-help">{% if job.research_sources %}These saved observations guide the video and support new 3D builds.{% else %}Saved observations for this location. This visit started before the research notes were added to the video prompt.{% endif %}</p>
     <ul class="source-list research-sources">
       {% for source in research %}
       <li class="source-entry">

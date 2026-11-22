@@ -17,11 +17,12 @@ class WebSettings(BaseModel):
     world_root: Path = Path("/worlds")
     world_serving_root: Path = Path("/tmp/nonslop-worlds")
     assets_root: Path = Path("/opt/nonslop-web")
-    upload_limit: int = 10 * 1024 * 1024
-    total_upload_limit: int = 40 * 1024 * 1024
+    upload_limit: int = 25 * 1024 * 1024
+    total_upload_limit: int = 64 * 1024 * 1024
     reference_limit: int = 8
     text_limit: int = 20000
     secure_cookies: bool = True
+    world_generation_enabled: bool = False
 
 
 class ReferenceBundle(BaseModel):

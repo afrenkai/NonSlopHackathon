@@ -2,10 +2,10 @@
 
 A prototype for revisiting remembered scenes, indoors or outdoors, from one or
 a few photographs, descriptions, scans, and archive material. FastAPI serves a
-small HTMX interface. Kimi K3.1 Pro composes a scene prompt from the evidence,
-pi-H3 generates a 5.2-second visit with audio, and WorldMirror reconstructs a
-Gaussian-splat space from frames of that video. Field notes retain photographs,
-optional remembered details, source context, and generated visits.
+small HTMX interface; pi-H3 generates a 5.2-second visit with audio on Modal.
+WorldMirror reconstructs a Gaussian-splat space from supplied photographs and H3 video views,
+or from generated video for legacy text-only API requests. Field notes retain
+photographs, optional remembered details, source context, and generated visits.
 
 The implementation roadmap is maintained in [todo.md](todo.md): video → 3D
 space with HY-WorldMirror, with an isolated SGLang-Omni service.
@@ -109,15 +109,7 @@ Start a browser field note with at least one PNG, JPEG, or WebP photograph and
 add a place or scene and year. Written notes are optional; the photographs anchor
 the first frame and the reconstructed space. Optional UTF-8 text/Markdown or an image scan
 supplies historical context; scans use English Tesseract OCR. Files are limited
-to 10 MB each and images to 20 megapixels. An optional JSON research packet
-(`research_file`, a scene_scout manifest or a list of evidence items with
-`title`/`record_url`/`excerpt`/`kind`/`capture_from`/`capture_to` fields)
-joins the visit's saved research evidence. An uploaded packet contributes up to
-24 usable items with up to 1,000 characters per excerpt.
-
-New demo visits load the matching [Flatbush](research/25-flatbush/README.md)
-or [Hakodate Bay](research/hakodate-bay/README.md) evidence packet automatically.
-Each packet can also be attached to a custom visit.
+to 10 MB each and images to 20 megapixels.
 
 The HTMX form also accepts an image folder or multiple selected photographs.
 Use up to eight references, 10 MB per file, and 40 MB total. References are
@@ -136,48 +128,43 @@ requested memory year or establish a camera pose; scan dates may describe
 digitization. GPS is a prompt clue, not a reverse-geocoded or verified address.
 Focal length alone is not treated as a calibrated intrinsic matrix.
 
-Web grounding queries Internet Archive using all comma-separated location terms
-and the exact year, then a
-ten-year window if needed. Source links, excerpts, dates, and retrieval notices
-are retained with each scene. Search results require relevance review; they do
-not certify an exact reconstruction. H3's hosted Context-IR is not part of its
+Web grounding resolves a geographic Wikipedia entity, rejects ambiguous names,
+and uses its Wikidata administrative areas and alternate names to filter Archive
+image/text records. It searches the exact publication year, then a ten-year window.
+Geographic relevance is checked before sources enter the generation prompt.
+General history is labeled separately from period material; a publication date
+does not establish the scene's appearance that year. Source links, excerpts,
+dates, and retrieval notices are retained with each scene. H3's hosted Context-IR is not part of its
 open-source release. The prompt uses H3's structured visual/sound fields and
 preserves the supplied opening image.
 
-When configured, a Modal-hosted endpoint for Kimi K3.1 Pro receives the full
-accepted visit description and source text, photo metadata, retrieved and saved
-research, the resized reference photographs, and Omni's photo observations.
-The demo packets also include all 12 successful Flatbush DeerFlow inspections
-or all 42 successful Hakodate inspections, with receipt IDs and source URLs.
-The research folders retain the original archival photos and documents.
-Kimi returns H3's visual and sound prompt. Create a Shared or Dedicated Endpoint for
-`moonshotai/Kimi-K3.1-Pro` and a workspace proxy token, then set
-`NONSLOP_PROMPT_TOKEN` (`wk-<id>.ws-<secret>`), `NONSLOP_PROMPT_BASE_URL` (your
-endpoint URL ending in `/v1`), and `NONSLOP_PROMPT_MODEL` (the model ID returned
-by the endpoint's `/v1/models` route). Keep these with the web credentials in
-`.env` or the `nonslop-access` secret, then redeploy the CPU app. Per-token
-billing applies on Shared Endpoints. Without a token, or if the endpoint fails
-or returns an incomplete prompt, generation falls back to the deterministic
-template. The visit record shows the prompt H3 used and identifies Kimi or the
-template. For photo visits, Kimi checks Omni's descriptions against the
-numbered reference images and records concrete visible details and
-uncertainties for each. Supporting views contribute features when the opening
-photo or established overlap supports their placement.
-
 `POST /api/jobs` accepts the same multipart fields as the UI: `location`, `year`,
-`description`, `source_text`, `source_file`, `research_file`, `reference_image`,
-`use_web`, and optional `seed`. Repeat `reference_images` multipart fields for multiple
+`description`, `source_text`, `source_file`, `reference_image`, `use_web`, and
+optional `seed`. Repeat `reference_images` multipart fields for multiple
 references. Poll `GET /api/jobs/{job_id}`; retrieve completed media from
 `GET /api/jobs/{job_id}/video`. There is room for four outstanding jobs and one
 GPU worker processes them in sequence.
 
-After the video is ready, use **Build a 3D space**, then **Step into this space**.
-WorldMirror reconstructs up to six sampled frames from the H3 video, so Kimi's
-evidence-based prompt guides the visuals used for the splat. Reconstruction
-uses up to a 756-pixel input edge and a 1.5-million-splat export cap. The source
-ledger retains the full normalized reference photos. Previously built spaces
-remain viewable with their original input type. **Rebuild this space** uses
-the visit's saved video and invalidates the cached 3D artifacts.
+After video generation, use **Build a 3D space**, then **Step into this space**.
+WorldMirror jointly consumes the original photographs and up to six sampled H3
+video views. Before reconstruction, a CPU preparation job sends the anchor photo,
+candidate video views, owner text, retrieved evidence, photo metadata, and prior
+photo observations through Qwen3-Omni. Its structured consistency review selects
+usable video frames and identifies indoor scenes so sky masking is disabled there.
+No usable generated views means a failed build; context processing is not silently
+skipped. The complete context and review are retained with the private 3D artifacts.
+WorldMirror has no text encoder: text and evidence affect view selection and
+masking rather than being passed as unsupported model arguments. The website
+shows the review and actual input counts. Choose overlapping photos of the same scene; views with different
+aspect ratios use centered crops matching the opening photo, without stretching.
+The full normalized references remain available in the source ledger. With no
+photographs, reconstruction consumes the sampled video views. Each space records which inputs
+produced its geometry. Reconstruction uses up to a 756-pixel input edge and a
+1.5-million-splat export cap. Existing visits can use **Rebuild this space** to
+apply the current reconstruction without regenerating their video. Cached 3D
+assets are invalidated when a rebuild starts. Old photo-only spaces remain viewable;
+rebuild them to include H3 views. Synthetic views suggest geometry but are not
+additional observations of the real scene.
 
 The pinned WorldMirror export patch preserves predicted opacity during voxel
 merging and writes standard PLY opacity logits. Scale-outlier filtering remains
@@ -195,7 +182,7 @@ Spark uses its native platform-specific detail budget rather than a fixed 150k
 display cap. Its blur settings match WorldMirror's classic Gaussian rasterization
 rather than applying the opacity compensation intended for antialiased training.
 
-Earlier photo-only validation on November 22, 2026 completed with both one and two
+Live photo-input validation on November 22, 2026 completed with both one and two
 indoor example photographs. The updated two-photo rebuild produced 605,046 exported
 splats (41.1 MB), two camera poses, and 756 × 504 calibration dimensions. The owner’s
 3D page, camera JSON, and PLY download returned HTTP 200. This verifies the deployed reconstruction
