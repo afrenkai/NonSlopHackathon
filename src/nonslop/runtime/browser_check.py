@@ -145,18 +145,21 @@ def check(
             page.on("response", record_response)
             home = page.goto("/", wait_until="domcontentloaded", timeout=120000)
             assert home is not None and home.status == 200
-            page.get_by_role("link", name="Add a photograph").click()
-            page.wait_for_url("**/visits/new")
-            page.get_by_label("Place or street", exact=True).fill(
+            page.locator('a[href="/dashboard#box"]').click()
+            page.wait_for_url("**/dashboard#box")
+            page.get_by_role("button", name="Start a visit", exact=True).click()
+            dialog = page.locator("dialog#add-photo")
+            expect(dialog).to_be_visible()
+            dialog.get_by_label("Place or street", exact=True).fill(
                 "Hester Street, Lower East Side, New York City"
             )
-            page.get_by_label("Year", exact=True).fill("1905")
-            page.get_by_label("What would you like to revisit?", exact=True).fill(
+            dialog.get_by_label("Year", exact=True).fill("1905")
+            dialog.get_by_label("What would you like to revisit?", exact=True).fill(
                 "A quiet morning on a narrow street of brick tenements, shopfronts "
                 "and a few market carts. Slowly walk forward along the pavement. "
                 "Keep the architecture stable and the street lightly occupied."
             )
-            page.get_by_label("Find context on the web").uncheck()
+            dialog.get_by_label("Find context on the web").uncheck()
             with TemporaryDirectory() as reference_directory:
                 if reference_images:
                     folder_path = Path(reference_directory)
@@ -166,19 +169,21 @@ def check(
                         (folder_path / f"{image_number:02d}.png").write_bytes(
                             reference_image
                         )
-                    page.locator("summary").filter(
+                    dialog.locator("summary").filter(
                         has_text="Add multiple reference images"
                     ).click()
-                    page.locator("#reference-folder").set_input_files(str(folder_path))
+                    dialog.locator("#reference-folder").set_input_files(
+                        str(folder_path)
+                    )
                     noun = "image" if reference_count == 1 else "images"
-                    expect(page.locator("#reference-selection")).to_have_text(
+                    expect(dialog.locator("#reference-selection")).to_have_text(
                         f"{reference_count} reference {noun} selected."
                     )
                     progress("reference folder selected")
                 with page.expect_response(
                     is_creation_response, timeout=120000
                 ) as creation:
-                    page.get_by_role(
+                    dialog.get_by_role(
                         "button", name="Create a visit", exact=True
                     ).click()
             assert creation.value.status == 200

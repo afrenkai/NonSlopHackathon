@@ -57,7 +57,7 @@ button,summary { cursor: pointer; } button:disabled { cursor: wait; opacity: .68
 .empty-state h3 { max-width: 16ch; }.empty-state > p:not(.eyebrow) { margin: 1rem 0 .5rem; max-width: 38ch; }
 #latest:has(.visit-card) .empty-state { display: none; }
 #your-box,#new-visit { scroll-margin-top: 1rem; }
-.public-notice { margin: 0; padding: .65rem .8rem; background: var(--folder); color: var(--ink); }
+
 .form-stack { display: grid; gap: 1.25rem; }
 .field { display: grid; gap: .45rem; min-width: 0; }
 .place-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(78px,.33fr); gap: .8rem; }

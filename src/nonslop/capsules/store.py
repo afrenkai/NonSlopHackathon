@@ -6,6 +6,8 @@ import duckdb
 from nonslop.capsules.schemas import CapsuleEntry, CapsuleRecord, EntryEnrichment
 from nonslop.data.jobs import JobStore
 
+CAPSULES_PER_PAGE = 30
+
 
 class CapsuleStore:
     def __init__(self, jobs: JobStore) -> None:
@@ -61,29 +63,34 @@ class CapsuleStore:
                 connection.execute("COMMIT")
             self.commit()
 
-    def get(self, capsule_id: UUID, owner_id: str) -> CapsuleRecord | None:
+    def get(self, capsule_id: UUID) -> CapsuleRecord | None:
         with self.lock, duckdb.connect(str(self.database)) as connection:
             row = connection.execute(
-                "SELECT payload FROM capsules WHERE capsule_id = ? AND owner_id = ?",
-                [capsule_id, owner_id],
+                "SELECT payload FROM capsules WHERE capsule_id = ?",
+                [capsule_id],
             ).fetchone()
         return None if row is None else CapsuleRecord.model_validate_json(row[0])
 
-    def recent(self, owner_id: str) -> list[CapsuleRecord]:
+    def public_page(self, page: int = 1) -> tuple[list[CapsuleRecord], bool]:
+        # Capsules have only ever been created through the web interface.
         with self.lock, duckdb.connect(str(self.database)) as connection:
             rows = connection.execute(
-                "SELECT payload FROM capsules WHERE owner_id = ? "
-                "ORDER BY created_at DESC LIMIT 30",
-                [owner_id],
+                "SELECT payload FROM capsules ORDER BY created_at DESC, capsule_id DESC "
+                "LIMIT ? OFFSET ?",
+                [CAPSULES_PER_PAGE + 1, (page - 1) * CAPSULES_PER_PAGE],
             ).fetchall()
-        return [CapsuleRecord.model_validate_json(row[0]) for row in rows]
+        return [
+            CapsuleRecord.model_validate_json(row[0])
+            for row in rows[:CAPSULES_PER_PAGE]
+        ], len(rows) > CAPSULES_PER_PAGE
 
     def append(self, entry: CapsuleEntry, media_bytes: bytes | None = None) -> None:
         if media_bytes is not None and entry.media_filename is None:
             raise ValueError("Entry media requires a filename")
         with self.lock:
-            if self.get(entry.capsule_id, entry.owner_id) is None:
-                raise ValueError("Capsule not found in this workspace")
+            capsule = self.get(entry.capsule_id)
+            if capsule is None or capsule.owner_id != entry.owner_id:
+                raise ValueError("Entry does not belong to this capsule")
             with duckdb.connect(str(self.database)) as connection:
                 connection.execute("BEGIN TRANSACTION")
                 connection.execute(
@@ -109,19 +116,6 @@ class CapsuleStore:
                 connection.execute("COMMIT")
             self.commit()
 
-    def page(self, page_number: int, owner_id: str) -> tuple[list[CapsuleRecord], bool]:
-        page_size = 20
-        with self.lock, duckdb.connect(str(self.database)) as connection:
-            rows = connection.execute(
-                "SELECT payload FROM capsules WHERE owner_id = ? "
-                "ORDER BY created_at DESC, capsule_id DESC LIMIT ? OFFSET ?",
-                [owner_id, page_size + 1, (page_number - 1) * page_size],
-            ).fetchall()
-        return (
-            [CapsuleRecord.model_validate_json(row[0]) for row in rows[:page_size]],
-            len(rows) > page_size,
-        )
-
     def get_entry(self, entry_id: UUID, owner_id: str) -> CapsuleEntry | None:
         with self.lock, duckdb.connect(str(self.database)) as connection:
             row = connection.execute(
@@ -130,17 +124,13 @@ class CapsuleStore:
             ).fetchone()
         return None if row is None else CapsuleEntry.model_validate_json(row[0])
 
-    def entries(self, capsule_id: UUID, owner_id: str) -> list[CapsuleEntry]:
-        with self.lock:
-            if self.get(capsule_id, owner_id) is None:
-                raise ValueError("Capsule not found in this workspace")
-            with duckdb.connect(str(self.database)) as connection:
-                rows = connection.execute(
-                    "SELECT payload FROM capsule_entries "
-                    "WHERE capsule_id = ? AND owner_id = ? "
-                    "ORDER BY occurred_on, created_at",
-                    [capsule_id, owner_id],
-                ).fetchall()
+    def entries(self, capsule: CapsuleRecord) -> list[CapsuleEntry]:
+        with self.lock, duckdb.connect(str(self.database)) as connection:
+            rows = connection.execute(
+                "SELECT payload FROM capsule_entries WHERE capsule_id = ? AND owner_id = ? "
+                "ORDER BY occurred_on, created_at",
+                [capsule.capsule_id, capsule.owner_id],
+            ).fetchall()
         return [CapsuleEntry.model_validate_json(row[0]) for row in rows]
 
     def update_enrichment(
@@ -160,11 +150,12 @@ class CapsuleStore:
             self.commit()
         return updated
 
-    def linked_entries(self, job_id: UUID, owner_id: str) -> list[CapsuleEntry]:
+    def linked_entries(self, job_id: UUID) -> list[CapsuleEntry]:
         with self.lock, duckdb.connect(str(self.database)) as connection:
             rows = connection.execute(
-                "SELECT payload FROM capsule_entries WHERE owner_id = ? "
-                "AND json_extract_string(payload, '$.linked_job_id') = ? ORDER BY occurred_on, created_at",
-                [owner_id, str(job_id)],
+                "SELECT e.payload FROM capsule_entries e JOIN capsules c USING (capsule_id, owner_id) "
+                "WHERE json_extract_string(e.payload, '$.linked_job_id') = ? "
+                "ORDER BY e.occurred_on, e.created_at",
+                [str(job_id)],
             ).fetchall()
         return [CapsuleEntry.model_validate_json(row[0]) for row in rows]

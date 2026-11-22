@@ -1,0 +1,28 @@
+{#- Landing hero background: eight CC0 nature photographs crossfade behind the title.
+    Credits and license evidence: static/hero/NOTICE.md. The photographs are decorative, so the
+    slides are hidden from screen readers and have empty alt text.
+    Each photo has a 3:2 landscape crop for screens 700px and wider and a 9:16 portrait crop for phones,
+    both cut around the same subject; focal points live in static/photo-hero.css.
+    Only the first photo loads with the page. The others keep data-src/data-srcset until photo-hero.js needs them. -#}
+{%- set hero_photos = [
+  "misty-mountain-lake",
+  "sand-dunes",
+  "seljalandsfoss",
+  "snowy-firs",
+  "port-orford-coast",
+  "sunrise-meadow",
+  "murlough-bay",
+  "birch-grove"
+] -%}
+{%- macro slides() %}
+<div class="photo-hero-slides" aria-hidden="true">
+{%- for slug in hero_photos %}{% set lazy = "" if loop.first else "data-" %}
+  <div class="hero-slide{% if loop.first %} is-active{% endif %}" data-photo="{{ slug }}">
+    <picture>
+      <source media="(max-width: 699px)" {{ lazy }}srcset="{% for w in (720, 1080, 1440) %}/static/hero/{{ slug }}-portrait-{{ w }}.webp {{ w }}w{% if not loop.last %}, {% endif %}{% endfor %}" sizes="100vw">
+      <img {{ lazy }}src="/static/hero/{{ slug }}-1920.webp" {{ lazy }}srcset="{% for w in (1280, 1920, 2560) %}/static/hero/{{ slug }}-{{ w }}.webp {{ w }}w{% if not loop.last %}, {% endif %}{% endfor %}" sizes="100vw" width="1920" height="1280" alt="" decoding="async"{% if loop.first %} fetchpriority="high"{% endif %}>
+    </picture>
+  </div>
+{%- endfor %}
+</div>
+{%- endmacro %}

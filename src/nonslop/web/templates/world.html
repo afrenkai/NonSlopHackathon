@@ -4,7 +4,7 @@
 {% block scripts %}<script type="module" src="/static/viewer.js"></script>{% endblock %}
 {% block content %}
 {% set photo_geometry = job.world.result and job.world.result.input_kind == 'reference_photos' %}
-<nav class="room-back" aria-label="Visit navigation"><a class="text-link" href="/visits/{{ job.job_id }}">← Visit record</a>{% if job.status == 'complete' and job.result %}<a class="text-link" href="/jobs/{{ job.job_id }}/video">Watch the video ↗</a>{% endif %}</nav>
+<nav class="room-back" aria-label="Visit navigation"><a class="text-link" href="/visits/{{ job.job_id }}">← Visit record</a>{% if job.status == 'complete' and job.result %}<a class="text-link" href="/jobs/{{ job.job_id }}/video">Watch the video</a>{% endif %}</nav>
 <section class="page-intro" aria-labelledby="world-title">
   <p class="file-tab">{{ job.scene.year }} · A reconstructed visit</p>
   <h1 id="world-title">{{ job.scene.location }}</h1>
@@ -49,6 +49,6 @@
     {% with expanded_sources = true %}{% include "source_ledger.html" %}{% endwith %}
     <div class="visit-footer"><span>{% if photo_geometry %}Photographs → inferred geometry{% else %}Generated video → inferred geometry{% endif %}</span><time>{{ job.created_at|string|replace('T', ' ') }}</time></div>
   </aside>
-</div>
-
-{% endblock %}
+  </div>
+  {% include "linked_memories.html" %}
+  {% endblock %}

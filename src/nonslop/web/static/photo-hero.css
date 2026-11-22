@@ -1,0 +1,42 @@
+/* Landing hero: CC0 nature photographs fill the whole section and crossfade behind the title
+   (templates/photo_hero.html, photo-hero.js). CSP-safe: focal points live here, not in style attributes. */
+/* The hero spans the whole window. On this page the usual column (1380px and the gutter, as on .workspace
+   in style.css) moves from <main> to the sections after the hero. No 100vw, so a classic scrollbar adds no overflow. */
+.workspace:has(> .photo-hero:first-child) { max-width: none; padding-top: 0; padding-inline: 0; }
+.workspace:has(> .photo-hero:first-child) > :not(.photo-hero, dialog) { margin-inline: max(var(--gutter), (100% - 1380px) / 2 + var(--gutter)); }
+.guide-hero.photo-hero { --hero-pad-b: clamp(1.75rem, 4.5vw, 4rem);
+  position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 0;
+  margin-inline: 0; padding: 0;
+  min-height: clamp(28rem, calc(100vh - 7rem), 60rem); min-height: clamp(28rem, calc(100svh - 7rem), 60rem);
+  background: #2d302a; color: var(--paper); }
+.photo-hero + .guide-chapter { border-top: 0; }
+.photo-hero-slides { position: absolute; inset: 0; z-index: -1; }
+.photo-hero-slides::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(to top, rgb(23 25 17 / .3), rgb(23 25 17 / 0) 60%); }
+.hero-slide { position: absolute; inset: 0; opacity: 0; background: var(--tone, #2d302a); }
+.hero-slide.is-active { opacity: 1; z-index: 1; }
+.hero-slide img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: var(--fx, 50%) var(--fy, 50%); }
+@media (prefers-reduced-motion: no-preference) {
+  /* Subtle crossfade: the new photograph fades in over the old one, which stays put until the fade ends. */
+  .hero-slide { transition: opacity 0s linear 1.6s; }
+  .hero-slide.is-active { transition: opacity 1.6s ease-in-out; }
+}
+/* Center the title vertically on the left and keep the action at the bottom right. */
+.photo-hero-copy { width:100%; flex:1; display:flex; padding:var(--hero-pad-b) var(--gutter); }
+.photo-hero-text { flex:1; min-width:0; display:grid; grid-template-rows:1fr auto 1fr; }
+.guide-hero.photo-hero h1 { grid-row:2; justify-self:start; text-align:left; position:relative; margin:0; font-size:clamp(1.5rem,7.5vw,6rem); color:var(--paper); text-shadow:0 1px 12px #171911; }
+.guide-hero.photo-hero h1::before { content:""; position:absolute; z-index:-1; pointer-events:none; inset:-3rem -10vw -3rem calc(-1 * var(--gutter)); background:linear-gradient(to bottom, transparent, rgb(23 25 17 / .68) 3rem calc(100% - 3rem), transparent); mask-image:linear-gradient(to right, black calc(100% - 10vw), transparent); }
+.guide-hero.photo-hero h1 em { display:block; color:var(--paper); }
+.photo-hero .guide-welcome { grid-row:3; place-self:end; }
+.photo-hero :focus-visible { outline-color: var(--paper); }
+/* Phones get the 9:16 files, which are already centred on the subject. */
+@media (max-width: 699px) { .hero-slide img { object-position: 50% var(--fyp, 50%); } }
+/* Focal points: landscape crop (--fx --fy), portrait crop (--fyp); --tone shows while a photo loads. */
+.hero-slide[data-photo="misty-mountain-lake"] { --fx: 64%; --fy: 40%; --fyp: 40%; --tone: #7d8381; }
+.hero-slide[data-photo="sand-dunes"] { --fx: 40.3%; --fy: 40%; --fyp: 40%; --tone: #8f5228; }
+.hero-slide[data-photo="seljalandsfoss"] { --fx: 66.9%; --fy: 50%; --fyp: 50%; --tone: #6e6a4d; }
+.hero-slide[data-photo="snowy-firs"] { --fx: 57%; --fy: 45%; --fyp: 45%; --tone: #aa918d; }
+.hero-slide[data-photo="port-orford-coast"] { --fx: 31%; --fy: 54.9%; --fyp: 55%; --tone: #7c808f; }
+.hero-slide[data-photo="sunrise-meadow"] { --fx: 40%; --fy: 54.8%; --fyp: 55%; --tone: #595657; }
+.hero-slide[data-photo="murlough-bay"] { --fx: 37.1%; --fy: 45%; --fyp: 45%; --tone: #818a63; }
+.hero-slide[data-photo="birch-grove"] { --fx: 45.1%; --fy: 50%; --fyp: 50%; --tone: #8c8870; }

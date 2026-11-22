@@ -1,21 +1,37 @@
 {% extends "base.html" %}
-{% block title %}Photographs & field notes{% endblock %}
-{% block styles %}<link rel="stylesheet" href="/static/field-print.css"><link rel="stylesheet" href="/static/guide.css">{% endblock %}
+{% block title %}Photographs & keepsakes{% endblock %}
+{% import "photo_hero.html" as hero %}
+{% block styles %}<link rel="stylesheet" href="/static/field-print.css"><link rel="stylesheet" href="/static/guide.css"><link rel="stylesheet" href="/static/photo-hero.css">{% endblock %}
+{% block scripts %}{{ super() }}<script src="/static/photo-hero.js" defer></script>{% endblock %}
 {% block content %}
-<section id="intro" class="guide-hero" aria-labelledby="guide-title">
-  <div><p class="eyebrow">Memory Worlds / A field guide</p>
-    <h1 id="guide-title">Places you remember.<br><em>Photographs you kept.</em></h1>
-  </div>
-  <div class="guide-welcome"><p>Revisit a remembered scene through a photograph. Add the details you remember whenever you want to.</p>
-    <a class="button button-primary" href="/dashboard">Open the dashboard <span aria-hidden="true">→</span></a>
+<section id="intro" class="guide-hero photo-hero" aria-labelledby="guide-title" data-slideshow>
+  {{ hero.slides() }}
+  <div class="photo-hero-copy">
+    <div class="photo-hero-text">
+      <h1 id="guide-title">Rediscover and relive <em>old memories</em></h1>
+      <div class="guide-welcome">
+        <a class="button button-primary" href="/dashboard">Open the dashboard</a>
+      </div>
+    </div>
   </div>
 </section>
 <section id="photograph" class="guide-chapter photo-chapter" aria-labelledby="photo-title">
-  <div class="chapter-copy"><p class="file-tab">01 / Photograph</p>
+  <div class="chapter-copy"><p class="file-tab">Photograph</p>
     <h2 id="photo-title">Step back<br>inside the<br><em>photograph.</em></h2>
-    <p>One photograph is enough to begin. Add more views or the details you remember, and step inside.</p>
-    <a class="button button-primary" href="/visits/new">Add a photograph <span aria-hidden="true">→</span></a>
+    <a class="button button-primary" href="/dashboard#box">Explore photographs</a>
   </div>
   {% include "field_print.html" %}
+</section>
+<section id="keepsake" class="guide-chapter keepsake-chapter" aria-labelledby="keepsake-title">
+  <figure class="keepsake-example" aria-labelledby="spheal-caption">
+    <div class="keepsake-print"><img src="/static/spheal.webp" width="750" height="1000" loading="lazy" alt="A small white seal plush with black eyes resting in a hand."></div>
+    <figcaption id="spheal-caption"><span class="keepsake-tag"><strong>Spheal</strong> <span>since 2023</span></span>
+      <p class="keepsake-description">Soft and fuzzy lil guy</p>
+    </figcaption>
+  </figure>
+  <div class="chapter-copy"><p class="file-tab">Keepsake</p>
+    <h2 id="keepsake-title">Give nostalgia <em>a home</em></h2>
+    <a class="button button-primary" href="/dashboard#keepsakes">Explore keepsakes</a>
+  </div>
 </section>
 {% endblock %}

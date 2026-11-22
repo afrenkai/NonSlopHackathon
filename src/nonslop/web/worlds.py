@@ -7,12 +7,12 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from nonslop.capsules.store import CapsuleStore
 from nonslop.data.videos import ArtifactStore
 from nonslop.generation.schemas import JobRecord
 from nonslop.reconstruction.service import ReconstructionService
 from nonslop.web.schemas import WebSettings
 from nonslop.web.security import (
-    browser_workspace,
     csrf_token,
     require_api,
     require_csrf,
@@ -25,7 +25,9 @@ def install_world_routes(
     service: ReconstructionService,
     artifacts: ArtifactStore,
     templates: Jinja2Templates,
-    find_job: Callable[[UUID, str | None], JobRecord],
+    find_public_job: Callable[[UUID], JobRecord],
+    find_api_job: Callable[[UUID], JobRecord],
+    capsules: CapsuleStore,
 ) -> None:
     def start_world(job: JobRecord, rebuild: bool = False) -> JobRecord:
         try:
@@ -62,7 +64,7 @@ def install_world_routes(
         async with request.form(max_files=0, max_fields=2, max_part_size=1024) as form:
             require_csrf(request, str(form.get("csrf", "")))
             rebuild = str(form.get("rebuild", "")).lower() == "true"
-        job = await to_thread.run_sync(find_job, job_id, browser_workspace(request))
+        job = await to_thread.run_sync(find_public_job, job_id)
         started = await to_thread.run_sync(start_world, job, rebuild)
         return templates.TemplateResponse(
             request=request,
@@ -72,7 +74,7 @@ def install_world_routes(
 
     @application.get("/jobs/{job_id}/world", response_class=HTMLResponse)
     def view_world(request: Request, job_id: UUID) -> HTMLResponse:
-        job = find_job(job_id, browser_workspace(request))
+        job = find_public_job(job_id)
         if job.world is None or job.world.status != "complete":
             raise HTTPException(409, "The reconstructed space is not ready yet.")
         return templates.TemplateResponse(
@@ -80,34 +82,31 @@ def install_world_routes(
             name="world.html",
             context={
                 "job": job,
+                "linked_memories": capsules.linked_entries(job_id),
             },
         )
 
     @application.get("/jobs/{job_id}/world/gaussians.ply")
     def browser_splats(request: Request, job_id: UUID) -> FileResponse:
-        return artifact_response(
-            find_job(job_id, browser_workspace(request)), "gaussians.ply"
-        )
+        return artifact_response(find_public_job(job_id), "gaussians.ply")
 
     @application.get("/jobs/{job_id}/world/cameras")
     def browser_cameras(request: Request, job_id: UUID) -> FileResponse:
-        return artifact_response(
-            find_job(job_id, browser_workspace(request)), "camera_params.json"
-        )
+        return artifact_response(find_public_job(job_id), "camera_params.json")
 
     @application.post("/api/jobs/{job_id}/world", response_model=JobRecord)
     def reconstruct_api(
         request: Request, job_id: UUID, rebuild: bool = False
     ) -> JobRecord:
         require_api(request, settings)
-        return start_world(find_job(job_id, None), rebuild)
+        return start_world(find_api_job(job_id), rebuild)
 
     @application.get("/api/jobs/{job_id}/world/gaussians.ply")
     def api_splats(request: Request, job_id: UUID) -> FileResponse:
         require_api(request, settings)
-        return artifact_response(find_job(job_id, None), "gaussians.ply")
+        return artifact_response(find_api_job(job_id), "gaussians.ply")
 
     @application.get("/api/jobs/{job_id}/world/cameras")
     def api_cameras(request: Request, job_id: UUID) -> FileResponse:
         require_api(request, settings)
-        return artifact_response(find_job(job_id, None), "camera_params.json")
+        return artifact_response(find_api_job(job_id), "camera_params.json")

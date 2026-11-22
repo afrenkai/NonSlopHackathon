@@ -7,7 +7,7 @@
   </header>
   {% if request.method == 'POST' %}<p role="status" class="ks-view-note">Memory saved in the timeline.</p>{% endif %}
   <nav class="ks-views" aria-label="Memory view">
-    {% for key, label in [('whole', 'Whole capsule'), ('timeline', 'Timeline')] %}
+    {% for key, label in [('whole', 'All memories'), ('timeline', 'Timeline')] %}
       <a id="ks-view-{{ key }}" href="{{ capsule_url }}?view={{ key }}#capsule-entries" hx-get="{{ capsule_url }}/entries?view={{ key }}"
          hx-target="#capsule-entries" hx-swap="outerHTML" hx-sync="#capsule-entries:replace"{% if view == key %} aria-current="true"{% endif %}>{{ label }}</a>
     {% endfor %}
@@ -44,7 +44,7 @@
               <a class="ks-link" href="{{ media_url }}" download>Download original</a>
             {% endif %}
             {% if entry.text %}<p class="ks-words{% if entry.text|length <= 200 %} ks-short{% endif %}">{{ entry.text }}</p>{% endif %}
-            {% if entry.linked_job_id %}<a class="ks-link" href="/visits/{{ entry.linked_job_id }}">Open the linked visit and 3D space <span aria-hidden="true">→</span></a>{% endif %}
+            {% if entry.linked_job_id %}<a class="ks-link" href="/visits/{{ entry.linked_job_id }}">Open the linked visit and 3D space</a>{% endif %}
             {% if entry.enrichment %}
               <details class="ks-machine" open>
                 <summary aria-live="polite">AI {{ entry.enrichment.kind }} · {{ 'Processing' if entry.enrichment.status == 'running' else entry.enrichment.status }}</summary>
