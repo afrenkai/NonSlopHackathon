@@ -20,7 +20,7 @@ nonslop = "nonslop.runtime.cli:main"
 [dependency-groups]
 checks = [
     "black", "ruff", "pytest", "fastapi[standard]", "duckdb", "httpx",
-    "itsdangerous", "jinja2", "pillow", "pytesseract",
+    "itsdangerous", "jinja2", "pillow", "pytesseract", "requests",
 ]
 
 [build-system]

@@ -1,9 +1,12 @@
+from base64 import b64encode
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID
 
 from anyio import to_thread
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -25,6 +28,13 @@ from nonslop.reconstruction.protocols import ReconstructionGateway
 from nonslop.reconstruction.service import ReconstructionService
 from nonslop.web.body_limit import BodyLimitMiddleware
 from nonslop.web.capsules import install_capsule_routes
+from nonslop.web.image_search import (
+    GALLERY_IMAGE_LIMIT,
+    IMAGE_REFERENCE_LIMIT,
+    ImageSearchError,
+    image_query,
+    search_images,
+)
 from nonslop.web.references import read_references
 from nonslop.web.schemas import WebSettings
 from nonslop.web.security import (
@@ -63,15 +73,6 @@ def create_app(
     application.mount(
         "/static", StaticFiles(directory=assets / "static"), name="static"
     )
-    store = JobStore(settings.data_root, commit_data)
-    capsules = CapsuleStore(store)
-    capsule_service = CapsuleService(capsules, archivist_gateway)
-    service = SceneService(store, gateway)
-    videos = ArtifactStore(settings.output_root, settings.serving_root, reload_outputs)
-    worlds = ReconstructionService(store, world_gateway)
-    world_artifacts = ArtifactStore(
-        settings.world_root, settings.world_serving_root, reload_worlds
-    )
 
     @application.middleware("http")
     async def response_headers(
@@ -103,6 +104,62 @@ def create_app(
             context={"error": str(error.detail)},
             status_code=error.status_code,
         )
+
+    if settings.references_only:
+        current_year = datetime.now().year
+
+        @application.post("/", response_class=HTMLResponse)
+        @application.get("/", response_class=HTMLResponse)
+        async def references(
+            request: Request,
+            location: Annotated[str, Form(max_length=250)] = "",
+            year: Annotated[int | None, Form(ge=1800, le=current_year)] = None,
+            description: Annotated[str, Form(max_length=4000)] = "",
+            csrf: Annotated[str, Form()] = "",
+        ) -> HTMLResponse:
+            results = None
+            error = None
+            if request.method == "POST":
+                require_csrf(request, csrf)
+                if len(description.strip()) < 5:
+                    raise HTTPException(422, "Describe the images you want to find.")
+                try:
+                    images = await search_images(
+                        image_query(description, location, year),
+                        GALLERY_IMAGE_LIMIT,
+                        location=location,
+                    )
+                    results = [
+                        (image.caption, b64encode(image.content).decode("ascii"))
+                        for image in images
+                    ]
+                except ImageSearchError as failure:
+                    error = str(failure)
+            return templates.TemplateResponse(
+                request=request,
+                name="references.html",
+                context={
+                    "location": location,
+                    "year": year,
+                    "description": description,
+                    "current_year": current_year,
+                    "results": results,
+                    "error": error,
+                    "csrf": csrf_token(request),
+                },
+            )
+
+        return application
+
+    store = JobStore(settings.data_root, commit_data)
+    capsules = CapsuleStore(store)
+    capsule_service = CapsuleService(capsules, archivist_gateway)
+    service = SceneService(store, gateway)
+    videos = ArtifactStore(settings.output_root, settings.serving_root, reload_outputs)
+    worlds = ReconstructionService(store, world_gateway)
+    world_artifacts = ArtifactStore(
+        settings.world_root, settings.world_serving_root, reload_worlds
+    )
 
     def find_job(job_id: UUID, owner_id: str | None = None) -> JobRecord:
         job = store.get(str(job_id))
@@ -142,11 +199,36 @@ def create_app(
                     "Add a location, a valid year, and a description. Keep context under 20,000 characters.",
                 ) from error
             references = await read_references(form, settings)
+        notices = []
+        remaining = settings.reference_limit - len(references.images)
+        if scene.use_web and remaining:
+            try:
+                images = await search_images(
+                    image_query(scene.description, scene.location, scene.year),
+                    min(IMAGE_REFERENCE_LIMIT, remaining),
+                    location=scene.location,
+                )
+            except ImageSearchError as failure:
+                notices.append(str(failure))
+            else:
+                position = len(references.images)
+                if position > 1:
+                    position -= 1
+                references.images[position:position] = [
+                    image.content for image in images
+                ]
+                references.filenames[position:position] = [
+                    image.caption for image in images
+                ]
+                if not images:
+                    notices.append(
+                        "The image collections returned no usable reference images."
+                    )
         for recent in store.recent():
             await to_thread.run_sync(service.refresh, recent)
         try:
             return await service.submit(
-                scene, references.images, owner_id, references.filenames
+                scene, references.images, owner_id, references.filenames, notices
             )
         except QueueFullError as error:
             raise HTTPException(409, str(error)) from error

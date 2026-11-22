@@ -1,5 +1,7 @@
+import json
 import re
 import wave
+from base64 import b64decode
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -7,6 +9,8 @@ from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
 
+import httpx
+import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 from pydantic import SecretStr
@@ -20,7 +24,9 @@ from nonslop.generation.schemas import (
 )
 from nonslop.models.inference_schemas import ArchivistResult, MediaType
 from nonslop.models.world_schemas import WorldResult
+from nonslop.web import image_search
 from nonslop.web.app import create_app
+from nonslop.web.image_relevance import image_subject, nous_title_scores, title_score
 from nonslop.web.schemas import WebSettings
 
 
@@ -110,6 +116,169 @@ def csrf_from(html: str) -> str:
     match = re.search(r'name="csrf" value="([^"]+)"', html)
     assert match is not None
     return match.group(1)
+
+
+@pytest.mark.parametrize(
+    ("title", "expected"),
+    [
+        ("Empire State Building (aerial view).jpg", True),
+        ("View of Empire State Building from Rockefeller Center", True),
+        ("View of Manhattan from the Empire State Building", False),
+        ("Manhattan from Weehawken, NJ.jpg", False),
+        ("Empire State Building blueprint", False),
+    ],
+)
+def test_image_titles_must_indicate_the_requested_subject(
+    title: str, expected: bool
+) -> None:
+    assert (
+        bool(title_score(title, image_subject("empire state building", ""))) == expected
+    )
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("anyio_backend", ["asyncio"])
+async def test_nous_scores_titles_in_order(monkeypatch: pytest.MonkeyPatch) -> None:
+    titles = ["Empire State Building at night", "City panorama"]
+
+    def response(request: httpx.Request) -> httpx.Response:
+        assert request.url.host == "inference-api.nousresearch.com"
+        assert request.headers["Authorization"] == "Bearer test-key"
+        prompt = json.loads(json.loads(request.content)["messages"][1]["content"])
+        assert prompt["titles"] == titles
+        return httpx.Response(
+            200, json={"choices": [{"message": {"content": '{"scores": [4, 1]}'}}]}
+        )
+
+    async_client = httpx.AsyncClient
+    monkeypatch.setenv("NOUS_API_KEY", "test-key")
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: async_client(
+            transport=httpx.MockTransport(response), **kwargs
+        ),
+    )
+    assert await nous_title_scores("Empire State Building", titles) == [4, 1]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("anyio_backend", ["asyncio"])
+async def test_commons_preview_and_generation_use_the_same_references(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    photo = BytesIO()
+    Image.new("RGB", (12, 10), "blue").save(photo, format="PNG")
+    requests: list[httpx.URL] = []
+
+    def commons_images(request: httpx.Request) -> httpx.Response:
+        requests.append(request.url)
+        if request.url.host == "commons.wikimedia.org":
+            assert request.url.params["generator"] == "search"
+            assert request.url.params["gsrnamespace"] == "6"
+            assert (
+                request.url.params["gsrsearch"]
+                == "Hester Street 1905 Brick storefronts filetype:bitmap"
+            )
+            assert "api_key" not in request.url.params
+            return httpx.Response(
+                200,
+                json={
+                    "query": {
+                        "pages": [
+                            {
+                                "index": 1,
+                                "title": "File:Hester Street photograph",
+                                "imageinfo": [
+                                    {"thumburl": "https://other.test/untrusted"}
+                                ],
+                            },
+                            {
+                                "index": 2,
+                                "title": "File:Hester Street storefronts",
+                                "imageinfo": [
+                                    {
+                                        "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/street.jpg/500px-street.jpg"
+                                    },
+                                ],
+                            },
+                            {
+                                "index": 3,
+                                "title": "File:Different street",
+                                "imageinfo": [
+                                    {
+                                        "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/unrelated.jpg/500px-unrelated.jpg"
+                                    },
+                                ],
+                            },
+                        ]
+                    }
+                },
+            )
+        assert request.url.host == "upload.wikimedia.org"
+        return httpx.Response(
+            200, content=photo.getvalue(), headers={"Content-Type": "image/png"}
+        )
+
+    async_client = httpx.AsyncClient
+    monkeypatch.delenv("NOUS_API_KEY", raising=False)
+    monkeypatch.setattr(image_search, "library_results", lambda query, limit: [])
+    monkeypatch.setattr(image_search, "archive_results", lambda query, limit: [])
+    monkeypatch.setattr(image_search, "museum_results", lambda query, limit: [])
+    monkeypatch.setattr(
+        httpx,
+        "AsyncClient",
+        lambda **kwargs: async_client(
+            transport=httpx.MockTransport(commons_images), **kwargs
+        ),
+    )
+    settings = client_settings(tmp_path)
+    worker = RecordingGenerator()
+    inputs = {
+        "location": "Hester Street",
+        "year": "1905",
+        "description": "Brick storefronts",
+    }
+
+    def transport(web_settings: WebSettings) -> httpx.ASGITransport:
+        return httpx.ASGITransport(
+            app=create_app(
+                web_settings,
+                worker,
+                RecordingReconstructor(),
+                RecordingArchivist(),
+                no_operation,
+                no_operation,
+                no_operation,
+            )
+        )
+
+    async with async_client(
+        transport=transport(settings.model_copy(update={"references_only": True})),
+        base_url="https://testserver",
+    ) as preview:
+        token = csrf_from((await preview.get("/")).text)
+        gallery = await preview.post("/", data={**inputs, "csrf": token})
+        assert gallery.status_code == 200
+        image = re.search(r'data:image/png;base64,([^"]+)', gallery.text)
+        assert image is not None
+        assert 'alt="Hester Street storefronts"' in gallery.text
+        assert (await preview.post("/jobs")).status_code == 404
+        assert not worker.submitted
+
+    async with async_client(
+        transport=transport(settings), base_url="https://testserver"
+    ) as website:
+        token = csrf_from((await website.get("/")).text)
+        submitted = await website.post(
+            "/jobs", data={**inputs, "csrf": token, "use_web": "true"}
+        )
+        assert submitted.status_code == 200
+        assert worker.references == [[b64decode(image.group(1))]]
+        assert len(requests) == 4
+        assert requests[0].params["gsrlimit"] == "32"
+        assert requests[2].params["gsrlimit"] == "8"
+        assert "Begin on the supplied first-frame image." in worker.submitted[0].prompt
 
 
 def api_headers(settings: WebSettings) -> dict[str, str]:

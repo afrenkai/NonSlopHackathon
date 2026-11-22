@@ -12,6 +12,7 @@ def build_web_image() -> modal.Image:
             "fastapi[standard]",
             "duckdb",
             "httpx",
+            "requests",
             "itsdangerous",
             "jinja2",
             "pillow",

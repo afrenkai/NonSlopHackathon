@@ -8,7 +8,6 @@ from nonslop.data.jobs import JobStore
 from nonslop.generation.prompts import build_scene_prompt
 from nonslop.generation.protocols import GenerationGateway
 from nonslop.generation.schemas import GenerationTask, JobRecord, SceneRequest
-from nonslop.grounding.retrieval import retrieve_sources
 
 
 class QueueFullError(Exception):
@@ -27,19 +26,16 @@ class SceneService:
         reference_images: list[bytes],
         owner_id: str,
         reference_names: list[str],
+        notices: list[str],
     ) -> JobRecord:
-        grounding = await retrieve_sources(scene)
         job = JobRecord(
             job_id=str(uuid4()),
             owner_id=owner_id,
             created_at=datetime.now(UTC),
             status="queued",
             scene=scene,
-            render_prompt=build_scene_prompt(
-                scene, grounding.sources, bool(reference_images)
-            ),
-            sources=grounding.sources,
-            notices=grounding.notices,
+            render_prompt=build_scene_prompt(scene, bool(reference_images)),
+            notices=notices,
             has_reference=bool(reference_images),
             reference_count=len(reference_images),
             reference_names=reference_names,

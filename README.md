@@ -100,12 +100,18 @@ the first and last as native frame conditions. Multi-image references are
 resized to at most 768 pixels on their longest edge for the vision context.
 AI observations are shown separately from the supplied historical evidence.
 
-Web grounding queries Internet Archive for the street and exact year, then a
-ten-year window if needed. Source links, excerpts, dates, and retrieval notices
-are retained with each scene. Search results require relevance review; they do
-not certify an exact reconstruction. H3's hosted Context-IR is not part of its
-open-source release. The prompt uses H3's structured visual/sound fields and
-preserves the supplied opening image.
+With **Find reference images online** enabled, the app searches Wikimedia Commons,
+the Library of Congress, photo collections on the Internet Archive, and the
+Cleveland Museum of Art's open-access photographs. No API key is required.
+The app checks titles for the requested subject before fetching thumbnails and
+skips obvious maps, illustrations, and views from the subject. Set `NOUS_API_KEY`
+in `.env` to optionally score matching titles against the scene through Nous.
+The local title filter remains in use if Nous is unavailable.
+The app downloads up to four thumbnails and uses them as image
+references, within the eight-image total limit. Uploaded opening and ending
+photos retain their positions. The references appear with the saved visit.
+H3's hosted Context-IR is not part of its open-source release. The prompt uses
+H3's structured visual/sound fields and preserves the supplied opening image.
 
 `POST /api/jobs` accepts the same multipart fields as the UI: `location`, `year`,
 `description`, `source_text`, `source_file`, `reference_image`, `use_web`, and

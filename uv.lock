@@ -1235,6 +1235,7 @@ checks = [
     { name = "pillow" },
     { name = "pytesseract" },
     { name = "pytest" },
+    { name = "requests" },
     { name = "ruff" },
 ]
 
@@ -1257,6 +1258,7 @@ checks = [
     { name = "pillow" },
     { name = "pytesseract" },
     { name = "pytest" },
+    { name = "requests" },
     { name = "ruff" },
 ]
 

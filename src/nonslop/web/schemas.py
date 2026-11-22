@@ -20,6 +20,7 @@ class WebSettings(BaseModel):
     reference_limit: int = 8
     text_limit: int = 20000
     secure_cookies: bool = True
+    references_only: bool = False
 
 
 class ReferenceBundle(BaseModel):
